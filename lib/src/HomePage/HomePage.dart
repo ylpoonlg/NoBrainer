@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/ClipPage/ClipPage.dart';
+import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
+import 'package:nobrainer/src/ShopPage/ShopPage.dart';
+import 'package:nobrainer/src/TimerPage/TimerPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,12 +16,24 @@ class _HomePageState extends State<HomePage> {
     return [
       ToolItem(
         title: "Todo List",
-        color: Color.fromARGB(255, 12, 144, 196),
+        color: AppTheme().color["cyan"],
         page: TodoPage(),
       ),
-      ToolItem(title: "Shopping List", color: Color.fromARGB(255, 14, 168, 8)),
-      ToolItem(title: "Clipboard", color: Color.fromARGB(255, 204, 32, 132)),
-      ToolItem(title: "Timer", color: Color.fromARGB(255, 202, 95, 7))
+      ToolItem(
+        title: "Shopping List",
+        color: AppTheme().color["green"],
+        page: ShopPage(),
+      ),
+      ToolItem(
+        title: "Clipboard",
+        color: AppTheme().color["magenta"],
+        page: ClipPage(),
+      ),
+      ToolItem(
+        title: "Timer",
+        color: AppTheme().color["orange"],
+        page: TimerPage(),
+      )
     ];
   }
 
@@ -27,6 +44,35 @@ class _HomePageState extends State<HomePage> {
         title: const Text(
           "No Brainer",
           style: TextStyle(color: Colors.white),
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'No Brainer',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
+            ),
+          ],
         ),
       ),
       body: Center(
@@ -53,13 +99,18 @@ class ToolItem extends StatelessWidget {
     return Container(
       child: InkWell(
           onTap: () {
-            print("Go to $page");
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => page));
+              context,
+              MaterialPageRoute(builder: (context) => page),
+            );
           },
-          child: Text(title)),
+          child: Container(
+            padding: EdgeInsets.all(30),
+            child: Text(title,
+                style:
+                    TextStyle(fontSize: 24, color: AppTheme().color["white"])),
+          )),
       margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(30),
       decoration: BoxDecoration(
           color: color, borderRadius: BorderRadius.all(Radius.circular(10))),
     );
