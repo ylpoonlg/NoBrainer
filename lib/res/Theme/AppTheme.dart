@@ -1,20 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppTheme {
-  String getThemeName() {
-    return "light";
-  }
-
-  ThemeData theme() {
-    String themeName = getThemeName();
+  static ThemeData theme(String themeName) {
     if (themeName == "dark") return darkTheme;
     return lightTheme;
   }
 
-  Map color = colors;
+  static Map color = colors;
 }
 
-Map colors = {
+const colors = {
   "red": Color.fromARGB(255, 189, 11, 11),
   "green": Color.fromARGB(255, 12, 180, 20),
   "blue": Color.fromARGB(255, 4, 38, 131),
@@ -30,11 +28,13 @@ Map colors = {
 };
 
 ThemeData lightTheme = ThemeData(
-  backgroundColor: Colors.white,
+  brightness: Brightness.light,
+  backgroundColor: colors["white"],
   primarySwatch: Colors.blueGrey,
 );
 
 ThemeData darkTheme = ThemeData(
-  backgroundColor: Colors.black,
+  brightness: Brightness.dark,
+  backgroundColor: colors["black"],
   primarySwatch: Colors.blueGrey,
 );
