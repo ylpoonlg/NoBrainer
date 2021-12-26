@@ -27,6 +27,10 @@ class NoBrainerAppState extends State<NoBrainerApp> {
       title: 'No Brainer',
       theme: AppTheme.theme(sh.settings["theme"] ?? "light"),
       home: HomePage(sh: sh),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child ?? const Text("Something went wrong..."),
+      ),
     );
   }
 }

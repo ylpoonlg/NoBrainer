@@ -13,24 +13,11 @@ class TodoPage extends StatefulWidget {
 
 class _TodoPageState extends State<TodoPage> {
   final LocalStorage storage = LocalStorage("nobrainer");
-  List<Map> todoList = [];
+  List<dynamic> todoList = [];
 
   _TodoPageState() : super();
 
-  List<Widget> _getTodoList() {
-    todoList = storage.getItem("todolist") ?? [];
-    List<Widget> items = [];
-    for (int i = 0; i < todoList.length; i++) {
-      items.add(TodoItem(
-        key: Key("todoitem-" + todoList[i]["uuid"]),
-        data: todoList[i],
-        onDelete: _deleteTodoItem,
-        onUpdate: _updateTodoItem,
-      ));
-    }
-    return items;
-  }
-
+  // Todo List Processing
   void _saveTodoList() {
     setState(() {
       storage.setItem("todolist", todoList);
@@ -38,12 +25,10 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   void _addTodoItem() {
-    todoList.add({
-      "uuid": const Uuid().v1(),
-      "title": "New Todo Item " + Random().nextInt(256).toString(),
-      "status": "Incomplete",
-      "deadline": "09/05/2003",
-    });
+    Map newItem = Map.from(defaultTodoItem);
+    newItem["uuid"] = const Uuid().v1();
+    newItem["deadline"] = DateTime.now().toString();
+    todoList.add(newItem);
     _saveTodoList();
   }
 
@@ -63,16 +48,53 @@ class _TodoPageState extends State<TodoPage> {
     _saveTodoList();
   }
 
+  /// Returns widgets of the todo list
+  List<Widget> _getTodoList() {
+    todoList = storage.getItem("todolist") ?? [];
+    List<Widget> items = [];
+    for (int i = 0; i < todoList.length; i++) {
+      items.add(TodoItem(
+        key: Key("todoitem-" + todoList[i]["uuid"]),
+        data: todoList[i],
+        onDelete: _deleteTodoItem,
+        onUpdate: _updateTodoItem,
+      ));
+    }
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Todo List"),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.sort),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.group),
+          ),
+        ],
       ),
-      body: ListView(
-        key: const Key("todolistview"),
-        children: _getTodoList(),
+      body: FutureBuilder(
+        future: storage.ready,
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.data == null) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.color["accent-primary"],
+              ),
+            );
+          }
+          return ListView(
+            key: const Key("todolistview"),
+            children: _getTodoList(),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppTheme.color["accent-primary"],
