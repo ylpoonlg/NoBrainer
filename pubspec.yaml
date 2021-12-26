@@ -1,5 +1,5 @@
 name: nobrainer
-description: A new Flutter project.
+description: A mobile app that acts as your brain
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -29,7 +29,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: "^2.0.11"
+  shared_preferences: ^2.0.11
+  localstorage: ^4.0.0
+  uuid: ^3.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

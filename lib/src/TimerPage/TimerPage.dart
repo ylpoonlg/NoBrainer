@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nobrainer/res/Theme/AppTheme.dart';
 
 class TimerPage extends StatefulWidget {
   @override
@@ -12,7 +12,11 @@ class _TimerPageState extends State<TimerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Text("Timer Here"),
+      appBar: AppBar(
+        backgroundColor: AppTheme.color["appbar-background"],
+        title: const Text("Timer"),
+      ),
+      body: const Text("Some timer threads here..."),
     );
   }
 }

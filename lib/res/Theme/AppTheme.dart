@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AppTheme {
   static ThemeData theme(String themeName) {
@@ -13,6 +10,8 @@ class AppTheme {
 }
 
 const colors = {
+  "appbar-background": Color.fromARGB(255, 29, 87, 134),
+  "accent-primary": Color.fromARGB(255, 240, 99, 17),
   "red": Color.fromARGB(255, 189, 11, 11),
   "green": Color.fromARGB(255, 12, 180, 20),
   "blue": Color.fromARGB(255, 4, 38, 131),
@@ -29,12 +28,12 @@ const colors = {
 
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
-  backgroundColor: colors["white"],
-  primarySwatch: Colors.blueGrey,
+  backgroundColor: const Color.fromARGB(255, 248, 248, 248),
+  primaryColor: colors["accent-primary"],
 );
 
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  backgroundColor: colors["black"],
-  primarySwatch: Colors.blueGrey,
+  backgroundColor: const Color.fromARGB(255, 45, 45, 46),
+  primaryColor: colors["accent-primary"],
 );

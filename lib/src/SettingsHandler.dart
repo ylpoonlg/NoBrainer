@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:localstorage/localstorage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsHandler {

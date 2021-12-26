@@ -6,11 +6,10 @@ import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
 import 'package:nobrainer/src/TimerPage/TimerPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
-import 'package:nobrainer/src/app.dart';
 
 class HomePage extends StatefulWidget {
   SettingsHandler sh;
-  HomePage(this.sh);
+  HomePage({required this.sh, Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -44,8 +43,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: AppTheme.color["appbar-background"],
         title: const Text(
           "No Brainer",
           style: TextStyle(color: Colors.white),
@@ -55,7 +57,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
@@ -68,13 +70,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => SettingsPage(widget.sh)));
+                        builder: (context) => SettingsPage(sh: widget.sh)));
               },
             ),
           ],
@@ -83,6 +85,7 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: GridView.count(
           crossAxisCount: 2,
+          childAspectRatio: screenWidth / (screenHeight - 120),
           children: getToolList(),
         ),
       ),
@@ -91,13 +94,16 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ToolItem extends StatelessWidget {
-  var title, color, page;
+  String title;
+  Color color;
+  Widget page;
 
-  ToolItem({title, color, page}) : super() {
-    this.title = title;
-    this.color = color;
-    this.page = page;
-  }
+  ToolItem({
+    required this.title,
+    required this.color,
+    required this.page,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -112,15 +118,16 @@ class ToolItem extends StatelessWidget {
             );
           },
           child: Container(
-            padding: EdgeInsets.all(30),
+            padding: const EdgeInsets.all(30),
             child: Text(title,
                 style: TextStyle(fontSize: 24, color: AppTheme.color["white"])),
           ),
         ),
       ),
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-          color: color, borderRadius: BorderRadius.all(Radius.circular(10))),
+          color: color,
+          borderRadius: const BorderRadius.all(Radius.circular(10))),
     );
   }
 }

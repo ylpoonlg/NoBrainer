@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nobrainer/res/Theme/AppTheme.dart';
 
 class ShopPage extends StatefulWidget {
   @override
@@ -12,7 +12,11 @@ class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Text("Shopping List Here"),
+      appBar: AppBar(
+        backgroundColor: AppTheme.color["appbar-background"],
+        title: const Text("Shopping List"),
+      ),
+      body: const Text("Some shopping items here..."),
     );
   }
 }
