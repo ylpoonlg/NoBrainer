@@ -7,7 +7,7 @@ import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
 Map defaultTodoItem = {
   "uuid": "generate uuid here",
   "group": "localuser",
-  "status": "Todo",
+  "status": "todo",
   "deadline": "a datetime object",
   "title": "New Task",
   "desc": "",
@@ -17,18 +17,22 @@ Map defaultTodoItem = {
 List todoStatus = [
   {
     "label": "Urgent",
+    "value": "urgent",
     "color": AppTheme.color["purple"],
   },
   {
     "label": "Todo",
+    "value": "todo",
     "color": AppTheme.color["red"],
   },
   {
     "label": "Ongoing",
+    "value": "ongoing",
     "color": AppTheme.color["yellow"],
   },
   {
     "label": "Completed",
+    "value": "completed",
     "color": AppTheme.color["green"],
   },
 ];
@@ -37,24 +41,27 @@ class TodoItem extends StatefulWidget {
   Map data;
   Function onDelete, onUpdate;
 
-  TodoItem(
-      {required Map this.data,
-      required Function this.onDelete,
-      required this.onUpdate,
-      Key? key})
-      : super(key: key);
+  TodoItem({
+    required Map this.data,
+    required Function this.onDelete,
+    required this.onUpdate,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TodoItemState(data);
 }
 
 class _TodoItemState extends State<TodoItem> {
-  String status = todoStatus[0]["label"];
+  String status = todoStatus[0]["value"];
 
   _TodoItemState(data) {
     status = data["status"] ?? status;
   }
 
+  /// Show delete confirmation popup.
+  ///
+  /// If confirmed, call the callback function.
   void _onDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -81,6 +88,9 @@ class _TodoItemState extends State<TodoItem> {
     );
   }
 
+  /// Handles status selection.
+  ///
+  /// Calls back the updated data.
   void _onSelectStatus(BuildContext context) {
     List<Widget> _getStatusOptions() {
       List<Widget> options = [];
@@ -88,7 +98,7 @@ class _TodoItemState extends State<TodoItem> {
         options.add(SimpleDialogOption(
           onPressed: () {
             setState(() {
-              status = todoStatus[i]["label"];
+              status = todoStatus[i]["value"];
               widget.data["status"] = status;
               widget.onUpdate(widget.data);
               Navigator.of(context).pop();
@@ -101,18 +111,19 @@ class _TodoItemState extends State<TodoItem> {
     }
 
     showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: const Text("Select a status"),
-            children: _getStatusOptions(),
-          );
-        });
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text("Select a status"),
+          children: _getStatusOptions(),
+        );
+      },
+    );
   }
 
   Color _getStatusColor(String status) {
     for (int i = 0; i < todoStatus.length; i++) {
-      if (todoStatus[i]["label"] == status) {
+      if (todoStatus[i]["value"] == status) {
         return todoStatus[i]["color"];
       }
     }

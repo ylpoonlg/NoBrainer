@@ -33,7 +33,7 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
         // Pick Time
         showTimePicker(
           context: context,
-          initialTime: TimeOfDay.now(),
+          initialTime: TimeOfDay.fromDateTime(DateTime.parse(data["deadline"])),
         ).then((time) {
           setState(() {
             if (time != null) {

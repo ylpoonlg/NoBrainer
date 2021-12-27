@@ -1,4 +1,4 @@
-package com.example.nobrainer
+package com.ylpoonlg.nobrainer
 
 import io.flutter.embedding.android.FlutterActivity
 
