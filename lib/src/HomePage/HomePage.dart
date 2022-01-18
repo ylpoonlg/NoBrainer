@@ -21,7 +21,9 @@ class _HomePageState extends State<HomePage> {
       ToolItem(
         title: "Todo List",
         color: AppTheme.color["cyan"],
-        page: TodoPage(),
+        page: TodoPage(
+          uuid: "tEst1ngUulD",
+        ),
       ),
       ToolItem(
         title: "Shopping List",

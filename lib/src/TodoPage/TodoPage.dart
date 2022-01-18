@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 // Sorting modes
@@ -20,25 +23,56 @@ List<Map> sortingModes = [
 ];
 
 class TodoPage extends StatefulWidget {
-  const TodoPage({Key? key}) : super(key: key);
+  final String uuid;
+  const TodoPage({Key? key, required String this.uuid}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TodoPageState();
 }
 
 class _TodoPageState extends State<TodoPage> {
-  final LocalStorage storage = LocalStorage("nobrainer");
   List<dynamic> todoList = []; // Current status of the todo list
+  bool isTodoListLoaded = false;
+
   String todoSortMode =
       sortingModes[0]["value"]; // Sorting modes for todo items
   String displayGroup = "all"; // group to display
 
-  _TodoPageState() : super();
+  _TodoPageState() : super() {
+    _loadTodoList();
+  }
 
   // Todo List Processing
-  void _saveTodoList() {
+  void _saveTodoList() async {
+    final Database db = await DbHelper.database;
+    db.insert(
+      "todolist",
+      {
+        'uuid': widget.uuid,
+        'content': json.encode(todoList),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    setState(() {});
+  }
+
+  void _loadTodoList() async {
+    final Database db = await DbHelper.database;
+    final List<dynamic> dbMap = await db.query(
+      "todolist",
+      //where: "uuid = " + widget.uuid,
+      distinct: true,
+    );
+    print(dbMap.toString());
+
+    if (dbMap.isEmpty) {
+      todoList = [];
+    } else {
+      todoList = json.decode(dbMap[0]["content"]);
+    }
+
     setState(() {
-      storage.setItem("todolist", todoList);
+      isTodoListLoaded = true;
     });
   }
 
@@ -48,6 +82,7 @@ class _TodoPageState extends State<TodoPage> {
     newItem["deadline"] = DateTime.now().toString();
     todoList.add(newItem);
     _saveTodoList(); // Save to local storage first
+
     // Jump to directly to the detail page
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => TodoItemDetails(
@@ -77,7 +112,6 @@ class _TodoPageState extends State<TodoPage> {
   ///
   /// Returns widgets of the todo list.
   List<Widget> _getTodoList() {
-    todoList = storage.getItem("todolist") ?? [];
     List<Map> sortedList = List.from(todoList);
 
     sortedList.sort((i, j) {
@@ -133,22 +167,16 @@ class _TodoPageState extends State<TodoPage> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: storage.ready,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.data == null) {
-            return Center(
+      body: isTodoListLoaded
+          ? ListView(
+              key: const Key("todolistview"),
+              children: _getTodoList(),
+            )
+          : Center(
               child: CircularProgressIndicator(
                 color: AppTheme.color["accent-primary"],
               ),
-            );
-          }
-          return ListView(
-            key: const Key("todolistview"),
-            children: _getTodoList(),
-          );
-        },
-      ),
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppTheme.color["accent-primary"],
         foregroundColor: AppTheme.color["white"],
