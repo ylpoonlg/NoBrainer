@@ -1,12 +1,13 @@
 import 'dart:convert';
 
-import 'package:localstorage/localstorage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:nobrainer/src/Database/db.dart';
+import 'package:sqflite/sqflite.dart';
 
 class SettingsHandler {
   Function reloadApp;
 
-  Map settings = {
+  /// Default settings
+  Map<String, String> settings = {
     "theme": "light",
   };
 
@@ -14,18 +15,31 @@ class SettingsHandler {
     loadSettings();
   }
 
-  void loadSettings() {
-    SharedPreferences.getInstance().then((pref) {
-      settings =
-          json.decode(pref.getString("settings") ?? json.encode(settings));
-      reloadApp();
-    });
+  void loadSettings() async {
+    final Database? db = await DbHelper.database;
+    if (db == null) return;
+
+    final dbMap = await db.query("settings");
+    for (var item in dbMap) {
+      settings[item["name"].toString()] = item["value"].toString();
+    }
+
+    reloadApp();
   }
 
-  void saveSettings() {
-    SharedPreferences.getInstance().then((pref) {
-      pref.setString("settings", json.encode(settings));
-      reloadApp();
+  void saveSettings() async {
+    final Database db = await DbHelper.database;
+    settings.forEach((key, value) {
+      db.insert(
+        "settings",
+        {
+          "name": key,
+          "value": value,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     });
+
+    reloadApp();
   }
 }

@@ -31,7 +31,11 @@ class DbHelper {
 
   void _createTables(db) async {
     await db.execute(
-      '''CREATE TABLE todolist (uuid TEXT PRIMARY KEY, content TEXT);''',
+      '''CREATE TABLE braincells (
+        uuid TEXT PRIMARY KEY,
+        type TEXT,
+        content TEXT
+      );''',
     );
     await db.execute(
       '''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''',
@@ -41,7 +45,7 @@ class DbHelper {
   void _debug() async {
     final Database db = await database;
 
-    //db.execute("DROP TABLE todolist;");
+    //db.execute("ALTER TABLE braincells RENAME COLUMN type TO props;");
     //_createTables(db);
   }
 }

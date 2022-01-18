@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:localstorage/localstorage.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
@@ -44,26 +43,36 @@ class _TodoPageState extends State<TodoPage> {
 
   // Todo List Processing
   void _saveTodoList() async {
+    setState(() {
+      isTodoListLoaded = false;
+    });
+
     final Database db = await DbHelper.database;
     db.insert(
-      "todolist",
+      "braincells",
       {
         'uuid': widget.uuid,
+        'props': json.encode({
+          "type": "todolist",
+          "cloud": false,
+        }),
         'content': json.encode(todoList),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    setState(() {});
+
+    setState(() {
+      isTodoListLoaded = true;
+    });
   }
 
   void _loadTodoList() async {
     final Database db = await DbHelper.database;
     final List<dynamic> dbMap = await db.query(
-      "todolist",
-      //where: "uuid = " + widget.uuid,
+      "braincells",
+      where: "uuid = \"" + widget.uuid + "\"",
       distinct: true,
     );
-    print(dbMap.toString());
 
     if (dbMap.isEmpty) {
       todoList = [];
