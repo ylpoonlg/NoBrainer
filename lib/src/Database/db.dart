@@ -13,7 +13,7 @@ class DbHelper {
     initDatabase();
   }
 
-  void initDatabase() async {
+  Future initDatabase() async {
     //print("DB PATH: " + await getDatabasesPath());
     if (database != null) return;
 
@@ -33,7 +33,7 @@ class DbHelper {
     await db.execute(
       '''CREATE TABLE braincells (
         uuid TEXT PRIMARY KEY,
-        type TEXT,
+        props TEXT,
         content TEXT
       );''',
     );
@@ -45,7 +45,7 @@ class DbHelper {
   void _debug() async {
     final Database db = await database;
 
-    //db.execute("ALTER TABLE braincells RENAME COLUMN type TO props;");
+    //db.execute("CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);");
     //_createTables(db);
   }
 }

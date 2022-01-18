@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Widget> getToolList() {
+  List<Widget> getBraincellList() {
     return [
       ToolItem(
         title: "Todo List",
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
         child: GridView.count(
           crossAxisCount: 2,
           childAspectRatio: screenWidth / (screenHeight - 120),
-          children: getToolList(),
+          children: getBraincellList(),
         ),
       ),
     );

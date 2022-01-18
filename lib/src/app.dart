@@ -13,7 +13,11 @@ class NoBrainerAppState extends State<NoBrainerApp> {
   SettingsHandler sh = SettingsHandler(() {});
 
   NoBrainerAppState() {
-    DbHelper(); // Init database instance
+    _initApp();
+  }
+
+  void _initApp() async {
+    await DbHelper().initDatabase(); // Init database instance
     sh = SettingsHandler(() {
       reloadApp();
     });
