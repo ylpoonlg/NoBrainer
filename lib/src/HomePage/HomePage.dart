@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/HomePage/BraincellTile.dart';
 import 'package:nobrainer/src/HomePage/ImportBraincell.dart';
 import 'package:nobrainer/src/HomePage/NewBraincell.dart';
@@ -7,6 +10,7 @@ import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
+import 'package:sqflite/sqflite.dart';
 
 class HomePage extends StatefulWidget {
   final SettingsHandler sh;
@@ -19,15 +23,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> braincells = [];
   bool isExpandAddOptions = false;
+  bool isBraincellsLoaded = false;
 
   _HomePageState() {
-    braincells.add({
-      "uuid": "TESTINGUUID",
-      "name": "Default Test TodoList",
-      "type": "todolist",
-      "imported": false,
-      "color": AppTheme.color["green"],
-    }); // For debug only
+    _loadBraincells();
   }
 
   Map cellMap(cell) {
@@ -52,10 +51,98 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  _newBraincell(cell) {
+  /// Save braincells to local database
+  /// Created new row if haven't already
+  _saveBraincell() async {
     setState(() {
-      braincells.add(cell);
+      isBraincellsLoaded = false;
     });
+
+    final Database db = await DbHelper.database;
+    for (final cell in braincells) {
+      debugPrint("Saving braincell " + cell["uuid"]);
+
+      final dbMap = await db.query("braincells",
+          where: "uuid = \"" + cell["uuid"] + "\"");
+
+      final values = {
+        'props': json.encode({
+          "name": cell["name"],
+          "type": cell["type"],
+          "imported": cell["imported"],
+          "color": {
+            "red": cell["color"].red,
+            "green": cell["color"].green,
+            "blue": cell["color"].blue,
+            "opacity": cell["color"].opacity,
+          },
+        }),
+      };
+
+      // Check if braincell exists
+      if (dbMap.isEmpty) {
+        values["uuid"] = cell["uuid"];
+        values["content"] = "[]";
+        await db.insert(
+          "braincells",
+          values,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        debugPrint("Created cell: " + cell["uuid"]);
+      } else {
+        final result = await db.update(
+          "braincells",
+          values,
+          where: 'uuid = "' + cell["uuid"] + '"',
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        debugPrint("Updated " + cell["uuid"] + ": $result");
+      }
+    }
+
+    final dbMap = await db.query("braincells");
+    debugPrint("Current braincells in db: \n" + dbMap.toString());
+
+    setState(() {
+      isBraincellsLoaded = true;
+    });
+  }
+
+  /// Restore braincells from local database
+  /// Sets isBraincellsLoaded = true when complete
+  _loadBraincells() async {
+    final Database db = await DbHelper.database;
+    final List<dynamic> dbMap = await db.query("braincells");
+
+    if (dbMap.isEmpty) {
+      braincells = [];
+    } else {
+      debugPrint(dbMap.toString());
+      for (var row in dbMap) {
+        final props = json.decode(row["props"]);
+        braincells.add({
+          "uuid": row["uuid"],
+          "name": props["name"],
+          "type": props["type"],
+          "imported": props["imported"],
+          "color": Color.fromRGBO(
+            props["color"]["red"],
+            props["color"]["green"],
+            props["color"]["blue"],
+            props["color"]["opacity"],
+          ),
+        });
+      }
+    }
+
+    setState(() {
+      isBraincellsLoaded = true;
+    });
+  }
+
+  _newBraincell(cell) {
+    braincells.add(cell);
+    _saveBraincell();
   }
 
   List<Widget> getBraincellList() {
@@ -177,11 +264,17 @@ class _HomePageState extends State<HomePage> {
         children: getFloatingActionButtons(),
       ),
       body: Center(
-        child: GridView.count(
-          crossAxisCount: 2,
-          childAspectRatio: 2 / 3,
-          children: getBraincellList(),
-        ),
+        child: !isBraincellsLoaded
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: AppTheme.color["accent-primary"],
+                ),
+              )
+            : GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 2 / 3,
+                children: getBraincellList(),
+              ),
       ),
     );
   }

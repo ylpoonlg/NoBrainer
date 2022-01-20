@@ -41,21 +41,18 @@ class _TodoPageState extends State<TodoPage> {
     _loadTodoList();
   }
 
-  // Todo List Processing
+  // Updates braincell content in database
+  // Braincell must exist already in database.
   void _saveTodoList() async {
     setState(() {
       isTodoListLoaded = false;
     });
 
     final Database db = await DbHelper.database;
-    db.insert(
+    await db.update(
       "braincells",
       {
         'uuid': widget.uuid,
-        'props': json.encode({
-          "type": "todolist",
-          "cloud": false,
-        }),
         'content': json.encode(todoList),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -77,7 +74,7 @@ class _TodoPageState extends State<TodoPage> {
     if (dbMap.isEmpty) {
       todoList = [];
     } else {
-      todoList = json.decode(dbMap[0]["content"]);
+      todoList = json.decode(dbMap[0]["content"] ?? "[]");
     }
 
     setState(() {

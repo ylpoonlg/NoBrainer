@@ -2,31 +2,26 @@ import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-const String DB_NAME = "nobrainer.db";
-
 class DbHelper {
   static dynamic database;
 
   static const dbName = "nobrainer.db";
 
-  DbHelper() {
-    initDatabase();
-  }
+  DbHelper();
 
   Future initDatabase() async {
-    //print("DB PATH: " + await getDatabasesPath());
     if (database != null) return;
 
     WidgetsFlutterBinding.ensureInitialized();
     database = openDatabase(
-      join(await getDatabasesPath(), DB_NAME),
+      join(await getDatabasesPath(), dbName),
       onCreate: (db, version) async {
         _createTables(db);
       },
       version: 1,
     );
 
-    _debug();
+    await _debug();
   }
 
   void _createTables(db) async {
@@ -42,10 +37,13 @@ class DbHelper {
     );
   }
 
-  void _debug() async {
+  _debug() async {
     final Database db = await database;
 
-    //db.execute("CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);");
-    //_createTables(db);
+    try {
+      // await db.execute("DROP TABLE braincells;");
+      // await db.execute("DROP TABLE settings;");
+      // _createTables(db);
+    } catch (e) {}
   }
 }

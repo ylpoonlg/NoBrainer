@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/HomePage/HomePage.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 
@@ -16,8 +15,7 @@ class NoBrainerAppState extends State<NoBrainerApp> {
     _initApp();
   }
 
-  void _initApp() async {
-    await DbHelper().initDatabase(); // Init database instance
+  _initApp() {
     sh = SettingsHandler(() {
       reloadApp();
     });
