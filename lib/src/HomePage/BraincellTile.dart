@@ -1,33 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/HomePage/NewBraincell.dart';
 
 class BraincellTile extends StatelessWidget {
-  String title, type;
-  Color color;
+  Map cell;
   Widget page;
+  Function onEdit, onDelete;
 
   BraincellTile({
-    required this.title,
-    required this.color,
+    required this.cell,
     required this.page,
-    this.type = "",
+    required this.onEdit,
+    required this.onDelete,
     Key? key,
   }) : super(key: key);
-
-  void _editBraincell() {
-    debugPrint("Edit braincell");
-  }
-
-  void _deleteBraincell() {
-    debugPrint("Delete braincell");
-  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(5),
       child: Card(
-        color: color,
+        color: cell["color"],
         child: InkWell(
           splashColor: Colors.grey.withAlpha(20),
           onTap: () {
@@ -43,7 +37,7 @@ class BraincellTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "    " + type,
+                      "    " + typeLabel[cell["type"]].toString(),
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white60,
@@ -56,10 +50,10 @@ class BraincellTile extends StatelessWidget {
                     onSelected: (value) {
                       switch (value) {
                         case "edit":
-                          _editBraincell();
+                          onEdit(cell);
                           break;
                         case "delete":
-                          _deleteBraincell();
+                          onDelete(cell);
                           break;
                       }
                     },
@@ -79,7 +73,7 @@ class BraincellTile extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(left: 10, right: 10),
                 child: Text(
-                  title,
+                  cell["name"],
                   style: TextStyle(
                     fontSize: 24,
                     color: AppTheme.color["white"],

@@ -1,13 +1,19 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class NewBraincell extends StatefulWidget {
   bool isEditMode = false;
+  Map<String, dynamic>? cell;
   Function callback;
+
   NewBraincell({
     Key? key,
     this.isEditMode = false,
+    this.cell,
     required this.callback,
   }) : super();
 
@@ -37,7 +43,7 @@ class _NewBraincellState extends State<NewBraincell> {
     return true;
   }
 
-  void addBraincell() {
+  addBraincell(context) {
     if (validateInput()) {
       widget.callback(cell);
       Navigator.of(context).pop();
@@ -59,8 +65,38 @@ class _NewBraincellState extends State<NewBraincell> {
     }
   }
 
+  _onSelectColor(context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: cell["color"],
+            paletteType: PaletteType.hueWheel,
+            onColorChanged: (color) {
+              setState(() {
+                cell["color"] = color;
+              });
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("Select"),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.cell != null) {
+      cell = widget.cell ?? {};
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -70,9 +106,11 @@ class _NewBraincellState extends State<NewBraincell> {
         ),
         actions: [
           TextButton(
-              onPressed: addBraincell,
+              onPressed: () {
+                addBraincell(context);
+              },
               child: Text(
-                "Add",
+                widget.isEditMode ? "Save" : "Add",
                 style: TextStyle(color: AppTheme.color["white"]),
               ))
         ],
@@ -108,7 +146,7 @@ class _NewBraincellState extends State<NewBraincell> {
                       children: [
                         const Spacer(),
                         const Icon(Icons.list),
-                        Text(" Type: " + typeLabel[cell["type"]].toString()),
+                        Text("  " + typeLabel[cell["type"]].toString()),
                         const Spacer(),
                       ],
                     ),
@@ -126,6 +164,19 @@ class _NewBraincellState extends State<NewBraincell> {
                 )
               // Placeholder: Imported Brinacells cannot have their type changed
               : const Text(""),
+          SizedBox(
+            height: 64,
+            child: TextButton(
+              onPressed: () {
+                _onSelectColor(context);
+              },
+              child: const Text("Color"),
+              style: TextButton.styleFrom(
+                primary: AppTheme.color["white"],
+                backgroundColor: cell["color"],
+              ),
+            ),
+          ),
         ],
       ),
     );

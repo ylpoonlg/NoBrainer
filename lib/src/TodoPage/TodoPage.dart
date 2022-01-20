@@ -52,9 +52,9 @@ class _TodoPageState extends State<TodoPage> {
     await db.update(
       "braincells",
       {
-        'uuid': widget.uuid,
         'content': json.encode(todoList),
       },
+      where: 'uuid = "' + widget.uuid + '"',
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 

@@ -62,9 +62,7 @@ class _HomePageState extends State<HomePage> {
     for (final cell in braincells) {
       debugPrint("Saving braincell " + cell["uuid"]);
 
-      final dbMap = await db.query("braincells",
-          where: "uuid = \"" + cell["uuid"] + "\"");
-
+      // Create value map for insert/update operations
       final values = {
         'props': json.encode({
           "name": cell["name"],
@@ -80,6 +78,10 @@ class _HomePageState extends State<HomePage> {
       };
 
       // Check if braincell exists
+      final dbMap = await db.query(
+        "braincells",
+        where: "uuid = \"" + cell["uuid"] + "\"",
+      );
       if (dbMap.isEmpty) {
         values["uuid"] = cell["uuid"];
         values["content"] = "[]";
@@ -117,6 +119,7 @@ class _HomePageState extends State<HomePage> {
     if (dbMap.isEmpty) {
       braincells = [];
     } else {
+      braincells = [];
       debugPrint(dbMap.toString());
       for (var row in dbMap) {
         final props = json.decode(row["props"]);
@@ -140,19 +143,79 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Add new braincell to state list
+  /// Either created or imported
   _newBraincell(cell) {
     braincells.add(cell);
     _saveBraincell();
   }
 
+  _editBraincell(cell) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => NewBraincell(
+          isEditMode: true,
+          cell: cell,
+          callback: (cell) {
+            for (var i = 0; i < braincells.length; i++) {
+              if (braincells[i]["uuid"] == cell["uuid"]) {
+                braincells[i] = Map.from(cell);
+              }
+            }
+            _saveBraincell();
+          },
+        ),
+      ),
+    );
+  }
+
+  _deleteBraincell(cell) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Confirmation"),
+        content: const Text("Are you sure you want to delete this braincell?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              braincells.removeWhere((cell) => cell["uuid"] == cell["uuid"]);
+
+              setState(() {
+                isBraincellsLoaded = false;
+              });
+
+              final Database db = await DbHelper.database;
+              await db.delete(
+                "braincells",
+                where: "uuid = ?",
+                whereArgs: [cell["uuid"]],
+              );
+
+              _loadBraincells();
+            },
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Returns a list of BraincellTiles
   List<Widget> getBraincellList() {
     return braincells
         .map(
           (cell) => BraincellTile(
-            title: cell["name"],
-            type: typeLabel[cell["type"]] ?? "", // Get label name from value
-            color: cell["color"],
+            cell: cell,
             page: cellMap(cell)["page"],
+            onDelete: _deleteBraincell,
+            onEdit: _editBraincell,
           ),
         )
         .toList();
@@ -164,6 +227,7 @@ class _HomePageState extends State<HomePage> {
   List<Widget> getFloatingActionButtons() {
     List<Widget> items = [];
     if (isExpandAddOptions) {
+      // New Button
       items.add(TextButton(
         onPressed: () {
           setState(() {
@@ -181,6 +245,7 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: AppTheme.color["gray"],
         ),
       ));
+      // Import Button
       items.add(TextButton(
         onPressed: () {
           setState(() {
@@ -199,6 +264,8 @@ class _HomePageState extends State<HomePage> {
         ),
       ));
     }
+
+    // Expand button
     items.add(Container(
       margin: const EdgeInsets.only(top: 15),
       child: FloatingActionButton(
