@@ -1,46 +1,133 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/src/ClipPage/ClipPage.dart';
+import 'package:nobrainer/src/HomePage/BraincellTile.dart';
+import 'package:nobrainer/src/HomePage/ImportBraincell.dart';
+import 'package:nobrainer/src/HomePage/NewBraincell.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
-import 'package:nobrainer/src/TimerPage/TimerPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
 
 class HomePage extends StatefulWidget {
-  SettingsHandler sh;
-  HomePage({required this.sh, Key? key}) : super(key: key);
+  final SettingsHandler sh;
+  const HomePage({required this.sh, Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Widget> getBraincellList() {
-    return [
-      ToolItem(
-        title: "Todo List",
-        color: AppTheme.color["cyan"],
-        page: TodoPage(
-          uuid: "tEst1ngUulD",
+  List<Map<String, dynamic>> braincells = [];
+  bool isExpandAddOptions = false;
+
+  _HomePageState() {
+    braincells.add({
+      "uuid": "TESTINGUUID",
+      "name": "Default Test TodoList",
+      "type": "todolist",
+      "imported": false,
+      "color": AppTheme.color["green"],
+    }); // For debug only
+  }
+
+  Map cellMap(cell) {
+    if (cell["type"] == "todolist") {
+      return {
+        "page": TodoPage(
+          uuid: cell["uuid"],
         ),
+      };
+    } else if (cell["type"] == "shoplist") {
+      return {
+        "page": ShopPage(
+          uuid: cell["uuid"],
+        ),
+      };
+    } else {
+      return {
+        "page": TodoPage(
+          uuid: cell["uuid"],
+        ),
+      };
+    }
+  }
+
+  _newBraincell(cell) {
+    setState(() {
+      braincells.add(cell);
+    });
+  }
+
+  List<Widget> getBraincellList() {
+    return braincells
+        .map(
+          (cell) => BraincellTile(
+            title: cell["name"],
+            type: typeLabel[cell["type"]] ?? "", // Get label name from value
+            color: cell["color"],
+            page: cellMap(cell)["page"],
+          ),
+        )
+        .toList();
+  }
+
+  /// Returns a list of floating action buttons.
+  ///
+  /// Controls the expansion of the add action buttons.
+  List<Widget> getFloatingActionButtons() {
+    List<Widget> items = [];
+    if (isExpandAddOptions) {
+      items.add(TextButton(
+        onPressed: () {
+          setState(() {
+            isExpandAddOptions = false;
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => NewBraincell(callback: _newBraincell),
+              ),
+            );
+          });
+        },
+        child: const Text("New Braincell"),
+        style: TextButton.styleFrom(
+          primary: AppTheme.color["white"],
+          backgroundColor: AppTheme.color["gray"],
+        ),
+      ));
+      items.add(TextButton(
+        onPressed: () {
+          setState(() {
+            isExpandAddOptions = false;
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ImportBraincell(
+                callback: _newBraincell,
+              ),
+            ));
+          });
+        },
+        child: const Text("Import Braincell from cloud"),
+        style: TextButton.styleFrom(
+          primary: AppTheme.color["white"],
+          backgroundColor: AppTheme.color["gray"],
+        ),
+      ));
+    }
+    items.add(Container(
+      margin: const EdgeInsets.only(top: 15),
+      child: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            isExpandAddOptions = !isExpandAddOptions;
+          });
+        },
+        backgroundColor: AppTheme.color["accent-primary"],
+        foregroundColor: AppTheme.color["white"],
+        child: isExpandAddOptions
+            ? const Icon(Icons.close)
+            : const Icon(Icons.add),
       ),
-      ToolItem(
-        title: "Shopping List",
-        color: AppTheme.color["green"],
-        page: ShopPage(),
-      ),
-      ToolItem(
-        title: "Clipboard",
-        color: AppTheme.color["magenta"],
-        page: ClipPage(),
-      ),
-      ToolItem(
-        title: "Timer",
-        color: AppTheme.color["orange"],
-        page: TimerPage(),
-      )
-    ];
+    ));
+    return items;
   }
 
   @override
@@ -84,52 +171,18 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+      floatingActionButton: Wrap(
+        direction: Axis.vertical,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        children: getFloatingActionButtons(),
+      ),
       body: Center(
         child: GridView.count(
           crossAxisCount: 2,
-          childAspectRatio: screenWidth / (screenHeight - 120),
+          childAspectRatio: 2 / 3,
           children: getBraincellList(),
         ),
       ),
-    );
-  }
-}
-
-class ToolItem extends StatelessWidget {
-  String title;
-  Color color;
-  Widget page;
-
-  ToolItem({
-    required this.title,
-    required this.color,
-    required this.page,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => page),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.all(30),
-            child: Text(title,
-                style: TextStyle(fontSize: 24, color: AppTheme.color["white"])),
-          ),
-        ),
-      ),
-      margin: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-          color: color,
-          borderRadius: const BorderRadius.all(Radius.circular(10))),
     );
   }
 }

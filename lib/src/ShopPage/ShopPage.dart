@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 
 class ShopPage extends StatefulWidget {
+  final String uuid;
+
+  ShopPage({required String this.uuid});
+
   @override
   State<StatefulWidget> createState() => _ShopPageState();
 }
