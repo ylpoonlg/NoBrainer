@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,20 +22,13 @@ class NewBraincell extends StatefulWidget {
   State<StatefulWidget> createState() => _NewBraincellState();
 }
 
-/// Convert type value to a label text
-Map<String, String> typeLabel = {
-  "todolist": "Todo List",
-  "shoplist": "Shopping List",
-  "select": "Select a type",
-};
-
 class _NewBraincellState extends State<NewBraincell> {
   Map<String, dynamic> cell = {
     "uuid": const Uuid().v1(),
     "name": "My Braincell",
     "type": "select",
     "imported": false,
-    "color": AppTheme.color["light-gray"],
+    "color": AppTheme.color["gray"],
   };
 
   bool validateInput() {

@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
+import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
 
-// Default TodoItem
-Map defaultTodoItem = {
-  "id": "set todo item id",
-  "status": "todo",
-  "deadline": "a datetime object",
-  "title": "New Task",
+// Default ShopItem
+Map defaultShopItem = {
+  "id": "set shop item id",
+  "quantity": "1",
+  "shop": "",
+  "status": false,
+  "title": "New Item",
   "desc": "",
 };
 
-class TodoItem extends StatefulWidget {
+class ShopItem extends StatefulWidget {
   Map data;
   Function onDelete, onUpdate;
 
-  TodoItem({
+  ShopItem({
     required Map this.data,
     required Function this.onDelete,
     required this.onUpdate,
@@ -25,13 +24,13 @@ class TodoItem extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _TodoItemState(data);
+  State<StatefulWidget> createState() => _ShopItemState(data);
 }
 
-class _TodoItemState extends State<TodoItem> {
-  String status = todoStatus[0]["value"];
+class _ShopItemState extends State<ShopItem> {
+  bool status = false;
 
-  _TodoItemState(data) {
+  _ShopItemState(data) {
     status = data["status"] ?? status;
   }
 
@@ -67,43 +66,12 @@ class _TodoItemState extends State<TodoItem> {
   /// Handles status selection.
   ///
   /// Calls back the updated data.
-  void _onSelectStatus(BuildContext context) {
-    List<Widget> _getStatusOptions() {
-      List<Widget> options = [];
-      for (int i = 0; i < todoStatus.length; i++) {
-        options.add(SimpleDialogOption(
-          onPressed: () {
-            setState(() {
-              status = todoStatus[i]["value"];
-              widget.data["status"] = status;
-              widget.onUpdate(widget.data);
-              Navigator.of(context).pop();
-            });
-          },
-          child: Text(todoStatus[i]["label"]),
-        ));
-      }
-      return options;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: const Text("Select a status"),
-          children: _getStatusOptions(),
-        );
-      },
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    for (int i = 0; i < todoStatus.length; i++) {
-      if (todoStatus[i]["value"] == status) {
-        return todoStatus[i]["color"];
-      }
-    }
-    return AppTheme.color["gray"];
+  void _onSelectStatus(value) {
+    setState(() {
+      status = value ?? false;
+      widget.data["status"] = status;
+      widget.onUpdate(widget.data);
+    });
   }
 
   @override
@@ -113,19 +81,24 @@ class _TodoItemState extends State<TodoItem> {
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => TodoItemDetails(
+              builder: (context) => ShopItemDetails(
                     onUpdate: widget.onUpdate,
                     data: widget.data,
                   )));
         },
         child: Row(
           children: [
-            RawMaterialButton(
-              onPressed: () {
-                _onSelectStatus(context);
-              },
-              fillColor: _getStatusColor(status),
-              shape: const CircleBorder(),
+            Checkbox(
+              value: status,
+              onChanged: _onSelectStatus,
+            ),
+            Container(
+              width: 40,
+              padding: const EdgeInsets.only(right: 10),
+              child: Text(
+                widget.data["quantity"].toString() + " x",
+                textAlign: TextAlign.end,
+              ),
             ),
             Expanded(
               child: Container(
@@ -135,7 +108,7 @@ class _TodoItemState extends State<TodoItem> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      widget.data["title"],
+                      widget.data["title"].toString(),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -145,7 +118,7 @@ class _TodoItemState extends State<TodoItem> {
                     ),
                     Container(height: 5),
                     Text(
-                      dateFormat(DateTime.parse(widget.data["deadline"])),
+                      widget.data["shop"].toString(),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),

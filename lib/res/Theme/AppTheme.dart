@@ -22,6 +22,7 @@ class AppTheme {
 const colors = {
   "appbar-background": Color.fromARGB(255, 29, 87, 134),
   "accent-primary": Color.fromARGB(255, 240, 99, 17),
+  "accent-secondary": Color.fromARGB(255, 4, 32, 155),
   "red": Color.fromARGB(255, 189, 11, 11),
   "green": Color.fromARGB(255, 12, 180, 20),
   "blue": Color.fromARGB(255, 4, 38, 131),

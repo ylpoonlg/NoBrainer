@@ -3,60 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 
-class TodoItemDetails extends StatefulWidget {
+class ShopItemDetails extends StatefulWidget {
   Map data;
   Function onUpdate;
 
-  TodoItemDetails({required this.data, required this.onUpdate, Key? key})
+  ShopItemDetails({required this.data, required this.onUpdate, Key? key})
       : super(key: key);
 
   @override
   State<StatefulWidget> createState() =>
-      _TodoItemsDetailsState(new Map.from(data));
+      _ShopItemsDetailsState(new Map.from(data));
 }
 
-class _TodoItemsDetailsState extends State<TodoItemDetails> {
+class _ShopItemsDetailsState extends State<ShopItemDetails> {
   final Map data;
-  _TodoItemsDetailsState(this.data);
-
-  void _onSelectDeadline(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => DatePickerDialog(
-        initialDate: DateTime.parse(data["deadline"]),
-        firstDate: DateTime(2000),
-        lastDate: DateTime(3000),
-        initialCalendarMode: DatePickerMode.day,
-      ),
-    ).then((date) {
-      setState(() {
-        // Pick Time
-        showTimePicker(
-          context: context,
-          initialTime: TimeOfDay.fromDateTime(DateTime.parse(data["deadline"])),
-        ).then((time) {
-          setState(() {
-            if (time != null) {
-              data["deadline"] = DateTime(
-                date.year,
-                date.month,
-                date.day,
-                time.hour,
-                time.minute,
-              ).toString();
-            }
-          });
-        });
-      });
-    });
-  }
+  _ShopItemsDetailsState(this.data);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text("Edit Todo Task"),
+        title: const Text("Edit Shopping Item"),
         actions: [
           MaterialButton(
             onPressed: () {
@@ -72,6 +40,7 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
       ),
       body: ListView(
         children: [
+          // Title
           Container(
             margin: const EdgeInsets.only(top: 20),
             padding: const EdgeInsets.only(left: 10, right: 10),
@@ -82,11 +51,48 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
               },
               decoration: const InputDecoration(
                 labelText: "Title",
-                hintText: "Enter the title of the task",
+                hintText: "Enter the title of the item",
                 border: OutlineInputBorder(),
               ),
             ),
           ),
+          // Quantity
+          Container(
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            child: TextField(
+              controller: TextEditingController(text: data["quantity"]),
+              onChanged: (text) {
+                data["quantity"] = text;
+              },
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Quantity",
+                hintText: "How many of this do you want?",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+
+          // Shop
+          Container(
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            child: TextField(
+              controller: TextEditingController(text: data["shop"]),
+              onChanged: (text) {
+                data["shop"] = text;
+              },
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Shop",
+                hintText: "Where can you buy this from?",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+
+          // Description box
           Container(
             margin: const EdgeInsets.only(top: 20),
             padding: const EdgeInsets.only(left: 10, right: 10),
@@ -100,24 +106,9 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
               maxLines: 10,
               decoration: const InputDecoration(
                 labelText: "Description",
-                hintText: "Describe the task",
+                hintText: "Describe the item",
                 border: OutlineInputBorder(),
               ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: Row(
-              children: [
-                const Text("Deadline"),
-                const Spacer(),
-                MaterialButton(
-                  onPressed: () {
-                    _onSelectDeadline(context);
-                  },
-                  child: Text(dateFormat(DateTime.parse(data["deadline"]))),
-                )
-              ],
             ),
           ),
         ],

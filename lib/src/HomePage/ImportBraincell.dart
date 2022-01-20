@@ -29,7 +29,7 @@ class _ImportBraincellState extends State<ImportBraincell> {
     // Test data
     cell = {
       "uuid": "SAMPLECLOUDUUID",
-      "name": "Test Imported Braincell",
+      "name": "Comming Soon!",
       "type": "todolist",
       "imported": true,
       "color": AppTheme.color["magenta"],
@@ -69,19 +69,12 @@ class _ImportBraincellState extends State<ImportBraincell> {
           "Import Braincell",
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          TextButton(
-              onPressed: importBraincell,
-              child: Text(
-                "Import",
-                style: TextStyle(color: AppTheme.color["white"]),
-              ))
-        ],
+        actions: [],
       ),
       body: ListView(
         children: [
           Container(
-            margin: const EdgeInsets.only(top: 20),
+            margin: const EdgeInsets.only(top: 30, bottom: 20),
             padding: const EdgeInsets.only(left: 10, right: 10),
             child: TextField(
               controller: TextEditingController(text: uuid),
@@ -90,6 +83,17 @@ class _ImportBraincellState extends State<ImportBraincell> {
                 labelText: "UUID",
                 hintText: "Enter the uuid of a braincell",
                 border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 20, right: 20),
+            child: TextButton(
+              onPressed: importBraincell,
+              child: const Text("Import"),
+              style: TextButton.styleFrom(
+                primary: AppTheme.color["white"],
+                backgroundColor: AppTheme.color["accent-primary"],
               ),
             ),
           ),

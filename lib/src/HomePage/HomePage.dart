@@ -29,6 +29,8 @@ class _HomePageState extends State<HomePage> {
     _loadBraincells();
   }
 
+  /// Returns the corresponding values needed for a braincell
+  /// based on its type
   Map cellMap(cell) {
     if (cell["type"] == "todolist") {
       return {
@@ -60,8 +62,6 @@ class _HomePageState extends State<HomePage> {
 
     final Database db = await DbHelper.database;
     for (final cell in braincells) {
-      debugPrint("Saving braincell " + cell["uuid"]);
-
       // Create value map for insert/update operations
       final values = {
         'props': json.encode({
@@ -90,7 +90,6 @@ class _HomePageState extends State<HomePage> {
           values,
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-        debugPrint("Created cell: " + cell["uuid"]);
       } else {
         final result = await db.update(
           "braincells",
@@ -98,12 +97,11 @@ class _HomePageState extends State<HomePage> {
           where: 'uuid = "' + cell["uuid"] + '"',
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-        debugPrint("Updated " + cell["uuid"] + ": $result");
       }
     }
 
-    final dbMap = await db.query("braincells");
-    debugPrint("Current braincells in db: \n" + dbMap.toString());
+    //final dbMap = await db.query("braincells");
+    //debugPrint("Braincells DB: \n" + dbMap.toString());
 
     setState(() {
       isBraincellsLoaded = true;
@@ -120,7 +118,6 @@ class _HomePageState extends State<HomePage> {
       braincells = [];
     } else {
       braincells = [];
-      debugPrint(dbMap.toString());
       for (var row in dbMap) {
         final props = json.decode(row["props"]);
         braincells.add({
@@ -146,7 +143,17 @@ class _HomePageState extends State<HomePage> {
   /// Add new braincell to state list
   /// Either created or imported
   _newBraincell(cell) {
-    braincells.add(cell);
+    bool newCell = true;
+    for (var i = 0; i < braincells.length; i++) {
+      if (braincells[i]["uuid"] == cell["uuid"]) {
+        braincells[i] = Map.from(cell);
+        newCell = false;
+        break;
+      }
+    }
+    if (newCell) {
+      braincells.add(cell);
+    }
     _saveBraincell();
   }
 
@@ -289,8 +296,6 @@ class _HomePageState extends State<HomePage> {
   ///
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],

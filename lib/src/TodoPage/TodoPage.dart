@@ -3,23 +3,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-
-// Sorting modes
-List<Map> sortingModes = [
-  {
-    "label": "Deadline",
-    "value": "deadline",
-  },
-  {
-    "label": "Status",
-    "value": "status",
-  },
-];
 
 class TodoPage extends StatefulWidget {
   final String uuid;
@@ -34,7 +23,7 @@ class _TodoPageState extends State<TodoPage> {
   bool isTodoListLoaded = false;
 
   String todoSortMode =
-      sortingModes[0]["value"]; // Sorting modes for todo items
+      todoSortModes[0]["value"]; // Sorting modes for todo items
   String displayGroup = "all"; // group to display
 
   _TodoPageState() : super() {
@@ -54,7 +43,8 @@ class _TodoPageState extends State<TodoPage> {
       {
         'content': json.encode(todoList),
       },
-      where: 'uuid = "' + widget.uuid + '"',
+      where: "uuid = ?",
+      whereArgs: [widget.uuid],
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
@@ -67,7 +57,8 @@ class _TodoPageState extends State<TodoPage> {
     final Database db = await DbHelper.database;
     final List<dynamic> dbMap = await db.query(
       "braincells",
-      where: "uuid = \"" + widget.uuid + "\"",
+      where: "uuid = ?",
+      whereArgs: [widget.uuid],
       distinct: true,
     );
 
@@ -165,7 +156,7 @@ class _TodoPageState extends State<TodoPage> {
             },
             icon: const Icon(Icons.sort),
             itemBuilder: (BuildContext context) {
-              return sortingModes.map((Map mode) {
+              return todoSortModes.map((Map mode) {
                 return PopupMenuItem<String>(
                     value: mode["value"], child: Text(mode["label"]));
               }).toList();
