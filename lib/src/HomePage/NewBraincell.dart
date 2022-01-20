@@ -34,7 +34,7 @@ class _NewBraincellState extends State<NewBraincell> {
     "name": "My Braincell",
     "type": "select",
     "imported": false,
-    "color": AppTheme.color["cyan"],
+    "color": AppTheme.color["light-gray"],
   };
 
   bool validateInput() {
@@ -97,6 +97,12 @@ class _NewBraincellState extends State<NewBraincell> {
     if (widget.cell != null) {
       cell = widget.cell ?? {};
     }
+
+    final Color foregroundColor =
+        AppTheme.getColorBrightness(cell["color"]) < 0.5
+            ? AppTheme.color["white"]
+            : AppTheme.color["black"];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -172,7 +178,7 @@ class _NewBraincellState extends State<NewBraincell> {
               },
               child: const Text("Color"),
               style: TextButton.styleFrom(
-                primary: AppTheme.color["white"],
+                primary: foregroundColor,
                 backgroundColor: cell["color"],
               ),
             ),

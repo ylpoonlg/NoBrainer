@@ -84,7 +84,7 @@ class _TodoPageState extends State<TodoPage> {
 
   void _addTodoItem() {
     Map newItem = Map.from(defaultTodoItem);
-    newItem["uuid"] = const Uuid().v1();
+    newItem["id"] = "todo-item-" + todoList.length.toString();
     newItem["deadline"] = DateTime.now().toString();
     todoList.add(newItem);
     _saveTodoList(); // Save to local storage first
@@ -98,16 +98,16 @@ class _TodoPageState extends State<TodoPage> {
     ));
   }
 
-  void _deleteTodoItem(uuid) {
+  void _deleteTodoItem(id) {
     todoList.removeWhere((item) {
-      return item["uuid"] == uuid;
+      return item["id"] == id;
     });
     _saveTodoList();
   }
 
   void _updateTodoItem(data) {
     for (int i = 0; i < todoList.length; i++) {
-      if (todoList[i]["uuid"] == data["uuid"]) {
+      if (todoList[i]["id"] == data["id"]) {
         todoList[i] = data;
       }
     }
@@ -140,7 +140,7 @@ class _TodoPageState extends State<TodoPage> {
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
       items.add(TodoItem(
-        key: Key("todoitem-" + sortedList[i]["uuid"]),
+        key: Key("todoitem-" + sortedList[i]["id"]),
         data: sortedList[i],
         onDelete: _deleteTodoItem,
         onUpdate: _updateTodoItem,

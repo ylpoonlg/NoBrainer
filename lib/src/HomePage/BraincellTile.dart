@@ -18,6 +18,14 @@ class BraincellTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = cell["color"];
+
+    // Calculate the the brightness of the tile and use suitable foreground color
+    final Color foregroundColor =
+        AppTheme.getColorBrightness(backgroundColor) < 0.5
+            ? AppTheme.color["white"]
+            : AppTheme.color["black"];
+
     return Container(
       margin: const EdgeInsets.all(5),
       child: Card(
@@ -38,9 +46,9 @@ class BraincellTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       "    " + typeLabel[cell["type"]].toString(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white60,
+                        color: foregroundColor.withAlpha(80),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -57,9 +65,9 @@ class BraincellTile extends StatelessWidget {
                           break;
                       }
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.more_vert,
-                      color: Colors.white,
+                      color: foregroundColor,
                     ),
                     itemBuilder: (context) {
                       return const [
@@ -76,7 +84,7 @@ class BraincellTile extends StatelessWidget {
                   cell["name"],
                   style: TextStyle(
                     fontSize: 24,
-                    color: AppTheme.color["white"],
+                    color: foregroundColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,

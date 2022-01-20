@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -7,6 +9,14 @@ class AppTheme {
   }
 
   static Map color = colors;
+
+  /// Returns the preceived brightness of a color
+  /// Value ranges from 0.0 to 1.0, the higher the value the brighter the color
+  static double getColorBrightness(Color color) {
+    return 0.3 * color.red / 255.0 +
+        0.59 * color.green / 255.0 +
+        0.11 * color.blue / 255.0;
+  }
 }
 
 const colors = {
@@ -22,8 +32,9 @@ const colors = {
   "purple": Color.fromARGB(255, 134, 44, 175),
   "teal": Color.fromARGB(255, 7, 194, 169),
   "white": Color.fromARGB(255, 248, 248, 248),
-  "black": Color.fromARGB(255, 15, 15, 15),
+  "light-gray": Color.fromARGB(255, 175, 175, 175),
   "gray": Color.fromARGB(255, 56, 58, 59),
+  "black": Color.fromARGB(255, 15, 15, 15),
 };
 
 ThemeData lightTheme = ThemeData(

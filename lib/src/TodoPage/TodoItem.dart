@@ -5,8 +5,7 @@ import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
 
 // Default TodoItem
 Map defaultTodoItem = {
-  "uuid": "generate uuid here",
-  "group": "localuser",
+  "id": "set todo item id",
   "status": "todo",
   "deadline": "a datetime object",
   "title": "New Task",
