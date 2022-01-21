@@ -77,65 +77,57 @@ class _ShopItemState extends State<ShopItem> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 80,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ShopItemDetails(
-                    onUpdate: widget.onUpdate,
-                    data: widget.data,
-                  )));
-        },
-        child: Row(
-          children: [
-            Checkbox(
-              value: status,
-              onChanged: _onSelectStatus,
-              activeColor: AppTheme.color["accent-primary"],
-              checkColor: AppTheme.color["white"],
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      horizontalTitleGap: 4,
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ShopItemDetails(
+            onUpdate: widget.onUpdate,
+            data: widget.data,
+          ),
+        ));
+      },
+      leading: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 0,
+        children: [
+          Checkbox(
+            value: status,
+            onChanged: _onSelectStatus,
+            activeColor: AppTheme.color["accent-primary"],
+            checkColor: AppTheme.color["white"],
+          ),
+          Container(
+            width: 36,
+            padding: const EdgeInsets.only(right: 10),
+            child: Text(
+              widget.data["quantity"].toString() + " x",
+              textAlign: TextAlign.end,
             ),
-            Container(
-              width: 40,
-              padding: const EdgeInsets.only(right: 10),
-              child: Text(
-                widget.data["quantity"].toString() + " x",
-                textAlign: TextAlign.end,
-              ),
-            ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(right: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.data["title"].toString(),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Container(height: 5),
-                    Text(
-                      widget.data["shop"].toString(),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            IconButton(
-                onPressed: () {
-                  _onDelete(context);
-                },
-                icon: const Icon(Icons.close)),
-          ],
+          ),
+        ],
+      ),
+      title: Text(
+        widget.data["title"].toString(),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      subtitle: Text(
+        widget.data["shop"].toString(),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+      trailing: IconButton(
+        onPressed: () {
+          _onDelete(context);
+        },
+        icon: const Icon(Icons.close),
       ),
     );
   }

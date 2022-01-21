@@ -108,58 +108,43 @@ class _TodoItemState extends State<TodoItem> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 80,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => TodoItemDetails(
-                    onUpdate: widget.onUpdate,
-                    data: widget.data,
-                  )));
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      horizontalTitleGap: 2,
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => TodoItemDetails(
+            onUpdate: widget.onUpdate,
+            data: widget.data,
+          ),
+        ));
+      },
+      leading: RawMaterialButton(
+        onPressed: () {
+          _onSelectStatus(context);
         },
-        child: Row(
-          children: [
-            RawMaterialButton(
-              onPressed: () {
-                _onSelectStatus(context);
-              },
-              fillColor: _getStatusColor(status),
-              shape: const CircleBorder(),
-            ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(right: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.data["title"],
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Container(height: 5),
-                    Text(
-                      dateFormat(DateTime.parse(widget.data["deadline"])),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            IconButton(
-                onPressed: () {
-                  _onDelete(context);
-                },
-                icon: const Icon(Icons.close)),
-          ],
+        fillColor: _getStatusColor(status),
+        shape: const CircleBorder(),
+      ),
+      title: Text(
+        widget.data["title"],
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      subtitle: Text(
+        dateFormat(DateTime.parse(widget.data["deadline"])),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+      trailing: IconButton(
+        onPressed: () {
+          _onDelete(context);
+        },
+        icon: const Icon(Icons.close),
       ),
     );
   }
