@@ -21,24 +21,17 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         scrollDirection: Axis.vertical,
         children: [
-          Container(
-            padding:
-                const EdgeInsets.only(left: 10, right: 10, top: 4, bottom: 4),
-            child: Row(
-              children: [
-                const Text("Dark Mode"),
-                const Spacer(),
-                Switch(
-                  value: (widget.sh.settings["theme"] ?? "light") == "dark",
-                  activeColor: Theme.of(context).primaryColor,
-                  onChanged: (value) {
-                    setState(() {
-                      widget.sh.settings["theme"] = value ? "dark" : "light";
-                      widget.sh.saveSettings();
-                    });
-                  },
-                )
-              ],
+          ListTile(
+            title: const Text("Dark Mode"),
+            trailing: Switch(
+              value: (widget.sh.settings["theme"] ?? "light") == "dark",
+              activeColor: Theme.of(context).primaryColor,
+              onChanged: (value) {
+                setState(() {
+                  widget.sh.settings["theme"] = value ? "dark" : "light";
+                  widget.sh.saveSettings();
+                });
+              },
             ),
           ),
         ],

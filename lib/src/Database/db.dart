@@ -6,6 +6,7 @@ class DbHelper {
   static dynamic database;
 
   static const dbName = "nobrainer.db";
+  static const int dbVersion = 2;
 
   DbHelper();
 
@@ -25,7 +26,7 @@ class DbHelper {
           await db.execute("UPDATE braincells SET orderIndex=0;");
         }
       },
-      version: 2,
+      version: dbVersion,
     );
 
     await _debug();

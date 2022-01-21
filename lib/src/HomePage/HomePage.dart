@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/AboutPage/AboutPage.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/HomePage/BraincellTile.dart';
 import 'package:nobrainer/src/HomePage/ImportBraincell.dart';
@@ -335,6 +336,23 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+            // About
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('About'),
+              onTap: () {
+                setState(() {
+                  isExpandAddOptions = false;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AboutPage(),
+                    ),
+                  );
+                });
+              },
+            ),
+            // Settings
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
