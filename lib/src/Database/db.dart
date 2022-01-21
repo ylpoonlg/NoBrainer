@@ -18,7 +18,14 @@ class DbHelper {
       onCreate: (db, version) async {
         _createTables(db);
       },
-      version: 1,
+      onUpgrade: (db, oldver, newver) async {
+        if (oldver < 2) {
+          await db
+              .execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
+          await db.execute("UPDATE braincells SET orderIndex=0;");
+        }
+      },
+      version: 2,
     );
 
     await _debug();
@@ -28,7 +35,7 @@ class DbHelper {
     await db.execute(
       '''CREATE TABLE braincells (
         uuid TEXT PRIMARY KEY,
-        index INTEGER UNIQUE,
+        orderIndex INTEGER,
         props TEXT,
         content TEXT
       );''',
@@ -47,7 +54,7 @@ class DbHelper {
 
       // await db.execute("DROP TABLE braincells;");
       // await db.execute("DROP TABLE settings;");
-      // _createTables(db);
+      //_createTables(db);
     } catch (e) {}
   }
 }

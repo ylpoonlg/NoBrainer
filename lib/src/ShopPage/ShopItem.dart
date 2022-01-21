@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
 
 // Default ShopItem
@@ -91,6 +92,8 @@ class _ShopItemState extends State<ShopItem> {
             Checkbox(
               value: status,
               onChanged: _onSelectStatus,
+              activeColor: AppTheme.color["accent-primary"],
+              checkColor: AppTheme.color["white"],
             ),
             Container(
               width: 40,
