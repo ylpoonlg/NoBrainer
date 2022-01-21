@@ -28,6 +28,7 @@ class DbHelper {
     await db.execute(
       '''CREATE TABLE braincells (
         uuid TEXT PRIMARY KEY,
+        index INTEGER UNIQUE,
         props TEXT,
         content TEXT
       );''',
@@ -41,6 +42,9 @@ class DbHelper {
     final Database db = await database;
 
     try {
+      //await db.execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
+      //await db.execute("UPDATE braincells SET orderIndex=0;");
+
       // await db.execute("DROP TABLE braincells;");
       // await db.execute("DROP TABLE settings;");
       // _createTables(db);

@@ -10,6 +10,7 @@ import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
+import 'package:reorderable_grid/reorderable_grid.dart';
 import 'package:sqflite/sqflite.dart';
 
 class HomePage extends StatefulWidget {
@@ -61,9 +62,12 @@ class _HomePageState extends State<HomePage> {
     });
 
     final Database db = await DbHelper.database;
-    for (final cell in braincells) {
+    for (var i = 0; i < braincells.length; i++) {
+      final cell = braincells[i];
+
       // Create value map for insert/update operations
       final values = {
+        'orderIndex': i,
         'props': json.encode({
           "name": cell["name"],
           "type": cell["type"],
@@ -112,7 +116,8 @@ class _HomePageState extends State<HomePage> {
   /// Sets isBraincellsLoaded = true when complete
   _loadBraincells() async {
     final Database db = await DbHelper.database;
-    final List<dynamic> dbMap = await db.query("braincells");
+    final List<dynamic> dbMap =
+        await db.query("braincells", orderBy: "orderIndex");
 
     if (dbMap.isEmpty) {
       braincells = [];
@@ -158,6 +163,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   _editBraincell(cell) {
+    setState(() {
+      isExpandAddOptions = false;
+    });
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NewBraincell(
@@ -214,11 +222,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  _onReorder(oldIndex, newIndex) {
+    final cell = braincells.removeAt(oldIndex);
+    braincells.insert(newIndex, cell);
+    _saveBraincell();
+  }
+
   /// Returns a list of BraincellTiles
   List<Widget> getBraincellList() {
     return braincells
         .map(
           (cell) => BraincellTile(
+            key: Key("braincell-tile-" + cell["uuid"]),
             cell: cell,
             page: cellMap(cell)["page"],
             onDelete: _deleteBraincell,
@@ -324,10 +339,15 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.push(
+                setState(() {
+                  isExpandAddOptions = false;
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => SettingsPage(sh: widget.sh)));
+                      builder: (context) => SettingsPage(sh: widget.sh),
+                    ),
+                  );
+                });
               },
             ),
           ],
@@ -345,10 +365,16 @@ class _HomePageState extends State<HomePage> {
                   color: AppTheme.color["accent-primary"],
                 ),
               )
-            : GridView.count(
-                crossAxisCount: 2,
-                childAspectRatio: 2 / 3,
-                children: getBraincellList(),
+            : Container(
+                margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
+                child: ReorderableGridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2 / 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: getBraincellList(),
+                  onReorder: _onReorder,
+                ),
               ),
       ),
     );

@@ -28,7 +28,6 @@ class BraincellTile extends StatelessWidget {
             : AppTheme.color["black"];
 
     return Container(
-      margin: const EdgeInsets.all(5),
       child: Card(
         color: cell["color"],
         child: InkWell(

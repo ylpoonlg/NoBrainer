@@ -83,7 +83,6 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
               onChanged: (text) {
                 data["shop"] = text;
               },
-              keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: "Shop",
                 hintText: "Where can you buy this from?",
