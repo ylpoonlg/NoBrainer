@@ -316,7 +316,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text(
-          "No Brainer",
+          "NoBrainer",
           style: TextStyle(color: Colors.white),
         ),
       ),

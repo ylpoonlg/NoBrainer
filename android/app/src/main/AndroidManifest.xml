@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ylpoonlg.nobrainer">
    <application
-        android:label="No Brainer"
+        android:label="NoBrainer"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
