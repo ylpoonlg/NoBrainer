@@ -8,6 +8,7 @@ Map defaultShopItem = {
   "id": "set shop item id",
   "quantity": "1",
   "shop": "",
+  "price": 0,
   "status": false,
   "title": "New Item",
   "desc": "",

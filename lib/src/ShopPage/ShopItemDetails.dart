@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,10 +19,21 @@ class ShopItemDetails extends StatefulWidget {
 
 class _ShopItemsDetailsState extends State<ShopItemDetails> {
   final Map data;
+  bool pricePerItem = false;
+
   _ShopItemsDetailsState(this.data);
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    const EdgeInsetsGeometry listTilePadding = EdgeInsets.only(
+      top: 16,
+      left: 16,
+      right: 16,
+      bottom: 0,
+    );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -28,6 +41,11 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
         actions: [
           MaterialButton(
             onPressed: () {
+              if (pricePerItem) {
+                data["price"] = data["price"] ?? 0;
+                data["price"] *=
+                    double.tryParse(data["quantity"].toString()) ?? 1;
+              }
               widget.onUpdate(data);
               Navigator.of(context).pop();
             },
@@ -41,10 +59,9 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
       body: ListView(
         children: [
           // Title
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
+          ListTile(
+            contentPadding: listTilePadding,
+            title: TextField(
               controller: TextEditingController(text: data["title"]),
               onChanged: (text) {
                 data["title"] = text;
@@ -56,29 +73,77 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
               ),
             ),
           ),
-          // Quantity
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
-              controller: TextEditingController(text: data["quantity"]),
-              onChanged: (text) {
-                data["quantity"] = text;
-              },
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "Quantity",
-                hintText: "How many of this do you want?",
-                border: OutlineInputBorder(),
-              ),
+
+          ListTile(
+            contentPadding: listTilePadding,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Quantity
+                SizedBox(
+                  width: screenWidth / 3,
+                  child: TextField(
+                    controller: TextEditingController(
+                        text: data["quantity"] != null
+                            ? data["quantity"].toString()
+                            : "1"),
+                    onChanged: (text) {
+                      data["quantity"] = int.tryParse(text) ?? 1;
+                    },
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      prefixText: "x ",
+                      labelText: "Quantity",
+                      hintText: "How many of this do you want?",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                // Price
+                SizedBox(
+                  width: screenWidth / 3,
+                  child: TextField(
+                    controller: TextEditingController(
+                        text: data["price"] != null
+                            ? data["price"].toString()
+                            : "0"),
+                    onChanged: (text) {
+                      data["price"] = double.tryParse(text) ?? 0;
+                    },
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      prefixText: "\$ ",
+                      labelText: "Price",
+                      hintText: "How much is this?",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                // Per Item
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text("per item?"),
+                    Checkbox(
+                      value: pricePerItem,
+                      onChanged: (value) {
+                        setState(() {
+                          pricePerItem = value ?? false;
+                        });
+                      },
+                      activeColor: AppTheme.color["accent-primary"],
+                      checkColor: AppTheme.color["white"],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
           // Shop
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
+          ListTile(
+            contentPadding: listTilePadding,
+            title: TextField(
               controller: TextEditingController(text: data["shop"]),
               onChanged: (text) {
                 data["shop"] = text;
@@ -92,10 +157,9 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ),
 
           // Description box
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
+          ListTile(
+            contentPadding: listTilePadding,
+            title: TextField(
               controller: TextEditingController(text: data["desc"]),
               onChanged: (text) {
                 data["desc"] = text;
@@ -114,19 +178,4 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
       ),
     );
   }
-}
-
-String dateFormat(DateTime date) {
-  String YYYY = date.year.toString();
-  String MM = date.month.toString();
-  String DD = date.day.toString();
-
-  String hh = date.hour.toString();
-  String mm = date.minute.toString();
-
-  if (MM.length < 2) MM = "0" + MM;
-  if (DD.length < 2) DD = "0" + DD;
-  if (hh.length < 2) hh = "0" + hh;
-  if (mm.length < 2) mm = "0" + mm;
-  return "$YYYY-$MM-$DD $hh:$mm";
 }

@@ -32,10 +32,6 @@ class _ShopPageState extends State<ShopPage> {
   // Updates braincell content in database
   // Braincell must exist already in database.
   void _saveShopList() async {
-    // setState(() {
-    //   isShopListLoaded = false;
-    // });
-
     final Database db = await DbHelper.database;
     await db.update(
       "braincells",
