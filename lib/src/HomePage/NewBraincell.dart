@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class NewBraincell extends StatefulWidget {
@@ -159,6 +157,9 @@ class _NewBraincellState extends State<NewBraincell> {
                       PopupMenuItem<String>(
                           value: "shoplist",
                           child: Text(typeLabel["shoplist"].toString())),
+                      PopupMenuItem<String>(
+                          value: "finance",
+                          child: Text(typeLabel["finance"].toString())),
                     ];
                   },
                 )

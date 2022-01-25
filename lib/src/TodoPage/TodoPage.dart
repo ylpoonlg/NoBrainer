@@ -54,6 +54,7 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   void _loadTodoList() async {
+    debugPrint("Loading Todo List");
     final Database db = await DbHelper.database;
     final List<dynamic> dbMap = await db.query(
       "braincells",
@@ -93,6 +94,10 @@ class _TodoPageState extends State<TodoPage> {
     todoList.removeWhere((item) {
       return item["id"] == id;
     });
+    // Update id
+    for (int i = 0; i < todoList.length; i++) {
+      todoList[i]["id"] = "todo-item-" + i.toString();
+    }
     _saveTodoList();
   }
 
@@ -100,6 +105,7 @@ class _TodoPageState extends State<TodoPage> {
     for (int i = 0; i < todoList.length; i++) {
       if (todoList[i]["id"] == data["id"]) {
         todoList[i] = data;
+        break;
       }
     }
     _saveTodoList();
@@ -112,20 +118,24 @@ class _TodoPageState extends State<TodoPage> {
     List<Map> sortedList = List.from(todoList);
 
     sortedList.sort((i, j) {
+      const Map<String, int> statusValue = {
+        "urgent": 1,
+        "todo": 2,
+        "ongoing": 3,
+        "completed": 4,
+      };
+      var iStatus = statusValue[i["status"]] ?? 0;
+      var jStatus = statusValue[j["status"]] ?? 0;
+      var iTime = DateTime.parse(i["deadline"]);
+      var jTime = DateTime.parse(j["deadline"]);
+
       if (todoSortMode == "status") {
-        const Map<String, int> statusValue = {
-          "urgent": 1,
-          "todo": 2,
-          "ongoing": 3,
-          "completed": 4,
-        };
-        int a = statusValue[i["status"]] ?? 0;
-        int b = statusValue[j["status"]] ?? 0;
-        return a.compareTo(b);
+        int cmpStatus = iStatus.compareTo(jStatus);
+        // If same status, sort by deadline
+        return cmpStatus == 0 ? iTime.compareTo(jTime) : cmpStatus;
       }
       // Default to deadline mode
-      return DateTime.parse(i["deadline"])
-          .compareTo(DateTime.parse(j["deadline"]));
+      return iTime.compareTo(jTime);
     });
 
     List<Widget> items = [];

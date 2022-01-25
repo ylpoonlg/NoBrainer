@@ -8,6 +8,7 @@ import 'package:nobrainer/res/Theme/AppTheme.dart';
 Map<String, String> typeLabel = {
   "todolist": "Todo List",
   "shoplist": "Shopping List",
+  "finance": "Finance",
   "select": "Select a type",
 };
 

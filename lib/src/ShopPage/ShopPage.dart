@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
@@ -71,7 +72,6 @@ class _ShopPageState extends State<ShopPage> {
   void _addShopItem() {
     Map newItem = Map.from(defaultShopItem);
     newItem["id"] = "shop-item-" + shopList.length.toString();
-    newItem["deadline"] = DateTime.now().toString();
     shopList.add(newItem);
     _saveShopList(); // Save to local storage first
 
@@ -88,6 +88,10 @@ class _ShopPageState extends State<ShopPage> {
     shopList.removeWhere((item) {
       return item["id"] == id;
     });
+    // Update id
+    for (int i = 0; i < shopList.length; i++) {
+      shopList[i]["id"] = "shop-item-" + i.toString();
+    }
     _saveShopList();
   }
 
@@ -95,6 +99,7 @@ class _ShopPageState extends State<ShopPage> {
     for (int i = 0; i < shopList.length; i++) {
       if (shopList[i]["id"] == data["id"]) {
         shopList[i] = data;
+        break;
       }
     }
     _saveShopList();

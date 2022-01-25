@@ -17,6 +17,24 @@ class AppTheme {
         0.59 * color.green / 255.0 +
         0.11 * color.blue / 255.0;
   }
+
+  static Map colorToMap(Color clr) {
+    return {
+      "red": clr.red,
+      "green": clr.green,
+      "blue": clr.blue,
+      "opacity": clr.opacity,
+    };
+  }
+
+  static Color mapToColor(Map xmap) {
+    return Color.fromRGBO(
+      xmap["red"],
+      xmap["green"],
+      xmap["blue"],
+      xmap["opacity"],
+    );
+  }
 }
 
 const colors = {

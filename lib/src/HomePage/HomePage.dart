@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/AboutPage/AboutPage.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/FinancePage/FinancePage.dart';
 import 'package:nobrainer/src/HomePage/BraincellTile.dart';
 import 'package:nobrainer/src/HomePage/ImportBraincell.dart';
 import 'package:nobrainer/src/HomePage/NewBraincell.dart';
@@ -46,6 +48,12 @@ class _HomePageState extends State<HomePage> {
           uuid: cell["uuid"],
         ),
       };
+    } else if (cell["type"] == "finance") {
+      return {
+        "page": FinancePage(
+          uuid: cell["uuid"],
+        ),
+      };
     } else {
       return {
         "page": TodoPage(
@@ -73,12 +81,7 @@ class _HomePageState extends State<HomePage> {
           "name": cell["name"],
           "type": cell["type"],
           "imported": cell["imported"],
-          "color": {
-            "red": cell["color"].red,
-            "green": cell["color"].green,
-            "blue": cell["color"].blue,
-            "opacity": cell["color"].opacity,
-          },
+          "color": AppTheme.colorToMap(cell["color"]),
         }),
       };
 
@@ -131,12 +134,7 @@ class _HomePageState extends State<HomePage> {
           "name": props["name"],
           "type": props["type"],
           "imported": props["imported"],
-          "color": Color.fromRGBO(
-            props["color"]["red"],
-            props["color"]["green"],
-            props["color"]["blue"],
-            props["color"]["opacity"],
-          ),
+          "color": AppTheme.mapToColor(props["color"]),
         });
       }
     }
@@ -312,6 +310,8 @@ class _HomePageState extends State<HomePage> {
   ///
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -387,7 +387,7 @@ class _HomePageState extends State<HomePage> {
                 margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
                 child: ReorderableGridView.count(
                   crossAxisCount: 2,
-                  childAspectRatio: 2 / 3,
+                  childAspectRatio: (screenWidth > screenHeight) ? 1.75 : 0.75,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                   children: getBraincellList(),

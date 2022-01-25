@@ -6,6 +6,8 @@ class DbHelper {
   static dynamic database;
 
   static const dbName = "nobrainer.db";
+
+  /// Current database version, increment by one for major updates
   static const int dbVersion = 2;
 
   DbHelper();
@@ -20,6 +22,7 @@ class DbHelper {
         _createTables(db);
       },
       onUpgrade: (db, oldver, newver) async {
+        // Reorder braincells
         if (oldver < 2) {
           await db
               .execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
