@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItem.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 
@@ -21,6 +22,8 @@ class FinancePage extends StatefulWidget {
 class _FinancePageState extends State<FinancePage> {
   List<dynamic> financeList = []; // Current status of the shopping list
   bool isFinanceListLoaded = false;
+
+  List<Map> categories = [];
 
   _FinancePageState() : super() {
     _loadFinanceList();
@@ -59,6 +62,8 @@ class _FinancePageState extends State<FinancePage> {
     } else {
       financeList = json.decode(dbMap[0]["content"] ?? "[]");
     }
+
+    await _getCategories();
 
     setState(() {
       isFinanceListLoaded = true;
@@ -102,17 +107,34 @@ class _FinancePageState extends State<FinancePage> {
     _saveFinanceList();
   }
 
+  _getCategories() async {
+    await CategoryListState.getCategories();
+    categories = CategoryListState.categories;
+  }
+
   /// Sort the list according to the sort mode.
   ///
-  /// Returns widgets of the shopping list.
-  List<Widget> _getShopList() {
+  /// Returns widgets of the finance list.
+  List<Widget> _getFinanceList() {
     List<Map> sortedList = List.from(financeList);
 
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
+      Map catData = {
+        "cat": "",
+        "icon": Icons.currency_exchange,
+        "color": AppTheme.color["gray"],
+      };
+      categories.forEach((cat) {
+        if (cat["cat"] == sortedList[i]["cat"]) {
+          catData = cat;
+        }
+      });
+
       items.add(FinanceItem(
-        key: Key("financeitem-" + sortedList[i]["id"]),
+        key: Key(sortedList[i]["id"]),
         data: sortedList[i],
+        catData: catData,
         onDelete: _deleteFinanceItem,
         onUpdate: _updateFinanceItem,
       ));
@@ -122,6 +144,9 @@ class _FinancePageState extends State<FinancePage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -131,18 +156,39 @@ class _FinancePageState extends State<FinancePage> {
       body: isFinanceListLoaded
           ? ListView(
               key: const Key("financelistview"),
-              children: _getShopList(),
+              children: _getFinanceList(),
             )
           : Center(
               child: CircularProgressIndicator(
                 color: AppTheme.color["accent-primary"],
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.color["accent-primary"],
-        foregroundColor: AppTheme.color["white"],
-        child: const Icon(Icons.add),
-        onPressed: _addFinanceItem,
+      floatingActionButton: Wrap(
+        direction: Axis.vertical,
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: FloatingActionButton(
+              heroTag: "finance-income-button",
+              backgroundColor: AppTheme.color["accent-secondary"],
+              foregroundColor: AppTheme.color["white"],
+              child: const Icon(Icons.trending_up),
+              onPressed: _addFinanceItem,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: FloatingActionButton(
+              heroTag: "finance-spending-button",
+              backgroundColor: AppTheme.color["accent-primary"],
+              foregroundColor: AppTheme.color["white"],
+              child: const Icon(Icons.credit_card),
+              onPressed: _addFinanceItem,
+            ),
+          ),
+        ],
       ),
     );
   }

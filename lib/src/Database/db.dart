@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -8,7 +12,7 @@ class DbHelper {
   static const dbName = "nobrainer.db";
 
   /// Current database version, increment by one for major updates
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   DbHelper();
 
@@ -27,6 +31,17 @@ class DbHelper {
           await db
               .execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
           await db.execute("UPDATE braincells SET orderIndex=0;");
+        }
+        // Custom Categories
+        if (oldver < 3) {
+          await db.insert(
+            "settings",
+            {
+              "name": "finance-custom-cat",
+              "value": "[]",
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
       },
       version: dbVersion,
@@ -53,12 +68,10 @@ class DbHelper {
     final Database db = await database;
 
     try {
-      //await db.execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
-      //await db.execute("UPDATE braincells SET orderIndex=0;");
+      // DB operations
 
-      // await db.execute("DROP TABLE braincells;");
-      // await db.execute("DROP TABLE settings;");
-      //_createTables(db);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("database debug operation error:\n" + e.toString());
+    }
   }
 }

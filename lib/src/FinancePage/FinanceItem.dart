@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 
 // Default FinanceItem
 Map defaultFinanceItem = {
   "id": "set finance item id",
   "time": "a datetime object",
-  "amount": 0,
+  "amount": 0.00,
   "title": "New Item",
-  "cat": "general",
+  "cat": "",
   "color": AppTheme.colorToMap(AppTheme.color["gray"]),
   "desc": "",
 };
 
 class FinanceItem extends StatefulWidget {
-  Map data;
+  Map data, catData;
   Function onDelete, onUpdate;
 
   FinanceItem({
     required Map this.data,
     required Function this.onDelete,
     required this.onUpdate,
+    required this.catData,
     Key? key,
   }) : super(key: key);
 
@@ -61,10 +63,6 @@ class _FinanceItemState extends State<FinanceItem> {
     );
   }
 
-  Map<String, IconData> categoryIcon = {
-    "general": Icons.group_work,
-  };
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -78,12 +76,24 @@ class _FinanceItemState extends State<FinanceItem> {
           ),
         ));
       },
-      leading: Container(
-        padding: const EdgeInsets.only(left: 10),
-        child: Icon(
-          categoryIcon[widget.data["cat"] ?? "general"],
-          color: AppTheme.mapToColor(widget.data["color"]),
-        ),
+      leading: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            width: 36,
+            padding: const EdgeInsets.only(left: 10),
+            child: Icon(
+              widget.catData["icon"],
+              color: widget.catData["color"],
+            ),
+          ),
+          Container(
+            width: 64,
+            padding: const EdgeInsets.only(left: 6),
+            child: Text("\$" + widget.data["amount"].toString()),
+          ),
+        ],
       ),
       title: Text(
         widget.data["title"].toString(),

@@ -1,9 +1,6 @@
-import 'dart:ffi';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 
 class FinanceItemDetails extends StatefulWidget {
   Map data;
@@ -18,17 +15,31 @@ class FinanceItemDetails extends StatefulWidget {
 }
 
 class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
+  /// A copy of the original data
   final Map data;
+  Map? currentCategory = null;
 
-  _FinanceItemsDetailsState(this.data);
+  _FinanceItemsDetailsState(this.data) {
+    _getCategories();
+  }
 
-  List getCategories() {
-    return [
-      {
-        "cat": "",
-        "color": AppTheme.color["gray"],
+  _getCategories() async {
+    await CategoryListState.getCategories();
+    CategoryListState.categories.forEach((cat) {
+      if (cat["cat"] == data["cat"]) {
+        currentCategory = cat;
       }
-    ];
+    });
+    setState(() {});
+  }
+
+  /// onSelect called from category list
+  _onSelectCategory(Map cat) {
+    setState(() {
+      currentCategory = cat;
+      data["cat"] = cat["cat"];
+    });
+    Navigator.of(context).pop();
   }
 
   @override
@@ -105,18 +116,14 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                 showDialog(
                     context: context,
                     builder: (context) {
+                      // Show Category Selector
                       return AlertDialog(
                         title: const Text("Category"),
                         content: SizedBox(
                           width: screenWidth,
                           height: screenHeight,
-                          child: ListView(
-                            children: [
-                              ListTile(
-                                onTap: () {},
-                                title: const Text("General"),
-                              ),
-                            ],
+                          child: CategoryList(
+                            onSelect: _onSelectCategory,
                           ),
                         ),
                         actions: [
@@ -130,16 +137,21 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                       );
                     });
               },
+              // Current Category Button
               child: Row(
-                children: [
-                  Icon(
-                    Icons.group_work,
-                  ),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Text("General"),
-                ],
+                children: (currentCategory == null)
+                    ? [const Text("Select a Category")]
+                    : [
+                        Icon(
+                          currentCategory!["icon"],
+                          color: currentCategory!["color"],
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          currentCategory!["cat"],
+                          style: TextStyle(color: currentCategory!["color"]),
+                        ),
+                      ],
               ),
             ),
           ),

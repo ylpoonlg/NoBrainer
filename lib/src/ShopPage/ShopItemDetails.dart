@@ -1,8 +1,4 @@
-import 'dart:ffi';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 
 class ShopItemDetails extends StatefulWidget {

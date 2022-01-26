@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -9,6 +7,8 @@ class AppTheme {
   }
 
   static Map color = colors;
+
+  static Map icon = icons;
 
   /// Returns the preceived brightness of a color
   /// Value ranges from 0.0 to 1.0, the higher the value the brighter the color
@@ -54,6 +54,12 @@ const colors = {
   "light-gray": Color.fromARGB(255, 175, 175, 175),
   "gray": Color.fromARGB(255, 56, 58, 59),
   "black": Color.fromARGB(255, 15, 15, 15),
+};
+
+const icons = {
+  "general": Icons.group_work,
+  "food": Icons.food_bank,
+  "train": Icons.train,
 };
 
 ThemeData lightTheme = ThemeData(
