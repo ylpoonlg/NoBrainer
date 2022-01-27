@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 
 // Default FinanceItem
 Map defaultFinanceItem = {
@@ -103,6 +102,9 @@ class _FinanceItemState extends State<FinanceItem> {
         ),
         overflow: TextOverflow.ellipsis,
         maxLines: 2,
+      ),
+      subtitle: Text(
+        DateTimeFormat.dateFormat(DateTime.parse(widget.data["time"])),
       ),
       trailing: IconButton(
         onPressed: () {

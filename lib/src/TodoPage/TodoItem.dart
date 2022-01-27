@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 
 // Default TodoItem
 Map defaultTodoItem = {
@@ -136,7 +137,7 @@ class _TodoItemState extends State<TodoItem> {
         maxLines: 2,
       ),
       subtitle: Text(
-        dateFormat(DateTime.parse(widget.data["deadline"])),
+        DateTimeFormat.dateFormat(DateTime.parse(widget.data["deadline"])),
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
       ),

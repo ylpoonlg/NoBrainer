@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class FinanceItemDetails extends StatefulWidget {
   Map data;
@@ -77,7 +78,7 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(text: data["title"]),
+              controller: TextEditor.getController(data["title"]),
               onChanged: (text) {
                 data["title"] = text;
               },
@@ -93,9 +94,8 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(
-                  text:
-                      data["amount"] != null ? data["amount"].toString() : "0"),
+              controller: TextEditor.getController(
+                  data["amount"] != null ? data["amount"].toString() : "0"),
               onChanged: (text) {
                 data["amount"] = double.tryParse(text) ?? 0;
               },
@@ -160,7 +160,7 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(text: data["desc"]),
+              controller: TextEditor.getController(data["desc"]),
               onChanged: (text) {
                 data["desc"] = text;
               },

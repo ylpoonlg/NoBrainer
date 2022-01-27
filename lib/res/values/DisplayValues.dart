@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 
 /*
@@ -61,5 +62,44 @@ List todoStatus = [
     "label": "Completed",
     "value": "completed",
     "color": AppTheme.color["green"],
+  },
+];
+
+/// Default finance categories
+final List<Map> defaultCategories = [
+  {
+    "cat": "General",
+    "icon": Icons.group_work,
+    "color": AppTheme.color["gray"],
+  },
+  {
+    "cat": "Shopping",
+    "icon": Icons.shop,
+    "color": AppTheme.color["cyan"],
+  },
+  {
+    "cat": "Restaurant",
+    "icon": Icons.food_bank,
+    "color": AppTheme.color["orange"],
+  },
+  {
+    "cat": "Groceries",
+    "icon": Icons.apple,
+    "color": AppTheme.color["red"],
+  },
+  {
+    "cat": "Transport",
+    "icon": Icons.train,
+    "color": AppTheme.color["green"],
+  },
+  {
+    "cat": "Friends",
+    "icon": Icons.people,
+    "color": AppTheme.color["yellow"],
+  },
+  {
+    "cat": "Bills",
+    "icon": Icons.receipt,
+    "color": AppTheme.color["purple"],
   },
 ];

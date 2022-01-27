@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
+import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class TodoItemDetails extends StatefulWidget {
   Map data;
@@ -51,6 +53,16 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    const EdgeInsetsGeometry listTilePadding = EdgeInsets.only(
+      top: 16,
+      left: 16,
+      right: 16,
+      bottom: 0,
+    );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -70,11 +82,11 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
       ),
       body: ListView(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
-              controller: TextEditingController(text: data["title"]),
+          // Title
+          ListTile(
+            contentPadding: listTilePadding,
+            title: TextField(
+              controller: TextEditor.getController(data["title"]),
               onChanged: (text) {
                 data["title"] = text;
               },
@@ -85,11 +97,12 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextField(
-              controller: TextEditingController(text: data["desc"]),
+
+          // Description
+          ListTile(
+            contentPadding: listTilePadding,
+            title: TextField(
+              controller: TextEditor.getController(data["desc"]),
               onChanged: (text) {
                 data["desc"] = text;
               },
@@ -103,38 +116,22 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: Row(
-              children: [
-                const Text("Deadline"),
-                const Spacer(),
-                MaterialButton(
-                  onPressed: () {
-                    _onSelectDeadline(context);
-                  },
-                  child: Text(dateFormat(DateTime.parse(data["deadline"]))),
-                )
-              ],
+
+          // Deadline
+          ListTile(
+            contentPadding: listTilePadding,
+            title: const Text("Deadline"),
+            trailing: MaterialButton(
+              onPressed: () {
+                _onSelectDeadline(context);
+              },
+              child: Text(
+                DateTimeFormat.dateFormat(DateTime.parse(data["deadline"])),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-String dateFormat(DateTime date) {
-  String YYYY = date.year.toString();
-  String MM = date.month.toString();
-  String DD = date.day.toString();
-
-  String hh = date.hour.toString();
-  String mm = date.minute.toString();
-
-  if (MM.length < 2) MM = "0" + MM;
-  if (DD.length < 2) DD = "0" + DD;
-  if (hh.length < 2) hh = "0" + hh;
-  if (mm.length < 2) mm = "0" + mm;
-  return "$YYYY-$MM-$DD $hh:$mm";
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class ShopItemDetails extends StatefulWidget {
   Map data;
@@ -58,7 +59,7 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(text: data["title"]),
+              controller: TextEditor.getController(data["title"]),
               onChanged: (text) {
                 data["title"] = text;
               },
@@ -79,8 +80,8 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                 SizedBox(
                   width: screenWidth / 3,
                   child: TextField(
-                    controller: TextEditingController(
-                        text: data["quantity"] != null
+                    controller: TextEditor.getController(
+                        data["quantity"] != null
                             ? data["quantity"].toString()
                             : "1"),
                     onChanged: (text) {
@@ -99,10 +100,8 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                 SizedBox(
                   width: screenWidth / 3,
                   child: TextField(
-                    controller: TextEditingController(
-                        text: data["price"] != null
-                            ? data["price"].toString()
-                            : "0"),
+                    controller: TextEditor.getController(
+                        data["price"] != null ? data["price"].toString() : "0"),
                     onChanged: (text) {
                       data["price"] = double.tryParse(text) ?? 0;
                     },
@@ -140,7 +139,7 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(text: data["shop"]),
+              controller: TextEditor.getController(data["shop"]),
               onChanged: (text) {
                 data["shop"] = text;
               },
@@ -156,7 +155,7 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditingController(text: data["desc"]),
+              controller: TextEditor.getController(data["desc"]),
               onChanged: (text) {
                 data["desc"] = text;
               },

@@ -63,7 +63,7 @@ class _FinancePageState extends State<FinancePage> {
       financeList = json.decode(dbMap[0]["content"] ?? "[]");
     }
 
-    await _getCategories();
+    await CategoryListState.getCategories();
 
     setState(() {
       isFinanceListLoaded = true;
@@ -107,11 +107,6 @@ class _FinancePageState extends State<FinancePage> {
     _saveFinanceList();
   }
 
-  _getCategories() async {
-    await CategoryListState.getCategories();
-    categories = CategoryListState.categories;
-  }
-
   /// Sort the list according to the sort mode.
   ///
   /// Returns widgets of the finance list.
@@ -125,7 +120,7 @@ class _FinancePageState extends State<FinancePage> {
         "icon": Icons.currency_exchange,
         "color": AppTheme.color["gray"],
       };
-      categories.forEach((cat) {
+      CategoryListState.categories.forEach((cat) {
         if (cat["cat"] == sortedList[i]["cat"]) {
           catData = cat;
         }

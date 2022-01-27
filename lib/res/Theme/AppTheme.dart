@@ -60,6 +60,7 @@ const icons = {
   "general": Icons.group_work,
   "food": Icons.food_bank,
   "train": Icons.train,
+  "alarm": Icons.alarm,
 };
 
 ThemeData lightTheme = ThemeData(
