@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
+import 'package:sqflite/sqflite.dart';
 
 // Default ShopItem
 Map defaultShopItem = {
@@ -31,9 +34,11 @@ class ShopItem extends StatefulWidget {
 
 class _ShopItemState extends State<ShopItem> {
   bool status = false;
+  String currency = "\$";
 
   _ShopItemState(data) {
     status = data["status"] ?? status;
+    getCurrencySymbol();
   }
 
   /// Show delete confirmation popup.
@@ -76,6 +81,20 @@ class _ShopItemState extends State<ShopItem> {
     });
   }
 
+  getCurrencySymbol() async {
+    final Database db = await DbHelper.database;
+    final dbMap = await db.query(
+      "settings",
+      where: "name = ?",
+      whereArgs: ["currency"],
+    );
+    if (dbMap.isNotEmpty) {
+      setState(() {
+        currency = currencySymbol[dbMap[0]["value"]] ?? "\$";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -86,6 +105,7 @@ class _ShopItemState extends State<ShopItem> {
           builder: (context) => ShopItemDetails(
             onUpdate: widget.onUpdate,
             data: widget.data,
+            currency: currency,
           ),
         ));
       },

@@ -6,9 +6,14 @@ import 'package:nobrainer/src/Widgets/TextEditor.dart';
 class FinanceItemDetails extends StatefulWidget {
   Map data;
   Function onUpdate;
+  String currency;
 
-  FinanceItemDetails({required this.data, required this.onUpdate, Key? key})
-      : super(key: key);
+  FinanceItemDetails({
+    required this.data,
+    required this.onUpdate,
+    this.currency = "\$",
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() =>
@@ -43,6 +48,30 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
     Navigator.of(context).pop();
   }
 
+  void validateData() {
+    if (data["title"].length > 0 && data["amount"] >= 0) {
+      widget.onUpdate(data);
+      Navigator.of(context).pop();
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Invalid Input"),
+          content: const Text(
+              "Please check that the title must not be empty and amount must not be a negative number."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Ok"),
+            )
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -58,13 +87,10 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text("Edit Finance"),
+        title: Text(data["spending"] ?? true ? "Edit Spending" : "Edit Income"),
         actions: [
           MaterialButton(
-            onPressed: () {
-              widget.onUpdate(data);
-              Navigator.of(context).pop();
-            },
+            onPressed: validateData,
             child: const Text(
               "Save",
               style: TextStyle(color: Colors.white),
@@ -94,16 +120,17 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(
-                  data["amount"] != null ? data["amount"].toString() : "0"),
+              controller: TextEditor.getController(data["amount"] != null
+                  ? data["amount"].toStringAsFixed(2)
+                  : "0"),
               onChanged: (text) {
                 data["amount"] = double.tryParse(text) ?? 0;
               },
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                prefixText: "\$ ",
+              decoration: InputDecoration(
+                prefixText: widget.currency + " ",
                 labelText: "Amount",
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),

@@ -70,10 +70,11 @@ class _FinancePageState extends State<FinancePage> {
     });
   }
 
-  void _addFinanceItem() {
+  void _addFinanceItem(bool spendingMode) {
     Map newItem = Map.from(defaultFinanceItem);
     newItem["id"] = "finance-item-" + financeList.length.toString();
     newItem["time"] = DateTime.now().toString();
+    newItem["spending"] = spendingMode;
     financeList.add(newItem);
     _saveFinanceList(); // Save to local storage first
 
@@ -112,6 +113,11 @@ class _FinancePageState extends State<FinancePage> {
   /// Returns widgets of the finance list.
   List<Widget> _getFinanceList() {
     List<Map> sortedList = List.from(financeList);
+
+    // Sort list
+    sortedList.sort(
+      (i, j) => j["time"].compareTo(i["time"]),
+    ); // Sort by descending time
 
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
@@ -170,7 +176,9 @@ class _FinancePageState extends State<FinancePage> {
               backgroundColor: AppTheme.color["accent-secondary"],
               foregroundColor: AppTheme.color["white"],
               child: const Icon(Icons.trending_up),
-              onPressed: _addFinanceItem,
+              onPressed: () {
+                _addFinanceItem(false);
+              },
             ),
           ),
           Container(
@@ -180,7 +188,9 @@ class _FinancePageState extends State<FinancePage> {
               backgroundColor: AppTheme.color["accent-primary"],
               foregroundColor: AppTheme.color["white"],
               child: const Icon(Icons.credit_card),
-              onPressed: _addFinanceItem,
+              onPressed: () {
+                _addFinanceItem(true);
+              },
             ),
           ),
         ],

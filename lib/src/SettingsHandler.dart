@@ -9,13 +9,15 @@ class SettingsHandler {
   /// Default settings
   Map<String, String> settings = {
     "theme": "light",
+    "currency": "dollar",
   };
 
   SettingsHandler(this.reloadApp) {
     loadSettings();
+    saveSettings();
   }
 
-  void loadSettings() async {
+  loadSettings() async {
     final Database? db = await DbHelper.database;
     if (db == null) return;
 
@@ -27,7 +29,7 @@ class SettingsHandler {
     reloadApp();
   }
 
-  void saveSettings() async {
+  saveSettings() async {
     final Database db = await DbHelper.database;
     settings.forEach((key, value) {
       db.insert(

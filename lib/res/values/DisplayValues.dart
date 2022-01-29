@@ -103,3 +103,11 @@ final List<Map> defaultCategories = [
     "color": AppTheme.color["purple"],
   },
 ];
+
+const Map<String, String> currencySymbol = {
+  "dollar": "\$",
+  "pound": "£",
+  "euro": "€",
+  "yen": "¥",
+  "ruble": "₽",
+};

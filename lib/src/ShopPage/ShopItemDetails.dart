@@ -5,9 +5,14 @@ import 'package:nobrainer/src/Widgets/TextEditor.dart';
 class ShopItemDetails extends StatefulWidget {
   Map data;
   Function onUpdate;
+  String currency;
 
-  ShopItemDetails({required this.data, required this.onUpdate, Key? key})
-      : super(key: key);
+  ShopItemDetails({
+    required this.data,
+    required this.onUpdate,
+    this.currency = "\$",
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() =>
@@ -96,6 +101,7 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                     ),
                   ),
                 ),
+
                 // Price
                 SizedBox(
                   width: screenWidth / 3,
@@ -106,14 +112,15 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                       data["price"] = double.tryParse(text) ?? 0;
                     },
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      prefixText: "\$ ",
+                    decoration: InputDecoration(
+                      prefixText: widget.currency + " ",
                       labelText: "Price",
                       hintText: "How much is this?",
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
+
                 // Per Item
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,

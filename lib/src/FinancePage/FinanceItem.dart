@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
+import 'package:sqflite/sqflite.dart';
 
 // Default FinanceItem
 Map defaultFinanceItem = {
   "id": "set finance item id",
   "time": "a datetime object",
   "amount": 0.00,
+  "spending": true,
   "title": "New Item",
   "cat": "",
   "color": AppTheme.colorToMap(AppTheme.color["gray"]),
@@ -27,11 +31,15 @@ class FinanceItem extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _FinanceItemState(data);
+  State<StatefulWidget> createState() => _FinanceItemState();
 }
 
 class _FinanceItemState extends State<FinanceItem> {
-  _FinanceItemState(data) {}
+  _FinanceItemState() {
+    getCurrencySymbol();
+  }
+
+  String currency = "\$";
 
   /// Show delete confirmation popup.
   ///
@@ -62,6 +70,20 @@ class _FinanceItemState extends State<FinanceItem> {
     );
   }
 
+  getCurrencySymbol() async {
+    final Database db = await DbHelper.database;
+    final dbMap = await db.query(
+      "settings",
+      where: "name = ?",
+      whereArgs: ["currency"],
+    );
+    if (dbMap.isNotEmpty) {
+      setState(() {
+        currency = currencySymbol[dbMap[0]["value"]] ?? "\$";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -72,27 +94,16 @@ class _FinanceItemState extends State<FinanceItem> {
           builder: (context) => FinanceItemDetails(
             onUpdate: widget.onUpdate,
             data: widget.data,
+            currency: currency,
           ),
         ));
       },
-      leading: Wrap(
-        direction: Axis.horizontal,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Container(
-            width: 36,
-            padding: const EdgeInsets.only(left: 10),
-            child: Icon(
-              widget.catData["icon"],
-              color: widget.catData["color"],
-            ),
-          ),
-          Container(
-            width: 64,
-            padding: const EdgeInsets.only(left: 6),
-            child: Text("\$" + widget.data["amount"].toString()),
-          ),
-        ],
+      leading: Container(
+        margin: const EdgeInsets.only(left: 10),
+        child: Icon(
+          widget.catData["icon"],
+          color: widget.catData["color"],
+        ),
       ),
       title: Text(
         widget.data["title"].toString(),
@@ -106,11 +117,29 @@ class _FinanceItemState extends State<FinanceItem> {
       subtitle: Text(
         DateTimeFormat.dateFormat(DateTime.parse(widget.data["time"])),
       ),
-      trailing: IconButton(
-        onPressed: () {
-          _onDelete(context);
-        },
-        icon: const Icon(Icons.close),
+      trailing: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            child: Text(
+              (widget.data["spending"] ?? true ? "-" : "+") +
+                  currency +
+                  widget.data["amount"].toStringAsFixed(2),
+              style: TextStyle(
+                color: widget.data["spending"] ?? true
+                    ? AppTheme.color["red"]
+                    : AppTheme.color["green"],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              _onDelete(context);
+            },
+            icon: const Icon(Icons.close),
+          ),
+        ],
       ),
     );
   }
