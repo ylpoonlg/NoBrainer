@@ -10,11 +10,11 @@ class SettingsHandler {
   Map<String, String> settings = {
     "theme": "light",
     "currency": "dollar",
+    "finance-custom-cat": "[]",
   };
 
   SettingsHandler(this.reloadApp) {
     loadSettings();
-    saveSettings();
   }
 
   loadSettings() async {
@@ -27,6 +27,7 @@ class SettingsHandler {
     }
 
     reloadApp();
+    saveSettings(); // Save default settings in case it is not already saved
   }
 
   saveSettings() async {

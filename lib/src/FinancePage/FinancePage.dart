@@ -9,6 +9,7 @@ import 'package:nobrainer/src/FinancePage/FinanceItem.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 class FinancePage extends StatefulWidget {
   final String uuid;
@@ -72,7 +73,7 @@ class _FinancePageState extends State<FinancePage> {
 
   void _addFinanceItem(bool spendingMode) {
     Map newItem = Map.from(defaultFinanceItem);
-    newItem["id"] = "finance-item-" + financeList.length.toString();
+    newItem["id"] = "finance-item-" + const Uuid().v1();
     newItem["time"] = DateTime.now().toString();
     newItem["spending"] = spendingMode;
     financeList.add(newItem);

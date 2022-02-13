@@ -141,7 +141,7 @@ class _TodoPageState extends State<TodoPage> {
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
       items.add(TodoItem(
-        key: Key("todoitem-" + sortedList[i]["id"]),
+        key: Key("todoitem-" + const Uuid().v1()),
         data: sortedList[i],
         onDelete: _deleteTodoItem,
         onUpdate: _updateTodoItem,

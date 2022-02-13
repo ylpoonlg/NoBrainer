@@ -8,6 +8,7 @@ import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 class ShopPage extends StatefulWidget {
   final String uuid;
@@ -132,7 +133,7 @@ class _ShopPageState extends State<ShopPage> {
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
       items.add(ShopItem(
-        key: Key("shopitem-" + sortedList[i]["id"]),
+        key: Key("shopitem-" + const Uuid().v1()),
         data: sortedList[i],
         onDelete: _deleteShopItem,
         onUpdate: _updateShopItem,

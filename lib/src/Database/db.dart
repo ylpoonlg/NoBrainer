@@ -32,17 +32,6 @@ class DbHelper {
               .execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
           await db.execute("UPDATE braincells SET orderIndex=0;");
         }
-        // Custom Categories
-        if (oldver < 3) {
-          await db.insert(
-            "settings",
-            {
-              "name": "finance-custom-cat",
-              "value": "[]",
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
       },
       version: dbVersion,
     );
