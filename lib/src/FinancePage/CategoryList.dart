@@ -8,7 +8,7 @@ import 'package:nobrainer/src/FinancePage/NewCategory.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CategoryList extends StatefulWidget {
-  Function(Map) onSelect;
+  Function(Map?) onSelect;
 
   CategoryList({Key? key, required this.onSelect});
   @override
@@ -17,7 +17,7 @@ class CategoryList extends StatefulWidget {
 
 class CategoryListState extends State<CategoryList> {
   static List<Map> categories = [];
-  static List<Map> customCat = [];
+  static List<Map> _customCat = [];
   static bool isCategoriesLoaded = false;
 
   CategoryListState() : super() {
@@ -32,7 +32,7 @@ class CategoryListState extends State<CategoryList> {
       whereArgs: ["finance-custom-cat"],
     );
     final List stringCat = json.decode(dbMap[0]["value"]).toList();
-    CategoryListState.customCat = stringCat
+    CategoryListState._customCat = stringCat
         .map((cat) => {
               "cat": cat["cat"],
               "icon": AppTheme.icon[cat["icon"]],
@@ -42,7 +42,7 @@ class CategoryListState extends State<CategoryList> {
         .toList();
 
     List<Map> categories = List.from(defaultCategories);
-    categories.addAll(CategoryListState.customCat);
+    categories.addAll(CategoryListState._customCat);
 
     CategoryListState.categories = categories;
     isCategoriesLoaded = true;
@@ -57,7 +57,7 @@ class CategoryListState extends State<CategoryList> {
     await db.update(
       "settings",
       {
-        "value": json.encode(customCat
+        "value": json.encode(_customCat
             .map((cat) => {
                   "cat": cat["cat"],
                   "icon": cat["icon_string"],
@@ -81,7 +81,7 @@ class CategoryListState extends State<CategoryList> {
       MaterialPageRoute(
         builder: (context) => NewCategory((newCat) {
           categories.add(newCat);
-          customCat.add(newCat);
+          _customCat.add(newCat);
           saveCategories();
         }),
       ),
@@ -91,7 +91,7 @@ class CategoryListState extends State<CategoryList> {
   /// Delete Custom Categories
   _onDeleteCat(String catname) {
     categories.removeWhere((cat) => cat["cat"] == catname);
-    customCat.removeWhere((cat) => cat["cat"] == catname);
+    _customCat.removeWhere((cat) => cat["cat"] == catname);
     saveCategories();
   }
 
@@ -109,7 +109,7 @@ class CategoryListState extends State<CategoryList> {
           color: cat["color"],
         ),
         title: Text(cat["cat"]),
-        trailing: CategoryListState.customCat.indexWhere(
+        trailing: CategoryListState._customCat.indexWhere(
                   (custom) => custom["cat"] == cat["cat"],
                 ) !=
                 -1
@@ -132,6 +132,16 @@ class CategoryListState extends State<CategoryList> {
           onPressed: _onAddCat,
           child: const Text("+ Add a custom category"),
         ),
+      ),
+    );
+
+    listTiles.insert(
+      0,
+      ListTile(
+        onTap: () {
+          widget.onSelect(null);
+        },
+        title: const Text("None"),
       ),
     );
     return listTiles;

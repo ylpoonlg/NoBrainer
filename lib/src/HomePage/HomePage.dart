@@ -324,12 +324,12 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: AppTheme.color["appbar-background"],
               ),
-              child: Text(
-                'No Brainer',
+              child: const Text(
+                'NoBrainer',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,

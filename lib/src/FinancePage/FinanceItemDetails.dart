@@ -40,10 +40,10 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
   }
 
   /// onSelect called from category list
-  _onSelectCategory(Map cat) {
+  _onSelectCategory(Map? cat) {
     setState(() {
       currentCategory = cat;
-      data["cat"] = cat["cat"];
+      data["cat"] = cat == null ? "" : cat["cat"];
     });
     Navigator.of(context).pop();
   }

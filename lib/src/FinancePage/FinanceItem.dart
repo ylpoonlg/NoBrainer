@@ -39,6 +39,13 @@ class _FinanceItemState extends State<FinanceItem> {
     getCurrencySymbol();
   }
 
+  @override
+  void setState(f) {
+    if (mounted) {
+      super.setState(f);
+    }
+  }
+
   String currency = "\$";
 
   /// Show delete confirmation popup.

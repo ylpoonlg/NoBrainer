@@ -69,12 +69,12 @@ List todoStatus = [
 final List<Map> defaultCategories = [
   {
     "cat": "General",
-    "icon": Icons.group_work,
-    "color": AppTheme.color["gray"],
+    "icon": Icons.interests,
+    "color": AppTheme.color["light-gray"],
   },
   {
     "cat": "Shopping",
-    "icon": Icons.shop,
+    "icon": Icons.local_mall,
     "color": AppTheme.color["cyan"],
   },
   {
@@ -84,7 +84,7 @@ final List<Map> defaultCategories = [
   },
   {
     "cat": "Groceries",
-    "icon": Icons.apple,
+    "icon": Icons.local_grocery_store,
     "color": AppTheme.color["red"],
   },
   {

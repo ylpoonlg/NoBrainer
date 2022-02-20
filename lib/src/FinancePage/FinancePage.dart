@@ -124,8 +124,8 @@ class _FinancePageState extends State<FinancePage> {
     for (int i = 0; i < sortedList.length; i++) {
       Map catData = {
         "cat": "",
-        "icon": Icons.currency_exchange,
-        "color": AppTheme.color["gray"],
+        "icon": Icons.close,
+        "color": Colors.transparent,
       };
       CategoryListState.categories.forEach((cat) {
         if (cat["cat"] == sortedList[i]["cat"]) {
@@ -134,7 +134,7 @@ class _FinancePageState extends State<FinancePage> {
       });
 
       items.add(FinanceItem(
-        key: Key(sortedList[i]["id"]),
+        key: Key(sortedList[i]["id"] + const Uuid().v1()),
         data: sortedList[i],
         catData: catData,
         onDelete: _deleteFinanceItem,

@@ -57,10 +57,21 @@ const colors = {
 };
 
 const icons = {
-  "general": Icons.group_work,
+  "general": Icons.interests,
+  "shop": Icons.local_mall,
   "food": Icons.food_bank,
+  "grocery": Icons.local_grocery_store,
   "train": Icons.train,
-  "alarm": Icons.alarm,
+  "people": Icons.people,
+  "bill": Icons.receipt,
+  "custom": Icons.brush,
+  "bitcoin": Icons.currency_bitcoin,
+  "house": Icons.house,
+  "car": Icons.directions_car,
+  "computer": Icons.computer,
+  "phone": Icons.phone,
+  "clothes": Icons.checkroom,
+  "sport": Icons.directions_bike,
 };
 
 ThemeData lightTheme = ThemeData(
