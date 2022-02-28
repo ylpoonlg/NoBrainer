@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/FinancePage/AnalysisPage.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItem.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
@@ -153,7 +153,17 @@ class _FinancePageState extends State<FinancePage> {
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Finance"),
-        actions: [],
+        actions: [
+            IconButton(
+                onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            AnalysisPage(financeList: financeList),
+                    ));
+                },
+                icon: const Icon(Icons.analytics),
+            ),
+        ],
       ),
       body: isFinanceListLoaded
           ? ListView(

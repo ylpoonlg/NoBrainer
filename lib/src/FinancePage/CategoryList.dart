@@ -150,7 +150,11 @@ class CategoryListState extends State<CategoryList> {
   @override
   Widget build(BuildContext context) {
     return isCategoriesLoaded
-        ? ListView(children: _getListTiles())
+        ? Scrollbar(
+            thumbVisibility: true,
+            trackVisibility: true,
+            child: ListView(children: _getListTiles()),
+          )
         : Center(
             child: CircularProgressIndicator(
               color: AppTheme.color["accent-primary"],

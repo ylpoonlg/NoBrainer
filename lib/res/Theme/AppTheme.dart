@@ -65,23 +65,30 @@ const icons = {
   "people": Icons.people,
   "bill": Icons.receipt,
   "custom": Icons.brush,
+  "savings": Icons.savings,
   "bitcoin": Icons.currency_bitcoin,
-  "house": Icons.house,
-  "car": Icons.directions_car,
+  "holiday": Icons.flight,
+  "celebration": Icons.celebration,
+  "sport": Icons.directions_bike,
   "computer": Icons.computer,
   "phone": Icons.phone,
+  "house": Icons.house,
+  "car": Icons.directions_car,
   "clothes": Icons.checkroom,
-  "sport": Icons.directions_bike,
+  "square": Icons.square,
+  "circle": Icons.circle,
 };
 
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   backgroundColor: const Color.fromARGB(255, 248, 248, 248),
+  cardColor: const Color.fromARGB(255, 200, 200, 200),
   primaryColor: colors["accent-primary"],
 );
 
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  backgroundColor: const Color.fromARGB(255, 45, 45, 46),
+  backgroundColor: const Color.fromARGB(255, 45, 45, 45),
+  cardColor: const Color.fromARGB(255, 60, 60, 60),
   primaryColor: colors["accent-primary"],
 );

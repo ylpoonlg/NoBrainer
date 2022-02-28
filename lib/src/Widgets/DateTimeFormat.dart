@@ -13,4 +13,9 @@ class DateTimeFormat {
     if (mm.length < 2) mm = "0" + mm;
     return "$YYYY-$MM-$DD $hh:$mm";
   }
+
+  static String dateOnly(DateTime date) {
+    String datetime = dateFormat(date);
+    return datetime.substring(0, 10);
+  }
 }

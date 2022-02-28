@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class FinanceItemDetails extends StatefulWidget {
@@ -70,6 +71,38 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
         ),
       );
     }
+  }
+
+  void _onSelectDeadline(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => DatePickerDialog(
+        initialDate: DateTime.parse(data["time"]),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(3000),
+        initialCalendarMode: DatePickerMode.day,
+      ),
+    ).then((date) {
+      setState(() {
+        // Pick Time
+        showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.fromDateTime(DateTime.parse(data["time"])),
+        ).then((time) {
+          setState(() {
+            if (time != null) {
+              data["time"] = DateTime(
+                date.year,
+                date.month,
+                date.day,
+                time.hour,
+                time.minute,
+              ).toString();
+            }
+          });
+        });
+      });
+    });
   }
 
   @override
@@ -179,6 +212,23 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                           style: TextStyle(color: currentCategory!["color"]),
                         ),
                       ],
+              ),
+            ),
+          ),
+
+          // Date
+          ListTile(
+            title: Text(
+              "Date",
+              style: TextStyle(color: AppTheme.color["white"]),
+            ),
+            trailing: TextButton(
+              onPressed: () {
+                _onSelectDeadline(context);
+              },
+              child: Text(
+                DateTimeFormat.dateFormat(DateTime.parse(data["time"])),
+                style: TextStyle(color: AppTheme.color["white"]),
               ),
             ),
           ),

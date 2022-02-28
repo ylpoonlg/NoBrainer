@@ -111,3 +111,19 @@ const Map<String, String> currencySymbol = {
   "yen": "¥",
   "ruble": "₽",
 };
+
+/// Todo List Sorting Modes
+List<Map> financeAnalyzeScope = [
+  {
+    "label": "Week",
+    "value": "week",
+  },
+  {
+    "label": "Month",
+    "value": "month",
+  },
+  {
+    "label": "Year",
+    "value": "year",
+  },
+];

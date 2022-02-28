@@ -36,12 +36,16 @@ class _CustomIconSelectorState extends State<CustomIconSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: GridView.count(
-        crossAxisCount: widget.columns,
-        children: getIcons(),
+    return Scrollbar(
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: GridView.count(
+          crossAxisCount: widget.columns,
+          children: getIcons(),
+        ),
       ),
     );
   }
