@@ -3,6 +3,7 @@ import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/Functions/Functions.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -15,16 +16,20 @@ class AnalysisPage extends StatefulWidget {
 
 class _AnalysisPageState extends State<AnalysisPage> {
   final List<dynamic> financeList; // Current status of the shopping list
+  Map<String, double> catSpending = {};
+  String currency = "\$";
+  double totalSpendings = 0;
+  double totalIncome = 0;
   DateTime dateStart = DateTime.now();
   DateTime dateEnd = DateTime.now();
   String timeScope = financeAnalyzeScope[0]["value"];
-  String currency = "\$";
 
   _AnalysisPageState(this.financeList) {
     getCurrencySymbol();
     DateTime now = DateTime.now();
     dateEnd = DateTime(now.year, now.month, now.day);
-    dateStart = _getDateStart(dateEnd, timeScope);
+    dateStart = _getPreviousDate(dateEnd, timeScope);
+    _analyzeFinanceList();
   }
 
   getCurrencySymbol() async {
@@ -41,32 +46,43 @@ class _AnalysisPageState extends State<AnalysisPage> {
     }
   }
 
-  DateTime _getDateStart(DateTime dateEnd, String scope) {
+  DateTime _getPreviousDate(DateTime dateEnd, String scope) {
     int newYear = dateEnd.year;
     int newMonth = dateEnd.month;
     int newDay = dateEnd.day;
-
     switch (scope) {
       case "week":
-        return dateEnd.subtract(const Duration(days: 7));
+        return dateEnd.subtract(const Duration(days: 6));
       case "month":
-        if (newMonth > 1) {
-          newMonth--;
-        } else {
-          newMonth = 12;
-          newYear--;
-        }
-        break;
+        int daysOffset = daysInMonth(newMonth, newYear) - 1;
+        return DateTime(newYear, newMonth, newDay - daysOffset);
       case "year":
         newYear--;
         if (newMonth == 2 && newDay == 29) newDay = 28;
         break;
     }
+    return DateTime(newYear, newMonth, newDay).add(const Duration(days: 1));
+  }
 
-    return DateTime(newYear, newMonth, newDay);
+  DateTime _getNextDate(DateTime dateStart, String scope) {
+    int newYear = dateStart.year;
+    int newMonth = dateStart.month;
+    int newDay = dateStart.day;
+    switch (scope) {
+      case "week":
+        return dateStart.add(const Duration(days: 6));
+      case "month":
+        int daysOffset = daysInMonth(newMonth, newYear) - 1;
+        return DateTime(newYear, newMonth, newDay + daysOffset);
+      case "year":
+        newYear++;
+        break;
+    }
+    return DateTime(newYear, newMonth, newDay).subtract(const Duration(days: 1));
   }
 
   void _onSelectDate(BuildContext context, {bool isDateEnd=true}) {
+  /// Prompts user for start or end date selection
     showDialog(
       context: context,
       builder: (context) => DatePickerDialog(
@@ -77,6 +93,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
       ),
     ).then((date) {
       setState(() {
+
         if (date != null) {
           if (isDateEnd) {
             dateEnd = DateTime(
@@ -93,15 +110,18 @@ class _AnalysisPageState extends State<AnalysisPage> {
           }
         }
         timeScope = "";
+        _analyzeFinanceList();
+
       });
+
     });
   }
 
-  List<Widget> _getCategoryTiles() {
-    /// Calculate the sutotal for each category and return a list of ListTiles
-    List<Widget> result = [];
-    List<Map> categories = CategoryListState.categories;
-    Map<String, double> catSpending = {};
+  void _analyzeFinanceList() {
+    /// Returns a map of spendings for each category in financeList
+    totalSpendings = 0;
+    totalIncome = 0;
+    catSpending = {};
     for (var item in financeList) {
         String cat = item["cat"];
         DateTime date = DateTime.parse(item["time"]);
@@ -109,11 +129,96 @@ class _AnalysisPageState extends State<AnalysisPage> {
         if (date.compareTo(dateStart) >= 0 && date.compareTo(dateEnd) <= 0) {
           if (item["spending"]) {
             catSpending[cat] = catSpending[cat]??0.0 - item["amount"];
+            totalSpendings += item["amount"];
           } else {
             catSpending[cat] = catSpending[cat]??0.0 + item["amount"];
+            totalIncome += item["amount"];
           }
         }
     }
+  }
+
+
+  void _onNextPeriod() {
+    setState(() {
+      dateStart = dateEnd.add(const Duration(days: 1));
+      dateEnd = _getNextDate(dateStart, timeScope);
+      _analyzeFinanceList();
+    });
+  }
+
+  void _onPreviousPeriod() {
+    setState(() {
+      dateEnd = dateStart.subtract(const Duration(days: 1));
+      dateStart = _getPreviousDate(dateEnd, timeScope);
+      _analyzeFinanceList();
+    });
+  }
+
+
+  List<Widget> _getTotalWrap() {
+    /// Returns horizontal Wrap with net total, spending and income
+    EdgeInsets paddings = const EdgeInsets.only(
+      left: 30,
+      right: 30,
+      top: 5,
+      bottom: 5,
+    );
+    return <Widget>[
+      const SizedBox(height: 15),
+      Container(
+        padding: paddings,
+        child: Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text("Total", style: Theme.of(context).textTheme.headline4),
+            Text(
+              (totalIncome <= totalSpendings ? "-" : "+") +
+              currency + (totalIncome - totalSpendings).abs().toStringAsFixed(2),
+              style: Theme.of(context).textTheme.headline5,
+            ),
+          ],
+        ),
+      ),
+      Container(
+        padding: paddings,
+        child: Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text("  Spendings", style: Theme.of(context).textTheme.headline6),
+            Text(
+              "-" + currency + totalSpendings.toStringAsFixed(2),
+            ),
+          ],
+        ),
+      ),
+      Container(
+        padding: paddings,
+        child: Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text("  Income", style: Theme.of(context).textTheme.headline6),
+            Text(
+              "+" + currency + totalIncome.toStringAsFixed(2),
+            ),
+          ],
+        ),
+      ),
+      const Divider(),
+    ];
+  }
+
+
+  List<Widget> _getCategoryTiles() {
+    /// Calculate the sutotal for each category and return a list of ListTiles
+    List<Widget> result = [];
+    List<Map> categories = CategoryListState.categories;
     for (var cat in categories) {
         double? amount = catSpending[cat["cat"]];
         if (amount == null) continue;
@@ -135,7 +240,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
           ),
           title: Text(cat["cat"]),
           trailing: Text(
-            sign + currency + amount.abs().toString(),
+            sign + currency + amount.abs().toStringAsFixed(2),
             style: TextStyle(color: color),
           ),
         ));
@@ -159,12 +264,17 @@ class _AnalysisPageState extends State<AnalysisPage> {
         title: const Text("Analytics"),
         actions: [],
       ),
+
       body: ListView(
         children: [
+          ..._getTotalWrap(),
+          
+          // Categories
           Container(
             padding: const EdgeInsets.only(
               left: 30,
-              top: 15,
+              right: 30,
+              top: 5,
               bottom: 10,
             ),
             child: const Text("Categories", style: TextStyle(fontSize: 20)),
@@ -194,46 +304,57 @@ class _AnalysisPageState extends State<AnalysisPage> {
           const SizedBox(height: bottomSheetHeight),
         ],
       ),
+
+      // Scope Controller
       bottomSheet: Container(
         width: screenWidth,
         height: bottomSheetHeight,
         color: crdColor,
         child: Column(
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-              child: Text("Scope", style: Theme.of(context).textTheme.headline6),
-            ),
-            const SizedBox(height: 10),
-            PopupMenuButton(
-              initialValue: timeScope,
-              onSelected: (val) {
-                setState(() {
-                    timeScope = val.toString();
-                    dateStart = _getDateStart(dateEnd, timeScope);
-                });
-              },
-              itemBuilder: (context) {
-                  return financeAnalyzeScope.map((item) =>
-                    PopupMenuItem(value: item["value"], child: Text(item["label"]))
-                  ).toList();
-              },
-              child: Container(
-                height: 40,
-                width: 100,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: fgColor,
+            const SizedBox(height: 20),
+            SizedBox(
+              width: screenWidth - 40,
+              child: Wrap(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text("Time Period", style: Theme.of(context).textTheme.headline6),
+                  PopupMenuButton(
+                    initialValue: timeScope,
+                    onSelected: (val) {
+                      setState(() {
+                          timeScope = val.toString();
+                          dateStart = _getPreviousDate(dateEnd, timeScope);
+                          _analyzeFinanceList();
+                      });
+                    },
+                    itemBuilder: (context) {
+                        return financeAnalyzeScope.map((item) =>
+                          PopupMenuItem(value: item["value"], child: Text(item["label"]))
+                        ).toList();
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: fgColor,
+                        ),
+                        borderRadius: const BorderRadius.all(Radius.circular(5)),
+                      ),
+                      child: Center(
+                        child: Text(timeScope == "" ? "- - -" :
+                          financeAnalyzeScope.firstWhere((item) => item["value"] == timeScope)["label"]
+                        ),
+                      ),
+                    ),
                   ),
-                  borderRadius: const BorderRadius.all(Radius.circular(5)),
-                ),
-                child: Center(
-                  child: Text(timeScope == "" ? "- - -" :
-                    financeAnalyzeScope.firstWhere((item) => item["value"] == timeScope)["label"]
-                  ),
-                ),
+                ],
               ),
             ),
+            const SizedBox(height: 20),
             SizedBox(
               width: screenWidth,
               child: Wrap(
@@ -242,7 +363,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: _onPreviousPeriod,
                     icon: const Icon(Icons.skip_previous),
                   ),
                   TextButton(
@@ -259,7 +380,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: _onNextPeriod,
                     icon: const Icon(Icons.skip_next),
                   ),
                 ],
