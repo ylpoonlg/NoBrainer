@@ -3,6 +3,7 @@ import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/FinancePage/PayMethods.dart';
 import 'package:nobrainer/src/Functions/Functions.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
@@ -17,6 +18,7 @@ class AnalysisPage extends StatefulWidget {
 class _AnalysisPageState extends State<AnalysisPage> {
   final List<dynamic> financeList; // Current status of the shopping list
   Map<String, double> catSpending = {};
+  Map<String, double> methodSpending = {};
   String currency = "\$";
   double totalSpendings = 0;
   double totalIncome = 0;
@@ -116,22 +118,30 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
     });
   }
+    
 
+  /// Returns a map of spendings for each category in financeList
   void _analyzeFinanceList() {
-    /// Returns a map of spendings for each category in financeList
     totalSpendings = 0;
     totalIncome = 0;
     catSpending = {};
+    methodSpending = {};
     for (var item in financeList) {
-        String cat = item["cat"];
+        String cat = item["cat"] ?? "";
+        String payMethod = item["paymethod"] ?? "";
         DateTime date = DateTime.parse(item["time"]);
         date = DateTime(date.year, date.month, date.day);
         if (date.compareTo(dateStart) >= 0 && date.compareTo(dateEnd) <= 0) {
+          if (!catSpending.containsKey(cat)) catSpending[cat] = 0.0;
+          if (!methodSpending.containsKey(payMethod)) methodSpending[payMethod] = 0.0;
+
           if (item["spending"]) {
-            catSpending[cat] = catSpending[cat]??0.0 - item["amount"];
+            catSpending[cat] = catSpending[cat]! - item["amount"];
+            methodSpending[payMethod] = methodSpending[payMethod]! - item["amount"];
             totalSpendings += item["amount"];
           } else {
-            catSpending[cat] = catSpending[cat]??0.0 + item["amount"];
+            catSpending[cat] = catSpending[cat]! + item["amount"];
+            methodSpending[payMethod] = methodSpending[payMethod]! + item["amount"];
             totalIncome += item["amount"];
           }
         }
@@ -156,8 +166,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
 
+  /// Returns horizontal Wrap with net total, spending and income
   List<Widget> _getTotalWrap() {
-    /// Returns horizontal Wrap with net total, spending and income
     EdgeInsets paddings = const EdgeInsets.only(
       left: 30,
       right: 30,
@@ -232,7 +242,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
         result.add(ListTile(
           leading: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(5),
             child: Icon(
               cat["icon"],
               color: cat["color"],
@@ -248,6 +258,30 @@ class _AnalysisPageState extends State<AnalysisPage> {
     return result;
   }
 
+  List<Widget> _getPayMethodTiles() {
+    List<Widget> result = [];
+    for (String payMethod in PayMethods.payMethods) {
+      double? amount = methodSpending[payMethod];
+      if (amount == null) continue;
+
+      Color color = AppTheme.color["green"];
+      String sign = "+";
+      if (amount <= 0) {
+          color = AppTheme.color["red"];
+          sign = "-";
+      }
+      result.add(ListTile(
+        title: Text(payMethod),
+        trailing: Text(
+          sign + currency + amount.abs().toStringAsFixed(2),
+          style: TextStyle(color: color),
+        ),
+      ));
+    }
+    
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -255,6 +289,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     const double bottomSheetHeight = 200;
 
     ScrollController catListScrollController = ScrollController();
+    ScrollController methodListScrollController = ScrollController();
     Color fgColor = Theme.of(context).textTheme.titleSmall?.color ?? Color(0);
     Color crdColor = Theme.of(context).cardColor;
 
@@ -280,11 +315,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
             child: const Text("Categories", style: TextStyle(fontSize: 20)),
           ),
           Container(
-            height: screenHeight * 0.35,
+            height: 320,
             margin: const EdgeInsets.symmetric(
               horizontal: 25,
               vertical: 5,
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
               border: Border.all(
                 color: fgColor,
@@ -298,6 +334,40 @@ class _AnalysisPageState extends State<AnalysisPage> {
               child: ListView(
                 controller: catListScrollController,
                 children: _getCategoryTiles(),
+              ),
+            ),
+          ),
+
+          // Payment Methods
+          Container(
+            padding: const EdgeInsets.only(
+              left: 30,
+              right: 30,
+              top: 15,
+              bottom: 10,
+            ),
+            child: const Text("Payment Methods", style: TextStyle(fontSize: 20)),
+          ),
+          Container(
+            height: 240,
+            margin: const EdgeInsets.symmetric(
+              horizontal: 25,
+              vertical: 5,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: fgColor,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+            ),
+            child: Scrollbar(
+              controller: methodListScrollController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: ListView(
+                controller: methodListScrollController,
+                children: _getPayMethodTiles(),
               ),
             ),
           ),

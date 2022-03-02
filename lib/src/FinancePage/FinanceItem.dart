@@ -9,12 +9,13 @@ import 'package:sqflite/sqflite.dart';
 // Default FinanceItem
 Map defaultFinanceItem = {
   "id": "set finance item id",
-  "time": "a datetime object",
+  "title": "New Item",
   "amount": 0.00,
   "spending": true,
-  "title": "New Item",
+  "paymethod": "",
   "cat": "",
   "color": AppTheme.colorToMap(AppTheme.color["gray"]),
+  "time": "a datetime object",
   "desc": "",
 };
 

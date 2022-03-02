@@ -14,14 +14,14 @@ import 'package:uuid/uuid.dart';
 class FinancePage extends StatefulWidget {
   final String uuid;
 
-  FinancePage({required String this.uuid});
+  const FinancePage({required this.uuid, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _FinancePageState();
 }
 
 class _FinancePageState extends State<FinancePage> {
-  List<dynamic> financeList = []; // Current status of the shopping list
+  List<dynamic> financeList = []; // Current status of the finance list
   bool isFinanceListLoaded = false;
 
   List<Map> categories = [];

@@ -27,10 +27,7 @@ class DbHelper {
       },
       onUpgrade: (db, oldver, newver) async {
         // Reorder braincells
-        if (oldver < 2) {
-          await db
-              .execute("ALTER TABLE braincells ADD COLUMN orderIndex INTEGER;");
-          await db.execute("UPDATE braincells SET orderIndex=0;");
+        if (oldver < 4) {
         }
       },
       version: dbVersion,

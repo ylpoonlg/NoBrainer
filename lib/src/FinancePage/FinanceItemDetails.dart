@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/FinancePage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
@@ -26,9 +27,18 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
   final Map data;
   Map? currentCategory = null;
 
+
   _FinanceItemsDetailsState(this.data) {
     _getCategories();
+    _getPayMethods();
   }
+
+  _getPayMethods() async {
+    await PayMethods.getPayMethods();
+    List<String> payMethods = PayMethods.payMethods;
+    setState(() {});
+  }
+
 
   _getCategories() async {
     await CategoryListState.getCategories();
@@ -38,6 +48,9 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
       }
     });
     setState(() {});
+  }
+
+  _onSelectPayMethod(String methodName) {
   }
 
   /// onSelect called from category list
@@ -165,6 +178,39 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                 labelText: "Amount",
                 border: const OutlineInputBorder(),
               ),
+            ),
+
+            // Payment Method
+            trailing: IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Payment Method"),
+                      content: SizedBox(
+                        width: screenWidth,
+                        height: 320,
+                        child: PayMethodsList(
+                          payMethod: data["paymethod"] ?? "",
+                          onChanged: (value) {
+                            data["paymethod"] = value;
+                          }
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("Confirm"),
+                        )
+                      ],
+                    );
+                  }
+                );
+              },
+              icon: const Icon(Icons.credit_card),
             ),
           ),
 

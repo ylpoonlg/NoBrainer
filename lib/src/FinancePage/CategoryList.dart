@@ -8,9 +8,9 @@ import 'package:nobrainer/src/FinancePage/NewCategory.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CategoryList extends StatefulWidget {
-  Function(Map?) onSelect;
+  final Function(Map?) onSelect;
 
-  CategoryList({Key? key, required this.onSelect});
+  const CategoryList({Key? key, required this.onSelect}) : super(key: key);
   @override
   State<StatefulWidget> createState() => CategoryListState();
 }
