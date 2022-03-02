@@ -9,11 +9,11 @@ import 'package:sqflite/sqflite.dart';
 // Default ShopItem
 Map defaultShopItem = {
   "id": "set shop item id",
-  "quantity": "1",
-  "shop": "",
-  "price": 0,
   "status": false,
   "title": "New Item",
+  "price": 0,
+  "quantity": "1",
+  "shops": [],
   "desc": "",
 };
 
@@ -140,7 +140,7 @@ class _ShopItemState extends State<ShopItem> {
         maxLines: 2,
       ),
       subtitle: Text(
-        widget.data["shop"].toString(),
+        widget.data["shops"]?.join(", ")??"",
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
       ),

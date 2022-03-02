@@ -35,10 +35,6 @@ List<Map> shopSortModes = [
     "label": "Item",
     "value": "item",
   },
-  {
-    "label": "Shop",
-    "value": "shop",
-  },
 ];
 
 /// Define Todo List Status

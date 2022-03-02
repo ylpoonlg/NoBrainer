@@ -123,10 +123,7 @@ class _ShopPageState extends State<ShopPage> {
         int a = statusValue[i["status"]] ?? 0;
         int b = statusValue[j["status"]] ?? 0;
         return a.compareTo(b);
-      } else if (shopSortMode == "shop") {
-        return i["shop"].compareTo(j["shop"]);
-      }
-      // Default to item mode
+      }      // Default to item mode
       return i["title"].compareTo(j["title"]);
     });
 

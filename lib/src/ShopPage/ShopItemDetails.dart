@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/ShopPage/Shops.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class ShopItemDetails extends StatefulWidget {
@@ -24,6 +25,19 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
   bool pricePerItem = false;
 
   _ShopItemsDetailsState(this.data);
+
+  List<Widget> _getShopsList() {
+    List<Widget> result = [];
+    for (String shop in data["shops"]??[]) {
+      result.add(
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5,),
+          child: Text(shop),
+        )
+      );
+    }
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +121,8 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                   width: screenWidth / 3,
                   child: TextField(
                     controller: TextEditor.getController(
-                        data["price"] != null ? data["price"].toString() : "0"),
+                      data["price"]?.toStringAsFixed(2) ?? "0.00"
+                    ),
                     onChanged: (text) {
                       data["price"] = double.tryParse(text) ?? 0;
                     },
@@ -145,16 +160,44 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           // Shop
           ListTile(
             contentPadding: listTilePadding,
-            title: TextField(
-              controller: TextEditor.getController(data["shop"]),
-              onChanged: (text) {
-                data["shop"] = text;
+            title: const Text("Shops"),
+            trailing: IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Shops"),
+                      content: SizedBox(
+                        width: screenWidth,
+                        height: 320,
+                        child: ShopsList(
+                          selected: List<String>.from(data["shops"] ?? []),
+                          onChanged: (value) {
+                            setState(() {
+                              data["shops"] = value;
+                            });
+                          }
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("Confirm"),
+                        )
+                      ],
+                    );
+                  }
+                );
+
               },
-              decoration: const InputDecoration(
-                labelText: "Shop",
-                hintText: "Where can you buy this from?",
-                border: OutlineInputBorder(),
-              ),
+              icon: const Icon(Icons.add),
+            ),
+            subtitle: Wrap(
+              direction: Axis.horizontal,
+              children: _getShopsList(),
             ),
           ),
 
