@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DbHelper {
   static dynamic database;
@@ -16,12 +18,38 @@ class DbHelper {
 
   DbHelper();
 
+  /// Returns true if user has granted the app with the provided permission 
+  Future<bool> checkPermission(Permission permission) async {
+    PermissionStatus status = await permission.request();
+    if (status.isGranted) {
+      debugPrint("Permission granted!");
+      return true;
+    } else if (await Permission.storage.request().isDenied) {
+      debugPrint("Permission denied");
+    } else if (await Permission.storage.request().isPermanentlyDenied) {
+      debugPrint("Permission permenantly denied");
+    }
+    return false;
+  }
+
+  /// Initialize database and set database to Future<Database> if null and permission granted.
   Future initDatabase() async {
+    WidgetsFlutterBinding.ensureInitialized();
     if (database != null) return;
 
-    WidgetsFlutterBinding.ensureInitialized();
+
+    /** Experimental - for migrating to external storage for easier backup */
+    // Check storage permission
+    //bool isPermissionGranted = await checkPermission(Permission.manageExternalStorage);
+    //if (!isPermissionGranted) return;
+    //Directory("/storage/emulated/0/NoBrainer/").create(recursive: true);
+    //String dbPath = "/storage/emulated/0/NoBrainer";
+
+    String dbPath = await getDatabasesPath();
+    debugPrint(" ==> Open database at: " + dbPath);
+
     database = openDatabase(
-      join(await getDatabasesPath(), dbName),
+      join(dbPath, dbName),
       onCreate: (db, version) async {
         _createTables(db);
       },
@@ -33,6 +61,7 @@ class DbHelper {
       version: dbVersion,
     );
 
+    await database;
     await _debug();
   }
 
@@ -55,6 +84,7 @@ class DbHelper {
 
     try {
       // DB operations
+      
 
     } catch (e) {
       debugPrint("database debug operation error:\n" + e.toString());

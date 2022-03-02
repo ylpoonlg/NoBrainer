@@ -311,6 +311,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
+
+    final double braincellTilesAR = (screenWidth > screenHeight) ? 1.75 : 0.85;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
@@ -386,7 +389,7 @@ class _HomePageState extends State<HomePage> {
                 margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
                 child: ReorderableGridView.count(
                   crossAxisCount: 2,
-                  childAspectRatio: (screenWidth > screenHeight) ? 1.75 : 0.75,
+                  childAspectRatio: braincellTilesAR,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                   children: getBraincellList(),

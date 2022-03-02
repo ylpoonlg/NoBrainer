@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/HomePage/HomePage.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
+import 'package:nobrainer/src/Database/db.dart';
 
 class NoBrainerApp extends StatefulWidget {
   @override
@@ -10,14 +11,25 @@ class NoBrainerApp extends StatefulWidget {
 
 class NoBrainerAppState extends State<NoBrainerApp> {
   SettingsHandler sh = SettingsHandler(() {});
+  bool isDatabaseReady = false;
+  bool showPermissionMsg = false;
 
   NoBrainerAppState() {
     _initApp();
   }
 
-  _initApp() {
+  _initApp() async {
+    await DbHelper().initDatabase(); // Init database instance
     sh = SettingsHandler(() {
       reloadApp();
+    });
+
+    setState(() {
+      if (DbHelper.database != null) {
+        isDatabaseReady = true;
+      } else {
+        showPermissionMsg = true;
+      }
     });
   }
 
@@ -27,13 +39,33 @@ class NoBrainerAppState extends State<NoBrainerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'No Brainer',
+    return isDatabaseReady ?
+    MaterialApp(
+      title: 'NoBrainer',
       theme: AppTheme.theme(sh.settings["theme"] ?? "light"),
       home: HomePage(sh: sh),
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
         child: child ?? const Text("Something went wrong..."),
+      ),
+    ) :
+    MaterialApp(
+      title: 'Loading',
+      theme: AppTheme.theme("light"),
+      home: Scaffold(
+        body: Center(
+          child: Wrap(
+            direction: Axis.vertical,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              showPermissionMsg ?
+                const Text("Please grant the\nStorage Permission from\nthe settings of your device") : Container(),
+            ],
+          ),
+        ),
       ),
     );
   }
