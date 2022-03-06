@@ -101,6 +101,17 @@ class _TodoPageState extends State<TodoPage> {
     _saveTodoList();
   }
 
+  void _clearDoneTasks() {
+    todoList.removeWhere((item) {
+      return item["status"] == "completed";
+    });
+    // Update id
+    for (int i = 0; i < todoList.length; i++) {
+      todoList[i]["id"] = "todo-item-" + i.toString();
+    }
+    _saveTodoList();
+  }
+
   void _updateTodoItem(data) {
     for (int i = 0; i < todoList.length; i++) {
       if (todoList[i]["id"] == data["id"]) {
@@ -157,6 +168,33 @@ class _TodoPageState extends State<TodoPage> {
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Todo List"),
         actions: [
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  key: const Key("clear-done-tasks"),
+                  title: const Text("Delete Confirmation"),
+                  content: const Text(
+                      "Are you sure you want to remove all the done tasks?"),
+                  actions: <Widget>[
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Cancel")),
+                    TextButton(
+                        onPressed: () {
+                          _clearDoneTasks();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Confirm")),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.clear_all),
+          ),
           PopupMenuButton(
             initialValue: todoSortMode,
             onSelected: (value) {

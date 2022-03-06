@@ -48,7 +48,9 @@ class PayMethodsList extends StatefulWidget {
   final Function(String) onChanged;
 
   const PayMethodsList({
-    Key? key, required this.payMethod, required this.onChanged,
+    Key? key,
+    required this.payMethod,
+    required this.onChanged,
   }) : super(key: key);
 
   @override
@@ -122,77 +124,80 @@ class _PayMethodsListState extends State<PayMethodsList> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete Confirmation"),
-        content: const Text("Are you sure to delete this payment method?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
-              deletePayMethod(methodName);
-              Navigator.of(context).pop();
-            },
-            child: const Text("Yes"),
-          ),
-        ]
-      ),
+          title: const Text("Delete Confirmation"),
+          content: const Text("Are you sure to delete this payment method?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () {
+                deletePayMethod(methodName);
+                Navigator.of(context).pop();
+              },
+              child: const Text("Yes"),
+            ),
+          ]),
     );
   }
 
   @override
   Widget build(context) {
-    return isLoaded ?
-      Scrollbar(
-        thumbVisibility: true,
-        trackVisibility: true,
-        child: ListView(
-          children: [
-            ListTile(
-              title: const Text("None"),
-              leading: Radio(
-                value: "",
-                groupValue: _payMethod,
-                onChanged: (value) {
-                  setState(() {
-                    _payMethod = "";
-                    widget.onChanged(_payMethod);
-                  });
-                },
-              ),
-            ),
-            ...PayMethods.payMethods.map(
-              (method) => ListTile(
-                leading: Radio(
-                  value: method,
-                  groupValue: _payMethod,
-                  onChanged: (value) {
-                    setState(() {
-                      _payMethod = value.toString();
-                      widget.onChanged(_payMethod);
-                    });
-                  },
+    return isLoaded
+        ? Scrollbar(
+            thumbVisibility: true,
+            trackVisibility: true,
+            child: ListView(
+              children: [
+                ListTile(
+                  title: const Text("None"),
+                  leading: Radio(
+                    value: "",
+                    groupValue: _payMethod,
+                    onChanged: (value) {
+                      setState(() {
+                        _payMethod = "";
+                        widget.onChanged(_payMethod);
+                      });
+                    },
+                  ),
                 ),
-                title: Text(method),
-                trailing: IconButton(
-                  onPressed: () {onDeleteMethod(method);},
-                  icon: const Icon(Icons.delete),
+                ...PayMethods.payMethods
+                    .map(
+                      (method) => ListTile(
+                        leading: Radio(
+                          value: method,
+                          groupValue: _payMethod,
+                          onChanged: (value) {
+                            setState(() {
+                              _payMethod = value.toString();
+                              widget.onChanged(_payMethod);
+                            });
+                          },
+                        ),
+                        title: Text(method),
+                        trailing: IconButton(
+                          onPressed: () {
+                            onDeleteMethod(method);
+                          },
+                          icon: const Icon(Icons.delete),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                ListTile(
+                  onTap: onNewMethod,
+                  leading: const Icon(Icons.add),
+                  title: const Text("New Payment Method"),
                 ),
-              ),
-            ).toList(),
-            ListTile(
-              onTap: onNewMethod,
-              leading: const Icon(Icons.add),
-              title: const Text("New Payment Method"),
+              ],
             ),
-          ],
-        ),
-      ) :
-      const Center(
-        child: CircularProgressIndicator(),
-      );
+          )
+        : const Center(
+            child: CircularProgressIndicator(),
+          );
   }
 }

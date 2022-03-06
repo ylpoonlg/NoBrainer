@@ -48,7 +48,9 @@ class ShopsList extends StatefulWidget {
   final Function(List<String>) onChanged;
 
   const ShopsList({
-    Key? key, required this.selected, required this.onChanged,
+    Key? key,
+    required this.selected,
+    required this.onChanged,
   }) : super(key: key);
 
   @override
@@ -122,80 +124,80 @@ class _ShopsListState extends State<ShopsList> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete Confirmation"),
-        content: const Text("Are you sure to delete this shop?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
-              deleteShop(methodName);
-              Navigator.of(context).pop();
-            },
-            child: const Text("Yes"),
-          ),
-        ]
-      ),
+          title: const Text("Delete Confirmation"),
+          content: const Text("Are you sure to delete this shop?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () {
+                deleteShop(methodName);
+                Navigator.of(context).pop();
+              },
+              child: const Text("Yes"),
+            ),
+          ]),
     );
   }
 
   @override
   Widget build(context) {
-    return isLoaded ?
-      Scrollbar(
-        thumbVisibility: true,
-        trackVisibility: true,
-        child: ListView(
-          children: [
-            ListTile(
-              title: const Text("Clear"),
-              onTap: () {
-                setState(() {
-                  selected = [];
-                  widget.onChanged(selected);
-                });
-              }
-            ),
-            ...Shops.shops.map(
-              (shop) => ListTile(
-                leading: Checkbox(
-                  activeColor: AppTheme.color["accent-primary"],
-                  checkColor: AppTheme.color["white"],
-                  value: selected.contains(shop),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value == true) {
-                        selected.add(shop);
-                      } else {
-                        selected.remove(shop);
-                      }
-                      widget.onChanged(selected);
-                    });
-                  }
+    return isLoaded
+        ? Scrollbar(
+            thumbVisibility: true,
+            trackVisibility: true,
+            child: ListView(
+              children: [
+                ListTile(
+                    title: const Text("Clear"),
+                    onTap: () {
+                      setState(() {
+                        selected = [];
+                        widget.onChanged(selected);
+                      });
+                    }),
+                ...Shops.shops
+                    .map(
+                      (shop) => ListTile(
+                        leading: Checkbox(
+                          activeColor: AppTheme.color["accent-primary"],
+                          checkColor: AppTheme.color["white"],
+                          value: selected.contains(shop),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                selected.add(shop);
+                              } else {
+                                selected.remove(shop);
+                              }
+                              widget.onChanged(selected);
+                            });
+                          },
+                        ),
+                        title: Text(shop),
+                        trailing: IconButton(
+                          onPressed: () {
+                            onDeleteShop(shop);
+                          },
+                          icon: const Icon(Icons.delete),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                ListTile(
+                  onTap: onNewShop,
+                  leading: const Icon(Icons.add),
+                  title: const Text("New Shop"),
                 ),
-                title: Text(shop),
-                trailing: IconButton(
-                  onPressed: () {
-                    onDeleteShop(shop);
-                  },
-                  icon: const Icon(Icons.delete),
-                ),
-              ),
-            ).toList(),
-            ListTile(
-              onTap: onNewShop,
-              leading: const Icon(Icons.add),
-              title: const Text("New Shop"),
+              ],
             ),
-          ],
-        ),
-      ) :
-      const Center(
-        child: CircularProgressIndicator(),
-      );
+          )
+        : const Center(
+            child: CircularProgressIndicator(),
+          );
   }
 }

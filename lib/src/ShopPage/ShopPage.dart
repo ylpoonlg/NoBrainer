@@ -96,6 +96,17 @@ class _ShopPageState extends State<ShopPage> {
     _saveShopList();
   }
 
+  void _clearBoughtItems() {
+    shopList.removeWhere((item) {
+      return item["status"] == true;
+    });
+    // Update id
+    for (int i = 0; i < shopList.length; i++) {
+      shopList[i]["id"] = "shop-item-" + i.toString();
+    }
+    _saveShopList();
+  }
+
   void _updateShopItem(data) {
     for (int i = 0; i < shopList.length; i++) {
       if (shopList[i]["id"] == data["id"]) {
@@ -123,7 +134,7 @@ class _ShopPageState extends State<ShopPage> {
         int a = statusValue[i["status"]] ?? 0;
         int b = statusValue[j["status"]] ?? 0;
         return a.compareTo(b);
-      }      // Default to item mode
+      } // Default to item mode
       return i["title"].compareTo(j["title"]);
     });
 
@@ -146,6 +157,33 @@ class _ShopPageState extends State<ShopPage> {
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Shopping List"),
         actions: [
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  key: const Key("clear-bought-items"),
+                  title: const Text("Delete Confirmation"),
+                  content: const Text(
+                      "Are you sure you want to remove all the checked items?"),
+                  actions: <Widget>[
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Cancel")),
+                    TextButton(
+                        onPressed: () {
+                          _clearBoughtItems();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Confirm")),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.clear_all),
+          ),
           PopupMenuButton(
             initialValue: shopSortMode,
             onSelected: (value) {
