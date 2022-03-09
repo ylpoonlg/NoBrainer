@@ -76,7 +76,7 @@ class _TodoPageState extends State<TodoPage> {
 
   void _addTodoItem() {
     Map newItem = Map.from(defaultTodoItem);
-    newItem["id"] = "todo-item-" + todoList.length.toString();
+    newItem["id"] = "todo-item-" + const Uuid().v1();
     newItem["deadline"] = DateTime.now().toString();
     todoList.add(newItem);
     _saveTodoList(); // Save to local storage first
@@ -94,10 +94,6 @@ class _TodoPageState extends State<TodoPage> {
     todoList.removeWhere((item) {
       return item["id"] == id;
     });
-    // Update id
-    for (int i = 0; i < todoList.length; i++) {
-      todoList[i]["id"] = "todo-item-" + i.toString();
-    }
     _saveTodoList();
   }
 
@@ -105,10 +101,6 @@ class _TodoPageState extends State<TodoPage> {
     todoList.removeWhere((item) {
       return item["status"] == "completed";
     });
-    // Update id
-    for (int i = 0; i < todoList.length; i++) {
-      todoList[i]["id"] = "todo-item-" + i.toString();
-    }
     _saveTodoList();
   }
 
@@ -193,7 +185,8 @@ class _TodoPageState extends State<TodoPage> {
                 ),
               );
             },
-            icon: const Icon(Icons.clear_all),
+            icon: const Icon(Icons.remove_done),
+            tooltip: "Clear completed tasks",
           ),
           PopupMenuButton(
             initialValue: todoSortMode,
@@ -203,6 +196,7 @@ class _TodoPageState extends State<TodoPage> {
               });
             },
             icon: const Icon(Icons.sort),
+            tooltip: "Sort",
             itemBuilder: (BuildContext context) {
               return todoSortModes.map((Map mode) {
                 return PopupMenuItem<String>(

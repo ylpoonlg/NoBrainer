@@ -5,6 +5,7 @@ import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/AnalysisPage.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/FinancePage/FinanceFilter.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItem.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 
@@ -23,6 +24,13 @@ class FinancePage extends StatefulWidget {
 class _FinancePageState extends State<FinancePage> {
   List<dynamic> financeList = []; // Current status of the finance list
   bool isFinanceListLoaded = false;
+
+  Map filter = {
+    "cats": [],
+    "paymethod": [],
+    "date-from": null,
+    "date-to": null,
+  };
 
   List<Map> categories = [];
 
@@ -92,10 +100,6 @@ class _FinancePageState extends State<FinancePage> {
     financeList.removeWhere((item) {
       return item["id"] == id;
     });
-    // Update id
-    for (int i = 0; i < financeList.length; i++) {
-      financeList[i]["id"] = "finance-item-" + i.toString();
-    }
     _saveFinanceList();
   }
 
@@ -109,6 +113,13 @@ class _FinancePageState extends State<FinancePage> {
     _saveFinanceList();
   }
 
+  bool _isFilterSet() {
+    return !filter["cats"].isEmpty ||
+        filter["date-from"] != null ||
+        filter["date-to"] != null ||
+        !filter["paymethod"].isEmpty;
+  }
+
   /// Sort the list according to the sort mode.
   ///
   /// Returns widgets of the finance list.
@@ -120,26 +131,59 @@ class _FinancePageState extends State<FinancePage> {
       (i, j) => j["time"].compareTo(i["time"]),
     ); // Sort by descending time
 
+    /// Returns whether any of the shops is in the filtered list of shops.
+    bool catInFilter(String cat) {
+      if (filter["cats"].isEmpty) return true;
+      for (Map catMap in filter["cats"]) {
+        if (cat == catMap["cat"]) return true;
+      }
+      return false;
+    }
+
+    bool payMethodInFilter(String payMethod) {
+      if (filter["paymethod"].isEmpty) return true;
+      for (String item in filter["paymethod"]) {
+        if (payMethod == item) return true;
+      }
+      return false;
+    }
+
+    bool dateInFilter(DateTime dt) {
+      if (filter["date-from"] != null) {
+        if (dt.compareTo(filter["date-from"]) < 0) return false;
+      }
+      if (filter["date-to"] != null) {
+        if (dt.compareTo(filter["date-to"].add(const Duration(days: 1))) > 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
-      Map catData = {
-        "cat": "",
-        "icon": Icons.close,
-        "color": Colors.transparent,
-      };
-      CategoryListState.categories.forEach((cat) {
-        if (cat["cat"] == sortedList[i]["cat"]) {
-          catData = cat;
-        }
-      });
+      if (catInFilter(sortedList[i]["cat"]) &&
+          dateInFilter(DateTime.parse(sortedList[i]["time"])) &&
+          payMethodInFilter(sortedList[i]["paymethod"] ?? "")) {
+        Map catData = {
+          "cat": "",
+          "icon": Icons.close,
+          "color": Colors.transparent,
+        };
+        CategoryListState.categories.forEach((cat) {
+          if (cat["cat"] == sortedList[i]["cat"]) {
+            catData = cat;
+          }
+        });
 
-      items.add(FinanceItem(
-        key: Key(sortedList[i]["id"] + const Uuid().v1()),
-        data: sortedList[i],
-        catData: catData,
-        onDelete: _deleteFinanceItem,
-        onUpdate: _updateFinanceItem,
-      ));
+        items.add(FinanceItem(
+          key: Key(sortedList[i]["id"] + const Uuid().v1()),
+          data: sortedList[i],
+          catData: catData,
+          onDelete: _deleteFinanceItem,
+          onUpdate: _updateFinanceItem,
+        ));
+      }
     }
     return items;
   }
@@ -154,15 +198,38 @@ class _FinancePageState extends State<FinancePage> {
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Finance"),
         actions: [
-            IconButton(
-                onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>
-                            AnalysisPage(financeList: financeList),
-                    ));
-                },
-                icon: const Icon(Icons.analytics),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => AnalysisPage(financeList: financeList),
+              ));
+            },
+            icon: const Icon(Icons.analytics),
+          ),
+          IconButton(
+            // Filter Button
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FinanceFilter(
+                    filter: filter,
+                    onApply: (newFilter) {
+                      setState(() {
+                        filter = newFilter;
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.filter_list,
+              color: _isFilterSet()
+                  ? AppTheme.color["accent-primary"]
+                  : AppTheme.color["white"],
             ),
+            tooltip: "Filter and Sort",
+          ),
         ],
       ),
       body: isFinanceListLoaded

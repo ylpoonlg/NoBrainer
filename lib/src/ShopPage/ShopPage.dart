@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/ShopPage/ShopFilter.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
 import 'package:sqflite/sqflite.dart';
@@ -13,7 +14,7 @@ import 'package:uuid/uuid.dart';
 class ShopPage extends StatefulWidget {
   final String uuid;
 
-  ShopPage({required String this.uuid});
+  const ShopPage({Key? key, required this.uuid}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ShopPageState();
@@ -23,9 +24,10 @@ class _ShopPageState extends State<ShopPage> {
   List<dynamic> shopList = []; // Current status of the shopping list
   bool isShopListLoaded = false;
 
-  String shopSortMode =
-      shopSortModes[0]["value"]; // Sorting modes for shopping items
-  String displayGroup = "all"; // group to display
+  Map filter = {
+    "shops": [],
+    "sort-mode": shopSortModes[0]["value"],
+  };
 
   _ShopPageState() : super() {
     _loadShopList();
@@ -72,7 +74,7 @@ class _ShopPageState extends State<ShopPage> {
 
   void _addShopItem() {
     Map newItem = Map.from(defaultShopItem);
-    newItem["id"] = "shop-item-" + shopList.length.toString();
+    newItem["id"] = "shop-item-" + const Uuid().v1();
     shopList.add(newItem);
     _saveShopList(); // Save to local storage first
 
@@ -89,10 +91,6 @@ class _ShopPageState extends State<ShopPage> {
     shopList.removeWhere((item) {
       return item["id"] == id;
     });
-    // Update id
-    for (int i = 0; i < shopList.length; i++) {
-      shopList[i]["id"] = "shop-item-" + i.toString();
-    }
     _saveShopList();
   }
 
@@ -100,10 +98,6 @@ class _ShopPageState extends State<ShopPage> {
     shopList.removeWhere((item) {
       return item["status"] == true;
     });
-    // Update id
-    for (int i = 0; i < shopList.length; i++) {
-      shopList[i]["id"] = "shop-item-" + i.toString();
-    }
     _saveShopList();
   }
 
@@ -117,6 +111,10 @@ class _ShopPageState extends State<ShopPage> {
     _saveShopList();
   }
 
+  bool _isFilterSet() {
+    return !filter["shops"].isEmpty;
+  }
+
   /// Sort the list according to the sort mode.
   ///
   /// Returns widgets of the shopping list.
@@ -125,7 +123,7 @@ class _ShopPageState extends State<ShopPage> {
 
     // Sort items in ascending value
     sortedList.sort((i, j) {
-      if (shopSortMode == "status") {
+      if (filter["sort-mode"] == "status") {
         // Put items that have not been bought at the front
         const Map<bool, int> statusValue = {
           false: 0,
@@ -138,14 +136,28 @@ class _ShopPageState extends State<ShopPage> {
       return i["title"].compareTo(j["title"]);
     });
 
+    /// Returns whether any of the shops is in the filtered list of shops.
+    bool shopInFilter(List shops) {
+      if (filter["shops"].isEmpty) return true;
+      for (String shop in shops) {
+        for (String filter in filter["shops"]) {
+          if (shop == filter) return true;
+        }
+      }
+      return false;
+    }
+
     List<Widget> items = [];
     for (int i = 0; i < sortedList.length; i++) {
-      items.add(ShopItem(
-        key: Key("shopitem-" + const Uuid().v1()),
-        data: sortedList[i],
-        onDelete: _deleteShopItem,
-        onUpdate: _updateShopItem,
-      ));
+      // add if any of the shops in sortedList["shops"] is also in filter["shops"]
+      if (shopInFilter(sortedList[i]["shops"])) {
+        items.add(ShopItem(
+          key: Key("shopitem-" + const Uuid().v1()),
+          data: sortedList[i],
+          onDelete: _deleteShopItem,
+          onUpdate: _updateShopItem,
+        ));
+      }
     }
     return items;
   }
@@ -158,6 +170,7 @@ class _ShopPageState extends State<ShopPage> {
         title: const Text("Shopping List"),
         actions: [
           IconButton(
+            // Clear Button
             onPressed: () {
               showDialog(
                 context: context,
@@ -182,22 +195,32 @@ class _ShopPageState extends State<ShopPage> {
                 ),
               );
             },
-            icon: const Icon(Icons.clear_all),
+            icon: const Icon(Icons.remove_done),
+            tooltip: "Clear checked items",
           ),
-          PopupMenuButton(
-            initialValue: shopSortMode,
-            onSelected: (value) {
-              setState(() {
-                shopSortMode = value.toString();
-              });
+          IconButton(
+            // Filter Button
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ShopFilter(
+                    filter: filter,
+                    onApply: (newFilter) {
+                      setState(() {
+                        filter = newFilter;
+                      });
+                    },
+                  ),
+                ),
+              );
             },
-            icon: const Icon(Icons.sort),
-            itemBuilder: (BuildContext context) {
-              return shopSortModes.map((Map mode) {
-                return PopupMenuItem<String>(
-                    value: mode["value"], child: Text(mode["label"]));
-              }).toList();
-            },
+            icon: Icon(
+              Icons.filter_list,
+              color: _isFilterSet()
+                  ? AppTheme.color["accent-primary"]
+                  : AppTheme.color["white"],
+            ),
+            tooltip: "Filter and Sort",
           ),
         ],
       ),
