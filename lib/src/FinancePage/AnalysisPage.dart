@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:csv/csv.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
@@ -6,6 +11,7 @@ import 'package:nobrainer/src/FinancePage/CategoryList.dart';
 import 'package:nobrainer/src/FinancePage/PayMethods.dart';
 import 'package:nobrainer/src/Functions/Functions.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class AnalysisPage extends StatefulWidget {
@@ -32,6 +38,61 @@ class _AnalysisPageState extends State<AnalysisPage> {
     dateEnd = DateTime(now.year, now.month, now.day);
     dateStart = _getPreviousDate(dateEnd, timeScope);
     _analyzeFinanceList();
+  }
+
+  _onExportData() async {
+    PermissionStatus storagePermission = await Permission.storage.request();
+    if (!storagePermission.isGranted) return;
+
+    if (Platform.isAndroid) {
+      int sdk = (await DeviceInfoPlugin().androidInfo).version.sdkInt ?? -1;
+      debugPrint("sdk version: " + sdk.toString());
+      if (sdk >= 30) {
+        PermissionStatus managePermission =
+            await Permission.manageExternalStorage.request();
+        if (!managePermission.isGranted) return;
+      }
+    }
+
+    List<List<dynamic>> rows = [];
+
+    rows.add([
+      "title",
+      "amount",
+      "spending",
+      "paymethod",
+      "category",
+      "time",
+      "desc",
+    ]);
+    for (var item in financeList) {
+      rows.add([
+        item["title"],
+        item["amount"],
+        item["spending"],
+        item["paymethod"],
+        item["cat"],
+        item["time"].toString(),
+        item["desc"],
+      ]);
+    }
+
+    try {
+      String csv = const ListToCsvConverter().convert(rows);
+      //String dir = (await ExternalPath.getExternalStorageDirectories())[0];
+      String dir = "/storage/emulated/0/";
+      File file = File(dir + "/NoBrainer/finance_data.csv");
+      debugPrint(file.path);
+      file.createSync(recursive: true);
+      file.writeAsString(csv);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Successfully exported data to " + file.path),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Failed to export data: " + e.toString()),
+      ));
+    }
   }
 
   getCurrencySymbol() async {
@@ -80,11 +141,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
         newYear++;
         break;
     }
-    return DateTime(newYear, newMonth, newDay).subtract(const Duration(days: 1));
+    return DateTime(newYear, newMonth, newDay)
+        .subtract(const Duration(days: 1));
   }
 
-  void _onSelectDate(BuildContext context, {bool isDateEnd=true}) {
-  /// Prompts user for start or end date selection
+  void _onSelectDate(BuildContext context, {bool isDateEnd = true}) {
+    /// Prompts user for start or end date selection
     showDialog(
       context: context,
       builder: (context) => DatePickerDialog(
@@ -95,7 +157,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
       ),
     ).then((date) {
       setState(() {
-
         if (date != null) {
           if (isDateEnd) {
             dateEnd = DateTime(
@@ -113,12 +174,9 @@ class _AnalysisPageState extends State<AnalysisPage> {
         }
         timeScope = "";
         _analyzeFinanceList();
-
       });
-
     });
   }
-    
 
   /// Returns a map of spendings for each category in financeList
   void _analyzeFinanceList() {
@@ -127,27 +185,29 @@ class _AnalysisPageState extends State<AnalysisPage> {
     catSpending = {};
     methodSpending = {};
     for (var item in financeList) {
-        String cat = item["cat"] ?? "";
-        String payMethod = item["paymethod"] ?? "";
-        DateTime date = DateTime.parse(item["time"]);
-        date = DateTime(date.year, date.month, date.day);
-        if (date.compareTo(dateStart) >= 0 && date.compareTo(dateEnd) <= 0) {
-          if (!catSpending.containsKey(cat)) catSpending[cat] = 0.0;
-          if (!methodSpending.containsKey(payMethod)) methodSpending[payMethod] = 0.0;
+      String cat = item["cat"] ?? "";
+      String payMethod = item["paymethod"] ?? "";
+      DateTime date = DateTime.parse(item["time"]);
+      date = DateTime(date.year, date.month, date.day);
+      if (date.compareTo(dateStart) >= 0 && date.compareTo(dateEnd) <= 0) {
+        if (!catSpending.containsKey(cat)) catSpending[cat] = 0.0;
+        if (!methodSpending.containsKey(payMethod))
+          methodSpending[payMethod] = 0.0;
 
-          if (item["spending"]) {
-            catSpending[cat] = catSpending[cat]! - item["amount"];
-            methodSpending[payMethod] = methodSpending[payMethod]! - item["amount"];
-            totalSpendings += item["amount"];
-          } else {
-            catSpending[cat] = catSpending[cat]! + item["amount"];
-            methodSpending[payMethod] = methodSpending[payMethod]! + item["amount"];
-            totalIncome += item["amount"];
-          }
+        if (item["spending"]) {
+          catSpending[cat] = catSpending[cat]! - item["amount"];
+          methodSpending[payMethod] =
+              methodSpending[payMethod]! - item["amount"];
+          totalSpendings += item["amount"];
+        } else {
+          catSpending[cat] = catSpending[cat]! + item["amount"];
+          methodSpending[payMethod] =
+              methodSpending[payMethod]! + item["amount"];
+          totalIncome += item["amount"];
         }
+      }
     }
   }
-
 
   void _onNextPeriod() {
     setState(() {
@@ -164,7 +224,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
       _analyzeFinanceList();
     });
   }
-
 
   /// Returns horizontal Wrap with net total, spending and income
   List<Widget> _getTotalWrap() {
@@ -186,7 +245,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
             Text("Total", style: Theme.of(context).textTheme.headline4),
             Text(
               (totalIncome <= totalSpendings ? "-" : "+") +
-              currency + (totalIncome - totalSpendings).abs().toStringAsFixed(2),
+                  currency +
+                  (totalIncome - totalSpendings).abs().toStringAsFixed(2),
               style: Theme.of(context).textTheme.headline5,
             ),
           ],
@@ -224,36 +284,35 @@ class _AnalysisPageState extends State<AnalysisPage> {
     ];
   }
 
-
   List<Widget> _getCategoryTiles() {
     /// Calculate the sutotal for each category and return a list of ListTiles
     List<Widget> result = [];
     List<Map> categories = CategoryListState.categories;
     for (var cat in categories) {
-        double? amount = catSpending[cat["cat"]];
-        if (amount == null) continue;
+      double? amount = catSpending[cat["cat"]];
+      if (amount == null) continue;
 
-        Color color = AppTheme.color["green"];
-        String sign = "+";
-        if (amount <= 0) {
-            color = AppTheme.color["red"];
-            sign = "-";
-        }
+      Color color = AppTheme.color["green"];
+      String sign = "+";
+      if (amount <= 0) {
+        color = AppTheme.color["red"];
+        sign = "-";
+      }
 
-        result.add(ListTile(
-          leading: Container(
-            padding: const EdgeInsets.all(5),
-            child: Icon(
-              cat["icon"],
-              color: cat["color"],
-            ),
+      result.add(ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(5),
+          child: Icon(
+            cat["icon"],
+            color: cat["color"],
           ),
-          title: Text(cat["cat"]),
-          trailing: Text(
-            sign + currency + amount.abs().toStringAsFixed(2),
-            style: TextStyle(color: color),
-          ),
-        ));
+        ),
+        title: Text(cat["cat"]),
+        trailing: Text(
+          sign + currency + amount.abs().toStringAsFixed(2),
+          style: TextStyle(color: color),
+        ),
+      ));
     }
     return result;
   }
@@ -267,8 +326,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
       Color color = AppTheme.color["green"];
       String sign = "+";
       if (amount <= 0) {
-          color = AppTheme.color["red"];
-          sign = "-";
+        color = AppTheme.color["red"];
+        sign = "-";
       }
       result.add(ListTile(
         title: Text(payMethod),
@@ -278,7 +337,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
         ),
       ));
     }
-    
+
     return result;
   }
 
@@ -297,13 +356,18 @@ class _AnalysisPageState extends State<AnalysisPage> {
       appBar: AppBar(
         backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Analytics"),
-        actions: [],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            onPressed: _onExportData,
+          ),
+        ],
       ),
 
       body: ListView(
         children: [
           ..._getTotalWrap(),
-          
+
           // Categories
           Container(
             padding: const EdgeInsets.only(
@@ -346,7 +410,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
               top: 15,
               bottom: 10,
             ),
-            child: const Text("Payment Methods", style: TextStyle(fontSize: 20)),
+            child:
+                const Text("Payment Methods", style: TextStyle(fontSize: 20)),
           ),
           Container(
             height: 240,
@@ -390,20 +455,22 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text("Time Period", style: Theme.of(context).textTheme.headline6),
+                  Text("Time Period",
+                      style: Theme.of(context).textTheme.headline6),
                   PopupMenuButton(
                     initialValue: timeScope,
                     onSelected: (val) {
                       setState(() {
-                          timeScope = val.toString();
-                          dateStart = _getPreviousDate(dateEnd, timeScope);
-                          _analyzeFinanceList();
+                        timeScope = val.toString();
+                        dateStart = _getPreviousDate(dateEnd, timeScope);
+                        _analyzeFinanceList();
                       });
                     },
                     itemBuilder: (context) {
-                        return financeAnalyzeScope.map((item) =>
-                          PopupMenuItem(value: item["value"], child: Text(item["label"]))
-                        ).toList();
+                      return financeAnalyzeScope
+                          .map((item) => PopupMenuItem(
+                              value: item["value"], child: Text(item["label"])))
+                          .toList();
                     },
                     child: Container(
                       height: 40,
@@ -412,12 +479,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
                         border: Border.all(
                           color: fgColor,
                         ),
-                        borderRadius: const BorderRadius.all(Radius.circular(5)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(5)),
                       ),
                       child: Center(
-                        child: Text(timeScope == "" ? "- - -" :
-                          financeAnalyzeScope.firstWhere((item) => item["value"] == timeScope)["label"]
-                        ),
+                        child: Text(timeScope == ""
+                            ? "- - -"
+                            : financeAnalyzeScope.firstWhere(
+                                (item) => item["value"] == timeScope)["label"]),
                       ),
                     ),
                   ),
@@ -437,14 +506,18 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     icon: const Icon(Icons.skip_previous),
                   ),
                   TextButton(
-                    onPressed: () {_onSelectDate(context, isDateEnd: false);},
+                    onPressed: () {
+                      _onSelectDate(context, isDateEnd: false);
+                    },
                     child: Text(
                       DateTimeFormat.dateOnly(dateStart),
                     ),
                   ),
                   const Text("From - To"),
                   TextButton(
-                    onPressed: () {_onSelectDate(context, isDateEnd: true);},
+                    onPressed: () {
+                      _onSelectDate(context, isDateEnd: true);
+                    },
                     child: Text(
                       DateTimeFormat.dateOnly(dateEnd),
                     ),
