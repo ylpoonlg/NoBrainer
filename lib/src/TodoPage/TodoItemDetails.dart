@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
@@ -129,6 +130,27 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
                 DateTimeFormat.dateFormat(DateTime.parse(data["deadline"])),
               ),
             ),
+          ),
+
+          // Notification
+          ListTile(
+            contentPadding: listTilePadding,
+            title: const Text("Notification"),
+            trailing: Switch(
+              onChanged: (value) {
+                setState(() {
+                  data["notify"] = value;
+                });
+              },
+              value: data["notify"] ?? false,
+              activeColor: AppTheme.color["accent-primary"],
+            ),
+            // trailing: MaterialButton(
+            //   onPressed: () async {
+            //     await TodoNotifier().scheduleNotification(data);
+            //   },
+            //   child: const Text("Test"),
+            // ),
           ),
         ],
       ),

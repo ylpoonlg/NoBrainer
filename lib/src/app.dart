@@ -4,6 +4,11 @@ import 'package:nobrainer/src/HomePage/HomePage.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Database/db.dart';
 
+class NavKey {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+}
+
 class NoBrainerApp extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => NoBrainerAppState();
@@ -39,34 +44,38 @@ class NoBrainerAppState extends State<NoBrainerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return isDatabaseReady ?
-    MaterialApp(
-      title: 'NoBrainer',
-      theme: AppTheme.theme(sh.settings["theme"] ?? "light"),
-      home: HomePage(sh: sh),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child ?? const Text("Something went wrong..."),
-      ),
-    ) :
-    MaterialApp(
-      title: 'Loading',
-      theme: AppTheme.theme("light"),
-      home: Scaffold(
-        body: Center(
-          child: Wrap(
-            direction: Axis.vertical,
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 20),
-              showPermissionMsg ?
-                const Text("Please grant the\nStorage Permission from\nthe settings of your device") : Container(),
-            ],
-          ),
-        ),
-      ),
-    );
+    return isDatabaseReady
+        ? MaterialApp(
+            title: 'NoBrainer',
+            theme: AppTheme.theme(sh.settings["theme"] ?? "light"),
+            home: HomePage(sh: sh),
+            builder: (context, child) => MediaQuery(
+              data:
+                  MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: child ?? const Text("Something went wrong..."),
+            ),
+            navigatorKey: NavKey.navigatorKey,
+          )
+        : MaterialApp(
+            title: 'Loading',
+            theme: AppTheme.theme("light"),
+            home: Scaffold(
+              body: Center(
+                child: Wrap(
+                  direction: Axis.vertical,
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 20),
+                    showPermissionMsg
+                        ? const Text(
+                            "Please grant the\nStorage Permission from\nthe settings of your device")
+                        : Container(),
+                  ],
+                ),
+              ),
+            ),
+          );
   }
 }

@@ -7,6 +7,7 @@ import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
+import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -54,7 +55,6 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   void _loadTodoList() async {
-    debugPrint("Loading Todo List");
     final Database db = await DbHelper.database;
     final List<dynamic> dbMap = await db.query(
       "braincells",
@@ -108,6 +108,12 @@ class _TodoPageState extends State<TodoPage> {
     for (int i = 0; i < todoList.length; i++) {
       if (todoList[i]["id"] == data["id"]) {
         todoList[i] = data;
+
+        if (data["notify"] == true && data["status"] != "completed") {
+          TodoNotifier().scheduleNotification(data);
+        } else {
+          TodoNotifier().unscheduleNotification(data["id"].hashCode);
+        }
         break;
       }
     }

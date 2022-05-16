@@ -11,6 +11,7 @@ Map defaultTodoItem = {
   "status": "todo",
   "deadline": "a datetime object",
   "title": "New Task",
+  "notify": false,
   "desc": "",
 };
 
