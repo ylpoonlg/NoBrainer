@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:external_path/external_path.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Database/tables.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,24 +15,27 @@ class DbHelper {
   static dynamic database;
 
   static const dbName = "nobrainer.db";
+  static String dbPath = "";
 
   /// Current database version, increment by one for major updates
-  static const int dbVersion = 3;
+  static const int dbVersion = 4;
 
   DbHelper();
 
-  /// Returns true if user has granted the app with the provided permission 
-  Future<bool> checkPermission(Permission permission) async {
-    PermissionStatus status = await permission.request();
-    if (status.isGranted) {
-      debugPrint("Permission granted!");
-      return true;
-    } else if (await Permission.storage.request().isDenied) {
-      debugPrint("Permission denied");
-    } else if (await Permission.storage.request().isPermanentlyDenied) {
-      debugPrint("Permission permenantly denied");
+  static Future<bool> checkPermissions() async {
+    PermissionStatus storagePermission = await Permission.storage.request();
+    if (!storagePermission.isGranted) return false;
+
+    if (Platform.isAndroid) {
+      int sdk = (await DeviceInfoPlugin().androidInfo).version.sdkInt ?? -1;
+      if (sdk >= 30) {
+        PermissionStatus managePermission =
+            await Permission.manageExternalStorage.request();
+        if (!managePermission.isGranted) return false;
+      }
     }
-    return false;
+
+    return true;
   }
 
   /// Initialize database and set database to Future<Database> if null and permission granted.
@@ -37,16 +43,15 @@ class DbHelper {
     WidgetsFlutterBinding.ensureInitialized();
     if (database != null) return;
 
+    // Check for permissions
+    bool isPermissionGranted = await checkPermissions();
+    if (!isPermissionGranted) return;
 
-    /** Experimental - for migrating to external storage for easier backup */
-    // Check storage permission
-    //bool isPermissionGranted = await checkPermission(Permission.manageExternalStorage);
-    //if (!isPermissionGranted) return;
-    //Directory("/storage/emulated/0/NoBrainer/").create(recursive: true);
-    //String dbPath = "/storage/emulated/0/NoBrainer";
-
-    String dbPath = await getDatabasesPath();
+    List<String> paths = await ExternalPath.getExternalStorageDirectories();
+    String dbPath = paths[0] + "/NoBrainer/";
+    Directory(dbPath).createSync(recursive: true);
     debugPrint(" ==> Open database at: " + dbPath);
+    DbHelper.dbPath = dbPath;
 
     database = openDatabase(
       join(dbPath, dbName),
@@ -54,8 +59,9 @@ class DbHelper {
         _createTables(db);
       },
       onUpgrade: (db, oldver, newver) async {
-        // Reorder braincells
+        // New tables structure
         if (oldver < 4) {
+          _createTables(db);
         }
       },
       version: dbVersion,
@@ -66,17 +72,9 @@ class DbHelper {
   }
 
   void _createTables(db) async {
-    await db.execute(
-      '''CREATE TABLE braincells (
-        uuid TEXT PRIMARY KEY,
-        orderIndex INTEGER,
-        props TEXT,
-        content TEXT
-      );''',
-    );
-    await db.execute(
-      '''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''',
-    );
+    for (String table in dbTables) {
+      await db.execute("CREATE TABLE IF NOT EXISTS $table;");
+    }
   }
 
   _debug() async {

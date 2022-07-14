@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/AboutPage/AboutPage.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/FinancePage.dart';
 import 'package:nobrainer/src/HomePage/BraincellTile.dart';
@@ -24,42 +25,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> braincells = [];
+  //List<Map<String, dynamic>> braincells = [];
+  List<BrainCell> braincells = [];
   bool isExpandAddOptions = false;
   bool isBraincellsLoaded = false;
 
+  int folderParent = 0;
+
   _HomePageState() {
     _loadBraincells();
-  }
-
-  /// Returns the corresponding values needed for a braincell
-  /// based on its type
-  Map cellMap(cell) {
-    if (cell["type"] == "todolist") {
-      return {
-        "page": TodoPage(
-          uuid: cell["uuid"],
-        ),
-      };
-    } else if (cell["type"] == "shoplist") {
-      return {
-        "page": ShopPage(
-          uuid: cell["uuid"],
-        ),
-      };
-    } else if (cell["type"] == "finance") {
-      return {
-        "page": FinancePage(
-          uuid: cell["uuid"],
-        ),
-      };
-    } else {
-      return {
-        "page": TodoPage(
-          uuid: cell["uuid"],
-        ),
-      };
-    }
   }
 
   /// Save braincells to local database
@@ -70,45 +44,57 @@ class _HomePageState extends State<HomePage> {
     });
 
     final Database db = await DbHelper.database;
-    for (var i = 0; i < braincells.length; i++) {
-      final cell = braincells[i];
 
-      // Create value map for insert/update operations
-      final values = {
-        'orderIndex': i,
-        'props': json.encode({
-          "name": cell["name"],
-          "type": cell["type"],
-          "imported": cell["imported"],
-          "color": AppTheme.colorToMap(cell["color"]),
-        }),
-      };
+    for (int i = 0; i < braincells.length; i++) {
+      BrainCell cell = braincells[i];
 
-      // Check if braincell exists
-      final dbMap = await db.query(
-        "braincells",
-        where: "uuid = \"" + cell["uuid"] + "\"",
-      );
-      if (dbMap.isEmpty) {
-        values["uuid"] = cell["uuid"];
-        values["content"] = "[]";
-        await db.insert(
-          "braincells",
-          values,
+      // Save to table BrainCells
+      if (!cell.isFolder) {
+        Map<String, Object?> newCell = {
+          "name": cell.title,
+          "type": cell.type,
+          "color": cell.color.value,
+          "settings": json.encode(cell.settings),
+        };
+        if (cell.cellid != -1) {
+          newCell["cellid"] = cell.cellid;
+        }
+        await db.insert("BrainCells",
+          newCell,
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-      } else {
-        final result = await db.update(
-          "braincells",
-          values,
-          where: 'uuid = "' + cell["uuid"] + '"',
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+
+
+        List<Map> rowid = await db.rawQuery("SELECT last_insert_rowid();");
+        if (rowid.isNotEmpty) {
+          List<Map> lastRow = await db.query("Braincells",
+            where: "rowid = ?", whereArgs: [rowid[0]["last_insert_rowid()"]],
+          );
+          cell.cellid = lastRow[0]["cellid"];
+          debugPrint("New cellid = " + cell.cellid.toString());
+          debugPrint("Last rowid = " + rowid[0]["last_insert_rowid()"].toString());
+        }
       }
-    }
 
-    //final dbMap = await db.query("braincells");
-    //debugPrint("Braincells DB: \n" + dbMap.toString());
+      // Save to table CellFolders
+      Map<String, Object?> newFolder = {
+        "cellid": cell.cellid,
+        "orderid": i,
+        "name": cell.title,
+        "parent": folderParent,
+      };
+      List<Map> folder = await db.query("CellFolders",
+        where: "cellid = ?", whereArgs: [cell.cellid],
+      );
+      if (folder.isNotEmpty) {
+        newFolder["id"] = folder[0]["id"];
+      }
+      await db.insert("CellFolders",
+        newFolder,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    
 
     setState(() {
       isBraincellsLoaded = true;
@@ -119,22 +105,30 @@ class _HomePageState extends State<HomePage> {
   /// Sets isBraincellsLoaded = true when complete
   _loadBraincells() async {
     final Database db = await DbHelper.database;
-    final List<dynamic> dbMap =
-        await db.query("braincells", orderBy: "orderIndex");
+    final List<Map> folders = await db.query("CellFolders",
+      where: "parent = ?", whereArgs: [folderParent],
+      orderBy: "orderid",
+    );
 
-    if (dbMap.isEmpty) {
-      braincells = [];
-    } else {
-      braincells = [];
-      for (var row in dbMap) {
-        final props = json.decode(row["props"]);
-        braincells.add({
-          "uuid": row["uuid"],
-          "name": props["name"],
-          "type": props["type"],
-          "imported": props["imported"],
-          "color": AppTheme.mapToColor(props["color"]),
-        });
+    braincells = [];
+    for (Map folder in folders) {
+      bool isFolder = folder["cellid"] == -1;
+      if (isFolder) {
+        braincells.add(BrainCell(
+          title: folder["name"], isFolder: true,
+        ));
+      } else {
+        List<Map> braincell = await db.query("Braincells",
+          where: "cellid = ?", whereArgs: [folder["cellid"]],
+        );
+        if (braincell.isEmpty) continue;
+        braincells.add(BrainCell(
+          cellid: folder["cellid"],
+          title: braincell[0]["name"],
+          type: braincell[0]["type"],
+          color: Color(braincell[0]["color"]),  // Debug
+          settings: json.decode(braincell[0]["settings"]),
+        ));
       }
     }
 
@@ -145,11 +139,11 @@ class _HomePageState extends State<HomePage> {
 
   /// Add new braincell to state list
   /// Either created or imported
-  _newBraincell(cell) {
+  _newBraincell(BrainCell cell) {
     bool newCell = true;
     for (var i = 0; i < braincells.length; i++) {
-      if (braincells[i]["uuid"] == cell["uuid"]) {
-        braincells[i] = Map.from(cell);
+      if (braincells[i].cellid == cell.cellid) {
+        braincells[i] = cell;
         newCell = false;
         break;
       }
@@ -160,7 +154,7 @@ class _HomePageState extends State<HomePage> {
     _saveBraincell();
   }
 
-  _editBraincell(cell) {
+  _editBraincell(BrainCell cell) {
     setState(() {
       isExpandAddOptions = false;
     });
@@ -171,8 +165,8 @@ class _HomePageState extends State<HomePage> {
           cell: cell,
           callback: (cell) {
             for (var i = 0; i < braincells.length; i++) {
-              if (braincells[i]["uuid"] == cell["uuid"]) {
-                braincells[i] = Map.from(cell);
+              if (braincells[i].cellid == cell.cellid) {
+                braincells[i] = cell;
               }
             }
             _saveBraincell();
@@ -182,7 +176,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _deleteBraincell(cell) {
+  _deleteBraincell(BrainCell cell) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -198,7 +192,7 @@ class _HomePageState extends State<HomePage> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              braincells.removeWhere((cell) => cell["uuid"] == cell["uuid"]);
+              braincells.removeWhere((cell2) => cell2.cellid == cell.cellid);
 
               setState(() {
                 isBraincellsLoaded = false;
@@ -206,9 +200,9 @@ class _HomePageState extends State<HomePage> {
 
               final Database db = await DbHelper.database;
               await db.delete(
-                "braincells",
-                where: "uuid = ?",
-                whereArgs: [cell["uuid"]],
+                "Braincells",
+                where: "cellid = ?",
+                whereArgs: [cell.cellid],
               );
 
               _loadBraincells();
@@ -228,12 +222,11 @@ class _HomePageState extends State<HomePage> {
 
   /// Returns a list of BraincellTiles
   List<Widget> getBraincellList() {
-    return braincells
-        .map(
-          (cell) => BraincellTile(
-            key: Key("braincell-tile-" + cell["uuid"]),
+    return braincells.map(
+          (BrainCell cell) => BraincellTile(
+            key: Key("braincell-tile-" + cell.cellid.toString()),
             cell: cell,
-            page: cellMap(cell)["page"],
+            page: cell.getPage(),
             onDelete: _deleteBraincell,
             onEdit: _editBraincell,
           ),
@@ -254,7 +247,10 @@ class _HomePageState extends State<HomePage> {
             isExpandAddOptions = false;
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => NewBraincell(callback: _newBraincell),
+                builder: (context) => NewBraincell(
+                  cell: BrainCell(title: "New Cell"),
+                  callback: _newBraincell,
+                ),
               ),
             );
           });
@@ -294,8 +290,6 @@ class _HomePageState extends State<HomePage> {
             isExpandAddOptions = !isExpandAddOptions;
           });
         },
-        backgroundColor: AppTheme.color["accent-primary"],
-        foregroundColor: AppTheme.color["white"],
         child: isExpandAddOptions
             ? const Icon(Icons.close)
             : const Icon(Icons.add),
@@ -304,9 +298,8 @@ class _HomePageState extends State<HomePage> {
     return items;
   }
 
-  ///
-  ///
-  ///
+
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -316,24 +309,20 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text(
-          "NoBrainer",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("NoBrainer"),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
-                color: AppTheme.color["appbar-background"],
+                color: Palette.base,
               ),
-              child: const Text(
+              child: Text(
                 'NoBrainer',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Palette.foregroundDark,
                   fontSize: 24,
                 ),
               ),
@@ -379,23 +368,21 @@ class _HomePageState extends State<HomePage> {
         children: getFloatingActionButtons(),
       ),
       body: Center(
-        child: !isBraincellsLoaded
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: AppTheme.color["accent-primary"],
-                ),
-              )
-            : Container(
-                margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
-                child: ReorderableGridView.count(
-                  crossAxisCount: 2,
-                  childAspectRatio: braincellTilesAR,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  children: getBraincellList(),
-                  onReorder: _onReorder,
-                ),
-              ),
+        child: !isBraincellsLoaded ?
+          const Center(
+            child: CircularProgressIndicator(),
+          ) :
+          Container(
+            margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
+            child: ReorderableGridView.count(
+              crossAxisCount: 2,
+              childAspectRatio: braincellTilesAR,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              children: getBraincellList(),
+              onReorder: _onReorder,
+            ),
+          ),
       ),
     );
   }

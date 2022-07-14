@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:uuid/uuid.dart';
 
 class NewBraincell extends StatefulWidget {
   bool isEditMode = false;
-  Map<String, dynamic>? cell;
+  BrainCell cell;
   Function callback;
 
   NewBraincell({
     Key? key,
     this.isEditMode = false,
-    this.cell,
+    required this.cell,
     required this.callback,
   }) : super();
 
@@ -21,17 +22,11 @@ class NewBraincell extends StatefulWidget {
 }
 
 class _NewBraincellState extends State<NewBraincell> {
-  Map<String, dynamic> cell = {
-    "uuid": const Uuid().v1(),
-    "name": "My Braincell",
-    "type": "select",
-    "imported": false,
-    "color": AppTheme.color["gray"],
-  };
+  late BrainCell cell = widget.cell;
 
   bool validateInput() {
-    if (cell["name"] == "") return false;
-    if (cell["type"] == "select") return false;
+    if (cell.title == "") return false;
+    if (cell.type == "select") return false;
     return true;
   }
 
@@ -63,11 +58,11 @@ class _NewBraincellState extends State<NewBraincell> {
       builder: (context) => AlertDialog(
         content: SingleChildScrollView(
           child: ColorPicker(
-            pickerColor: cell["color"],
+            pickerColor: cell.color,
             paletteType: PaletteType.hueWheel,
             onColorChanged: (color) {
               setState(() {
-                cell["color"] = color;
+                cell.color = color;
               });
             },
           ),
@@ -86,14 +81,9 @@ class _NewBraincellState extends State<NewBraincell> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.cell != null) {
-      cell = widget.cell ?? {};
-    }
-
-    final Color foregroundColor =
-        AppTheme.getColorBrightness(cell["color"]) < 0.5
-            ? AppTheme.color["white"]
-            : AppTheme.color["black"];
+    final Color foregroundColor = cell.color.computeLuminance() < 0.5 ?
+      AppTheme.color["white"] :
+      AppTheme.color["black"];
 
     return Scaffold(
       appBar: AppBar(
@@ -119,9 +109,9 @@ class _NewBraincellState extends State<NewBraincell> {
             margin: const EdgeInsets.only(top: 20),
             padding: const EdgeInsets.only(left: 10, right: 10),
             child: TextField(
-              controller: TextEditingController(text: cell["name"]),
+              controller: TextEditingController(text: cell.title),
               onChanged: (text) {
-                cell["name"] = text;
+                cell.title = text;
               },
               decoration: const InputDecoration(
                 labelText: "Name",
@@ -132,10 +122,10 @@ class _NewBraincellState extends State<NewBraincell> {
           ),
           !widget.isEditMode
               ? PopupMenuButton(
-                  initialValue: cell["type"],
+                  initialValue: cell.type,
                   onSelected: (value) {
                     setState(() {
-                      cell["type"] = value.toString();
+                      cell.type = value.toString();
                     });
                   },
                   child: Container(
@@ -144,7 +134,7 @@ class _NewBraincellState extends State<NewBraincell> {
                       children: [
                         const Spacer(),
                         const Icon(Icons.list),
-                        Text("  " + typeLabel[cell["type"]].toString()),
+                        Text("  " + typeLabel[cell.type].toString()),
                         const Spacer(),
                       ],
                     ),
@@ -174,7 +164,7 @@ class _NewBraincellState extends State<NewBraincell> {
               child: const Text("Color"),
               style: TextButton.styleFrom(
                 primary: foregroundColor,
-                backgroundColor: cell["color"],
+                backgroundColor: cell.color,
               ),
             ),
           ),

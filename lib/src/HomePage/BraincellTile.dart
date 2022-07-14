@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/HomePage/NewBraincell.dart';
 
 class BraincellTile extends StatelessWidget {
-  Map cell;
+  BrainCell cell;
   Widget page;
   Function onEdit, onDelete;
 
@@ -19,17 +20,16 @@ class BraincellTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = cell["color"];
-
-    // Calculate the the brightness of the tile and use suitable foreground color
-    final Color foregroundColor =
-        AppTheme.getColorBrightness(backgroundColor) < 0.5
-            ? AppTheme.color["white"]
-            : AppTheme.color["black"];
+    final Color foregroundColor = cell.color.computeLuminance() < 0.5 ?
+      AppTheme.color["white"] :
+      AppTheme.color["black"];
 
     return Container(
       child: Card(
-        color: cell["color"],
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20))
+        ),
+        color: cell.color,
         child: InkWell(
           splashColor: Colors.grey.withAlpha(20),
           onTap: () {
@@ -45,7 +45,7 @@ class BraincellTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "    " + typeLabel[cell["type"]].toString(),
+                      "    " + typeLabel[cell.type].toString(),
                       style: TextStyle(
                         fontSize: 16,
                         color: foregroundColor.withAlpha(80),
@@ -81,7 +81,7 @@ class BraincellTile extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(left: 10, right: 10),
                 child: Text(
-                  cell["name"],
+                  cell.title,
                   style: TextStyle(
                     fontSize: 24,
                     color: foregroundColor,

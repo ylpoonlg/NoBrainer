@@ -41,18 +41,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   _onExportData() async {
-    PermissionStatus storagePermission = await Permission.storage.request();
-    if (!storagePermission.isGranted) return;
-
-    if (Platform.isAndroid) {
-      int sdk = (await DeviceInfoPlugin().androidInfo).version.sdkInt ?? -1;
-      debugPrint("sdk version: " + sdk.toString());
-      if (sdk >= 30) {
-        PermissionStatus managePermission =
-            await Permission.manageExternalStorage.request();
-        if (!managePermission.isGranted) return;
-      }
-    }
+    if (!await DbHelper.checkPermissions()) return;
 
     List<List<dynamic>> rows = [];
 
