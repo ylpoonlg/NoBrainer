@@ -16,7 +16,7 @@ class NoBrainerApp extends StatefulWidget {
 }
 
 class NoBrainerAppState extends State<NoBrainerApp> {
-  SettingsHandler sh = SettingsHandler();
+  Settings settings = Settings();
   bool isDatabaseReady = false;
   bool showPermissionMsg = false;
 
@@ -26,12 +26,16 @@ class NoBrainerAppState extends State<NoBrainerApp> {
 
   _initApp() async {
     // Listen for setting changes
-    sh.addListener(() {
+    settingsHandler.addListener(() async {
+      settings = await settingsHandler.getSettings();
       reloadApp();
     });
 
     // Init Database Instance
     await DbHelper().initDatabase();
+
+    settings = await settingsHandler.getSettings();
+
     setState(() {
       if (DbHelper.database != null) {
         isDatabaseReady = true;
@@ -50,8 +54,8 @@ class NoBrainerAppState extends State<NoBrainerApp> {
     return isDatabaseReady
         ? MaterialApp(
             title: 'NoBrainer',
-            theme: AppTheme.theme(sh.settings["theme"] ?? "light"),
-            home: HomePage(sh: sh),
+            theme: AppTheme.theme(settings.themeName),
+            home: const HomePage(),
             builder: (context, child) => MediaQuery(
               data:
                   MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),

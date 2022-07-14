@@ -17,8 +17,7 @@ import 'package:reorderable_grid/reorderable_grid.dart';
 import 'package:sqflite/sqflite.dart';
 
 class HomePage extends StatefulWidget {
-  final SettingsHandler sh;
-  const HomePage({required this.sh, Key? key}) : super(key: key);
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -314,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SettingsPage(sh: widget.sh),
+                      builder: (context) => SettingsPage(),
                     ),
                   );
                 });
