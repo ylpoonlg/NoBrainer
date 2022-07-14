@@ -4,6 +4,7 @@ import 'package:nobrainer/src/HomePage/HomePage.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Database/db.dart';
 
+/// WIP: For using notification to return to previous natigation state
 class NavKey {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
@@ -15,7 +16,7 @@ class NoBrainerApp extends StatefulWidget {
 }
 
 class NoBrainerAppState extends State<NoBrainerApp> {
-  SettingsHandler sh = SettingsHandler(() {});
+  SettingsHandler sh = SettingsHandler();
   bool isDatabaseReady = false;
   bool showPermissionMsg = false;
 
@@ -24,11 +25,13 @@ class NoBrainerAppState extends State<NoBrainerApp> {
   }
 
   _initApp() async {
-    await DbHelper().initDatabase(); // Init database instance
-    sh = SettingsHandler(() {
+    // Listen for setting changes
+    sh.addListener(() {
       reloadApp();
     });
 
+    // Init Database Instance
+    await DbHelper().initDatabase();
     setState(() {
       if (DbHelper.database != null) {
         isDatabaseReady = true;

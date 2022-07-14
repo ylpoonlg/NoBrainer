@@ -33,7 +33,6 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("About App"),
       ),
       body: ListView(

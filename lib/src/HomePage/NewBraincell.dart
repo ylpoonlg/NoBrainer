@@ -26,7 +26,7 @@ class _NewBraincellState extends State<NewBraincell> {
 
   bool validateInput() {
     if (cell.title == "") return false;
-    if (cell.type == "select") return false;
+    if (cell.type == BrainCellType.none) return false;
     return true;
   }
 
@@ -49,6 +49,20 @@ class _NewBraincellState extends State<NewBraincell> {
           ],
         ),
       );
+    }
+  }
+
+
+  String cellTypeText(String type) {
+    switch (type) {
+      case BrainCellType.todoList:
+        return "Todo List";
+      case BrainCellType.shopList:
+        return "Shop List";
+      case BrainCellType.moneyPit:
+        return "Money Pit";
+      default:
+        return "Select a Braincell Type";
     }
   }
 
@@ -87,11 +101,7 @@ class _NewBraincellState extends State<NewBraincell> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text(
-          "New Braincell",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("New Braincell"),
         actions: [
           TextButton(
               onPressed: () {
@@ -134,36 +144,34 @@ class _NewBraincellState extends State<NewBraincell> {
                       children: [
                         const Spacer(),
                         const Icon(Icons.list),
-                        Text("  " + typeLabel[cell.type].toString()),
+                        Text("  "+cellTypeText(cell.type)),
                         const Spacer(),
                       ],
                     ),
                   ),
                   itemBuilder: (BuildContext context) {
                     return [
-                      PopupMenuItem<String>(
-                          value: "todolist",
-                          child: Text(typeLabel["todolist"].toString())),
-                      PopupMenuItem<String>(
-                          value: "shoplist",
-                          child: Text(typeLabel["shoplist"].toString())),
-                      PopupMenuItem<String>(
-                          value: "finance",
-                          child: Text(typeLabel["finance"].toString())),
-                    ];
+                      BrainCellType.todoList,
+                      BrainCellType.shopList,
+                      BrainCellType.moneyPit,
+                    ].map((type) => PopupMenuItem<String>(
+                      value: type,
+                      child: Text(cellTypeText(type)),
+                    )).toList();
                   },
                 )
               // Placeholder: Imported Brinacells cannot have their type changed
               : const Text(""),
-          SizedBox(
-            height: 64,
+          Container(
+            height: 72,
+            padding: const EdgeInsets.all(10),
             child: TextButton(
               onPressed: () {
                 _onSelectColor(context);
               },
               child: const Text("Color"),
               style: TextButton.styleFrom(
-                primary: foregroundColor,
+                foregroundColor: foregroundColor,
                 backgroundColor: cell.color,
               ),
             ),

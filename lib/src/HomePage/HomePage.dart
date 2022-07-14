@@ -71,8 +71,6 @@ class _HomePageState extends State<HomePage> {
             where: "rowid = ?", whereArgs: [rowid[0]["last_insert_rowid()"]],
           );
           cell.cellid = lastRow[0]["cellid"];
-          debugPrint("New cellid = " + cell.cellid.toString());
-          debugPrint("Last rowid = " + rowid[0]["last_insert_rowid()"].toString());
         }
       }
 
@@ -239,12 +237,11 @@ class _HomePageState extends State<HomePage> {
   /// Controls the expansion of the add action buttons.
   List<Widget> getFloatingActionButtons() {
     List<Widget> items = [];
-    if (isExpandAddOptions) {
-      // New Button
-      items.add(TextButton(
+    items.add(Container(
+      margin: const EdgeInsets.only(top: 15),
+      child: FloatingActionButton(
         onPressed: () {
           setState(() {
-            isExpandAddOptions = false;
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => NewBraincell(
@@ -255,44 +252,7 @@ class _HomePageState extends State<HomePage> {
             );
           });
         },
-        child: const Text("New Braincell"),
-        style: TextButton.styleFrom(
-          primary: AppTheme.color["white"],
-          backgroundColor: AppTheme.color["gray"],
-        ),
-      ));
-      // Import Button
-      items.add(TextButton(
-        onPressed: () {
-          setState(() {
-            isExpandAddOptions = false;
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ImportBraincell(
-                callback: _newBraincell,
-              ),
-            ));
-          });
-        },
-        child: const Text("Import Braincell from cloud"),
-        style: TextButton.styleFrom(
-          primary: AppTheme.color["white"],
-          backgroundColor: AppTheme.color["gray"],
-        ),
-      ));
-    }
-
-    // Expand button
-    items.add(Container(
-      margin: const EdgeInsets.only(top: 15),
-      child: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            isExpandAddOptions = !isExpandAddOptions;
-          });
-        },
-        child: isExpandAddOptions
-            ? const Icon(Icons.close)
-            : const Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     ));
     return items;
@@ -305,11 +265,12 @@ class _HomePageState extends State<HomePage> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
-    final double braincellTilesAR = (screenWidth > screenHeight) ? 1.75 : 0.85;
+    final double braincellTilesAR = (screenWidth > screenHeight) ? 2 : 1.2;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("NoBrainer"),
+        centerTitle: true,
       ),
       drawer: Drawer(
         child: ListView(
@@ -317,7 +278,7 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: Palette.base,
+                color: Palette.primary,
               ),
               child: Text(
                 'NoBrainer',
@@ -373,14 +334,16 @@ class _HomePageState extends State<HomePage> {
             child: CircularProgressIndicator(),
           ) :
           Container(
-            margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
             child: ReorderableGridView.count(
               crossAxisCount: 2,
               childAspectRatio: braincellTilesAR,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 15,
+              crossAxisSpacing: 12,
               children: getBraincellList(),
               onReorder: _onReorder,
+              padding: const EdgeInsets.only(
+                top: 20, left: 20, right: 20, bottom: 85,
+              ),
             ),
           ),
       ),

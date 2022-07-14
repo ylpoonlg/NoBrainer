@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTheme {
   static ThemeData theme(String themeName) {
@@ -9,7 +10,6 @@ class AppTheme {
   }
 
   static Map color = colors;
-
   static Map icon = icons;
 
 
@@ -87,9 +87,9 @@ class Palette {
   static const Color foregroundDark  = Color(0xFFFDFDFD);
 
   static const Color error           = Color(0xFFE22662);
-  static const Color primary         = Color(0xFFEBD5AE);
-  static const Color secondary       = Color(0xFF707299);
-  static const Color base            = Color(0xFF062B5A);
+  static const Color primary         = Color(0xFF062B5A);
+  static const Color secondary       = Color(0xFFEBD5AE);
+  static const Color tertiary        = Color(0xFF707299);
 
   static Color darken(Color color, {double weight = 0.9}) {
     return Color.fromARGB(
@@ -105,32 +105,16 @@ class Palette {
   }
 }
 
-ThemeData lightTheme = ThemeData(
-  backgroundColor: Palette.backgroundLight,
-  scaffoldBackgroundColor: Palette.backgroundLight,
-  appBarTheme: const AppBarTheme(
-    backgroundColor: Palette.base,
-    foregroundColor: Palette.foregroundDark,
-  ),
-  drawerTheme: const DrawerThemeData(
-    backgroundColor: Palette.backgroundLight,
-  ),
-  floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: Palette.primary,
-    foregroundColor: Palette.backgroundDark,
-  ),
-  popupMenuTheme: PopupMenuThemeData(
-    color: Palette.lighten(Palette.backgroundDark, weight: 1.5),
-  ),
-  progressIndicatorTheme: const ProgressIndicatorThemeData(
-    color: Palette.primary,
-  ),
+
+ThemeData lightTheme = ThemeData.from(
   colorScheme: ColorScheme(
     brightness:   Brightness.light,
     primary:      Palette.primary,
-    onPrimary:    Palette.backgroundDark,
+    onPrimary:    Palette.foregroundDark,
     secondary:    Palette.secondary,
-    onSecondary:  Palette.foregroundDark.withOpacity(0.95),
+    onSecondary:  Palette.backgroundDark,
+    tertiary:     Palette.tertiary,
+    onTertiary:   Palette.foregroundDark,
     error:        Palette.error,
     onError:      Palette.foregroundDark,
     background:   Palette.backgroundLight,
@@ -138,29 +122,60 @@ ThemeData lightTheme = ThemeData(
     surface:      Palette.darken(Palette.backgroundLight),
     onSurface:    Palette.foregroundLight,
   ),
+).copyWith(
+  useMaterial3: true,
+  brightness: Brightness.light,
+  //
+  // *** TODO: Material 3 Bug - https://github.com/flutter/flutter/issues/107305
+  //
+  // appBarTheme: const AppBarTheme(
+  //   backgroundColor:  Palette.primary,
+  //   foregroundColor:  Palette.foregroundDark,
+  //   actionsIconTheme: IconThemeData(color: Palette.foregroundDark),
+  //   iconTheme:        IconThemeData(color: Palette.foregroundDark),
+  // ),
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: Palette.secondary,
+    foregroundColor: Palette.backgroundDark,
+  ),
+  switchTheme: SwitchThemeData(
+    thumbColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return Palette.secondary;
+      }
+      return Colors.grey[200];
+    }),
+    trackColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return Palette.darken(Palette.secondary, weight: 0.8);
+      }
+      return Colors.grey;
+    }),
+  ),
 );
 
-
-ThemeData darkTheme = ThemeData.dark().copyWith(
+ThemeData darkTheme = ThemeData.from(
+  colorScheme: ColorScheme(
+    brightness:   Brightness.dark,
+    primary:      Palette.secondary,
+    onPrimary:    Palette.backgroundDark,
+    secondary:    Palette.tertiary,
+    onSecondary:  Palette.foregroundDark,
+    error:        Palette.error,
+    onError:      Palette.foregroundDark,
+    background:   Palette.backgroundDark,
+    onBackground: Palette.foregroundDark,
+    surface:      Palette.lighten(Palette.backgroundDark),
+    onSurface:    Palette.foregroundDark.withOpacity(0.9),
+  )
+).copyWith(
+  useMaterial3: true,
   brightness: Brightness.dark,
-  backgroundColor: Palette.backgroundDark,
-  scaffoldBackgroundColor: Palette.backgroundDark,
   appBarTheme: const AppBarTheme(
     backgroundColor: Palette.backgroundDark,
     foregroundColor: Palette.foregroundDark,
   ),
-  drawerTheme: const DrawerThemeData(
-    backgroundColor: Palette.backgroundDark,
-  ),
   floatingActionButtonTheme: lightTheme.floatingActionButtonTheme,
-  popupMenuTheme: lightTheme.popupMenuTheme,
-  progressIndicatorTheme: lightTheme.progressIndicatorTheme,
-  colorScheme: lightTheme.colorScheme.copyWith(
-    brightness:   Brightness.dark,
-    background:   Palette.backgroundDark,
-    onBackground: Palette.foregroundDark,
-    surface:      Palette.backgroundDark.withOpacity(0.8),
-    onSurface:    Palette.foregroundDark.withOpacity(0.9),
-  ),
+  switchTheme: lightTheme.switchTheme,
 );
 

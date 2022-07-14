@@ -166,8 +166,10 @@ class _ShopPageState extends State<ShopPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Shopping List"),
+        actionsIconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
         actions: [
           IconButton(
             // Clear Button
@@ -217,8 +219,8 @@ class _ShopPageState extends State<ShopPage> {
             icon: Icon(
               Icons.filter_list,
               color: _isFilterSet()
-                  ? AppTheme.color["accent-primary"]
-                  : AppTheme.color["white"],
+                  ? Palette.secondary
+                  : Palette.foregroundLight,
             ),
             tooltip: "Filter and Sort",
           ),

@@ -14,8 +14,7 @@ class BorderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color fgColor =
-        Theme.of(context).textTheme.bodyLarge?.color ?? AppTheme.color["white"];
+    Color fgColor = Theme.of(context).colorScheme.onBackground;
 
     return Material(
       type: MaterialType.transparency,
