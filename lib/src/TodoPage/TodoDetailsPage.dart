@@ -80,7 +80,9 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
           },
           child: const Text("Cancel"),
           style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.all(Palette.foregroundDark),
+            foregroundColor: MaterialStateProperty.all(
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
           ),
         ),
         actions: [
@@ -107,8 +109,8 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
                 item.title = text;
               },
               decoration: const InputDecoration(
-                labelText: "Title",
-                hintText: "Enter the title of the task",
+                labelText: "Task",
+                hintText: "e.g. Submit Assignment, Exercise",
                 border: OutlineInputBorder(),
               ),
             ),

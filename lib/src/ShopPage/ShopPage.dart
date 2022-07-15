@@ -5,159 +5,224 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
-import 'package:nobrainer/src/ShopPage/ShopFilter.dart';
+import 'package:nobrainer/src/Database/tables.dart';
+import 'package:nobrainer/src/ShopPage/ShopFilterPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
-import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
+import 'package:nobrainer/src/ShopPage/ShopDetailsPage.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class ShopPage extends StatefulWidget {
-  final String uuid;
+  final int cellid;
 
-  const ShopPage({Key? key, required this.uuid}) : super(key: key);
+  const ShopPage({required this.cellid, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ShopPageState();
 }
 
 class _ShopPageState extends State<ShopPage> {
-  List<dynamic> shopList = []; // Current status of the shopping list
-  bool isShopListLoaded = false;
+  List<ShopItem> cellItems     = []; // Current status of the shopping list
+  bool           isItemsLoaded = false;
+  ShopListFilter filter = ShopListFilter();
 
-  Map filter = {
-    "shops": [],
-    "sort-mode": shopSortModes[0]["value"],
-  };
-
-  _ShopPageState() : super() {
-    _loadShopList();
+  _ShopPageState() {
+    _loadItems();
   }
 
-  // Updates braincell content in database
-  // Braincell must exist already in database.
-  void _saveShopList() async {
-    final Database db = await DbHelper.database;
-    await db.update(
-      "braincells",
-      {
-        'content': json.encode(shopList),
-      },
-      where: "uuid = ?",
-      whereArgs: [widget.uuid],
+  _loadItems() async {
+    Database db = await DbHelper.database;
+    List<Map> rows = await db.query(
+      DbTableName.shopItems,
+      where: "cellid = ?",
+      whereArgs: [widget.cellid],
+    );
+
+    cellItems = [];
+    for (Map row in rows) {
+      cellItems.add(ShopItem.from(row));
+    }
+
+    setState(() {
+      isItemsLoaded = true;
+    });
+  }
+
+  _newItem(ShopItem item) async {
+    Database db = await DbHelper.database;
+    await db.insert(
+      DbTableName.shopItems,
+      item.toMap(exclude: ["id"]),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    setState(() {
-      isShopListLoaded = true;
-    });
+    _loadItems();
   }
 
-  void _loadShopList() async {
-    final Database db = await DbHelper.database;
-    final List<dynamic> dbMap = await db.query(
-      "braincells",
-      where: "uuid = ?",
-      whereArgs: [widget.uuid],
-      distinct: true,
+  _editItem(ShopItem item) async {
+    if (item.id < 0) {
+      _newItem(item);
+      return;
+    }
+
+    Database db = await DbHelper.database;
+    await db.update(
+      DbTableName.shopItems,
+      item.toMap(exclude: ["id", "cellid"]),
+      where: "id = ?",
+      whereArgs: [item.id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    if (dbMap.isEmpty) {
-      shopList = [];
-    } else {
-      shopList = json.decode(dbMap[0]["content"] ?? "[]");
-    }
+    _loadItems();
+  }
 
+  _deleteItem(ShopItem item) async {
     setState(() {
-      isShopListLoaded = true;
+      isItemsLoaded = false;
     });
+
+    Database db = await DbHelper.database;
+    await db.delete(
+      DbTableName.shopItems,
+      where: "id = ?",
+      whereArgs: [item.id],
+    );
+
+    _loadItems();
   }
 
-  void _addShopItem() {
-    Map newItem = Map.from(defaultShopItem);
-    newItem["id"] = "shop-item-" + const Uuid().v1();
-    shopList.add(newItem);
-    _saveShopList(); // Save to local storage first
-
-    // Jump to directly to the detail page
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ShopItemDetails(
-        onUpdate: _updateShopItem,
-        data: newItem,
-      ),
-    ));
-  }
-
-  void _deleteShopItem(id) {
-    shopList.removeWhere((item) {
-      return item["id"] == id;
+  _clearBoughtItems() async {
+    setState(() {
+      isItemsLoaded = false;
     });
-    _saveShopList();
-  }
 
-  void _clearBoughtItems() {
-    shopList.removeWhere((item) {
-      return item["status"] == true;
-    });
-    _saveShopList();
-  }
+    Database db = await DbHelper.database;
+    await db.delete(
+      DbTableName.shopItems,
+      where: "cellid = ? AND status > ?",
+      whereArgs: [widget.cellid, 0],
+    );
 
-  void _updateShopItem(data) {
-    for (int i = 0; i < shopList.length; i++) {
-      if (shopList[i]["id"] == data["id"]) {
-        shopList[i] = data;
-        break;
-      }
-    }
-    _saveShopList();
+    _loadItems();
   }
 
   bool _isFilterSet() {
-    return !filter["shops"].isEmpty;
+    return filter.shops.isNotEmpty;
   }
 
-  /// Sort the list according to the sort mode.
-  ///
-  /// Returns widgets of the shopping list.
-  List<Widget> _getShopList() {
-    List<Map> sortedList = List.from(shopList);
 
-    // Sort items in ascending value
-    sortedList.sort((i, j) {
-      if (filter["sort-mode"] == "status") {
-        // Put items that have not been bought at the front
-        const Map<bool, int> statusValue = {
-          false: 0,
-          true: 1,
-        };
-        int a = statusValue[i["status"]] ?? 0;
-        int b = statusValue[j["status"]] ?? 0;
-        return a.compareTo(b);
-      } // Default to item mode
-      return i["title"].compareTo(j["title"]);
-    });
+  Widget buildItemTile(ShopItem item) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      horizontalTitleGap: 4,
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ShopDetailsPage(
+            item: item,
+            onEdit: _editItem,
+          ),
+        ));
+      },
+      leading: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 0,
+        children: [
+          Checkbox(
+            value: item.status > 0,
+            onChanged: (value) {
+              value ??= false;
+              item.status = value ? 1 : 0;
+              _editItem(item);
+            },
+          ),
+          Container(
+            width: 36,
+            padding: const EdgeInsets.only(right: 10),
+            child: Text(
+              item.quantity.toString() + " x",
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+      title: Text(
+        item.title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      subtitle: Text(
+        item.shops.join(", "),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+      trailing: IconButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                key: Key("delete-alert-${item.id}"),
+                title: const Text("Delete Confirmation"),
+                content: const Text("Are you sure you want to delete this item?"),
+                actions: <Widget>[
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Cancel")),
+                  TextButton(
+                      onPressed: () {
+                        _deleteItem(item);
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Confirm")),
+                ],
+              );
+            },
+          );
+        },
+        icon: const Icon(Icons.close),
+      ),
+    );
+  }
 
-    /// Returns whether any of the shops is in the filtered list of shops.
+  List<ShopItem> filterItems() {
+    List<ShopItem> filteredItems = [];
+
     bool shopInFilter(List shops) {
-      if (filter["shops"].isEmpty) return true;
+      if (filter.shops.isEmpty) return true;
       for (String shop in shops) {
-        for (String filter in filter["shops"]) {
-          if (shop == filter) return true;
+        for (String filteredShop in filter.shops) {
+          if (shop == filteredShop) return true;
         }
       }
       return false;
     }
 
-    List<Widget> items = [];
-    for (int i = 0; i < sortedList.length; i++) {
-      // add if any of the shops in sortedList["shops"] is also in filter["shops"]
-      if (shopInFilter(sortedList[i]["shops"])) {
-        items.add(ShopItem(
-          key: Key("shopitem-" + const Uuid().v1()),
-          data: sortedList[i],
-          onDelete: _deleteShopItem,
-          onUpdate: _updateShopItem,
-        ));
+    for (ShopItem item in cellItems) {
+      if (shopInFilter(item.shops)) filteredItems.add(item);
+    }
+
+    filteredItems.sort((i, j) {
+      if (filter.sortMode == ShopListFilter.sortItem) {
+        return i.title.compareTo(j.title);
       }
+      return i.status.compareTo(j.status);
+    });
+
+    return filteredItems;
+  }
+
+  List<Widget> buildItemList() {
+    List<Widget> items = [];
+    for (ShopItem item in filterItems()) {
+      items.add(buildItemTile(item));
     }
     return items;
   }
@@ -167,9 +232,6 @@ class _ShopPageState extends State<ShopPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Shopping List"),
-        actionsIconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
         actions: [
           IconButton(
             // Clear Button
@@ -177,10 +239,10 @@ class _ShopPageState extends State<ShopPage> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  key: const Key("clear-bought-items"),
-                  title: const Text("Delete Confirmation"),
+                  key:     const Key("clear-bought-items"),
+                  title:   const Text("Delete Confirmation"),
                   content: const Text(
-                      "Are you sure you want to remove all the checked items?"),
+                    "Are you sure you want to remove all the checked items?"),
                   actions: <Widget>[
                     TextButton(
                         onPressed: () {
@@ -205,7 +267,7 @@ class _ShopPageState extends State<ShopPage> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ShopFilter(
+                  builder: (context) => ShopFilterPage(
                     filter: filter,
                     onApply: (newFilter) {
                       setState(() {
@@ -219,28 +281,30 @@ class _ShopPageState extends State<ShopPage> {
             icon: Icon(
               Icons.filter_list,
               color: _isFilterSet()
-                  ? Palette.secondary
-                  : Palette.foregroundLight,
+                ? Palette.secondary
+                : Theme.of(context).colorScheme.onSurface,
             ),
             tooltip: "Filter and Sort",
           ),
         ],
       ),
-      body: isShopListLoaded
-          ? ListView(
-              key: const Key("shoplistview"),
-              children: _getShopList(),
-            )
-          : Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.color["accent-primary"],
-              ),
-            ),
+      body: isItemsLoaded ?
+        ListView(
+          key:      const Key("shoplistview"),
+          children: buildItemList(),
+        ) : const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.color["accent-primary"],
-        foregroundColor: AppTheme.color["white"],
         child: const Icon(Icons.add),
-        onPressed: _addShopItem,
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => ShopDetailsPage(
+              item: ShopItem(
+                cellid: widget.cellid,
+              ),
+              onEdit: _editItem,
+            )
+          ));
+        },
       ),
     );
   }

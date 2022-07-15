@@ -33,7 +33,7 @@ class BrainCell {
       case BrainCellType.todoList:
         return TodoPage(cellid: cellid);
       case BrainCellType.shopList:
-        return ShopPage(uuid: cellid.toString());
+        return ShopPage(cellid: cellid);
       case BrainCellType.moneyPit:
         return FinancePage(uuid: cellid.toString());
       default:

@@ -73,6 +73,9 @@ const List<String> dbTables = [
       cellid INTEGER,
       title TEXT,
       desc TEXT,
+      status INTEGER,
+      price REAL,
+      quantity INTEGER,
       shops TEXT
     )
   ''',
@@ -84,3 +87,15 @@ const List<String> dbTables = [
 
 
 ];
+
+class DbTableName {
+  static const String braincells      = "BrainCells";
+  static const String cellFolders     = "CellFolders";
+  static const String settings        = "Settings";
+  static const String todoItems       = "TodoItems";
+  static const String moneyPitItems   = "MoneyPitItems";
+  static const String payMethods      = "PayMethods";
+  static const String moneyCategories = "MoneyCategories";
+  static const String shopItems       = "ShopItems";
+  static const String shops           = "Shops";
+}

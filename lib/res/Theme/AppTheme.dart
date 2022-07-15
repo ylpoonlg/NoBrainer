@@ -134,6 +134,10 @@ ThemeData lightTheme = ThemeData.from(
   //   actionsIconTheme: IconThemeData(color: Palette.foregroundDark),
   //   iconTheme:        IconThemeData(color: Palette.foregroundDark),
   // ),
+  checkboxTheme: CheckboxThemeData(
+    checkColor: MaterialStateProperty.all(Palette.backgroundDark),
+    fillColor:  MaterialStateProperty.all(Palette.secondary),
+  ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: Palette.secondary,
     foregroundColor: Palette.backgroundDark,
@@ -175,7 +179,9 @@ ThemeData darkTheme = ThemeData.from(
     backgroundColor: Palette.darken(Palette.backgroundDark),
     foregroundColor: Palette.foregroundDark,
   ),
+  // Inherit from lightTheme
+  checkboxTheme:             lightTheme.checkboxTheme,
   floatingActionButtonTheme: lightTheme.floatingActionButtonTheme,
-  switchTheme: lightTheme.switchTheme,
+  switchTheme:               lightTheme.switchTheme,
 );
 

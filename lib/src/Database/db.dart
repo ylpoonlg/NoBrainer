@@ -81,7 +81,8 @@ class DbHelper {
     final Database db = await database;
 
     try {
-      // DB operations
+      // db.execute("ALTER TABLE ShopItems ADD COLUMN quantity INTEGER;");
+      // db.execute("ALTER TABLE ShopItems ADD COLUMN price REAL;");
 
       //debugPrint("Done running db operation");
     } catch (e) {

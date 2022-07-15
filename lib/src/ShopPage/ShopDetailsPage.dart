@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/src/ShopPage/Shops.dart';
+import 'package:nobrainer/src/FinancePage/Currencies.dart';
+import 'package:nobrainer/src/SettingsHandler.dart';
+import 'package:nobrainer/src/ShopPage/ShopItem.dart';
+import 'package:nobrainer/src/ShopPage/ShopsList.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
-class ShopItemDetails extends StatefulWidget {
-  Map data;
-  Function onUpdate;
-  String currency;
+class ShopDetailsPage extends StatefulWidget {
+  final ShopItem item;
+  final Function onEdit;
 
-  ShopItemDetails({
-    required this.data,
-    required this.onUpdate,
-    this.currency = "\$",
+  const ShopDetailsPage({
+    required this.item,
+    required this.onEdit,
     Key? key,
   }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() =>
-      _ShopItemsDetailsState(new Map.from(data));
+      _ShopDetailsPageState();
 }
 
-class _ShopItemsDetailsState extends State<ShopItemDetails> {
-  final Map data;
-  bool pricePerItem = false;
-
-  _ShopItemsDetailsState(this.data);
+class _ShopDetailsPageState extends State<ShopDetailsPage> {
+  late ShopItem item;
+  bool   pricePerItem = false;
+  String currency     = "\$";
 
   List<Widget> _getShopsList() {
     List<Widget> result = [];
-    for (String shop in data["shops"]??[]) {
+    for (String shop in item.shops) {
       result.add(
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5,),
@@ -39,35 +39,61 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
     return result;
   }
 
+  _loadCurrencySymbol() async {
+    Settings settings = await settingsHandler.getSettings();
+    setState(() {
+      currency = Currencies.getCurrencySymbol(settings.currency);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    item = widget.item;
+    _loadCurrencySymbol();
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     const EdgeInsetsGeometry listTilePadding = EdgeInsets.only(
-      top: 16,
-      left: 16,
-      right: 16,
-      bottom: 0,
+      top:    16,
+      left:   16,
+      right:  16,
+      bottom:  0,
     );
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text("Edit Shopping Item"),
+        title: item.id >= 0
+          ? const Text("Edit Shopping Item")
+          : const Text("New Shopping Item"),
+        leadingWidth: 80,
+        leading: TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text("Cancel"),
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all(
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+        ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
               if (pricePerItem) {
-                data["price"] = data["price"] ?? 0;
-                data["price"] *=
-                    double.tryParse(data["quantity"].toString()) ?? 1;
+                item.price = item.price;
+                item.price *= item.quantity;
               }
-              widget.onUpdate(data);
+              widget.onEdit(item);
               Navigator.of(context).pop();
             },
-            child: const Text(
-              "Save",
-              style: TextStyle(color: Colors.white),
+            child: const Text("Save"),
+            style: ButtonStyle(
+              fixedSize: MaterialStateProperty.all(const Size(80, 64)),
             ),
           ),
         ],
@@ -78,13 +104,13 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["title"]),
+              controller: TextEditor.getController(item.title),
               onChanged: (text) {
-                data["title"] = text;
+                item.title = text;
               },
               decoration: const InputDecoration(
-                labelText: "Title",
-                hintText: "Enter the title of the item",
+                labelText: "Item",
+                hintText: "e.g. Fruits, Vegetables",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -100,17 +126,16 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                   width: screenWidth / 3,
                   child: TextField(
                     controller: TextEditor.getController(
-                        data["quantity"] != null
-                            ? data["quantity"].toString()
-                            : "1"),
+                      item.quantity.toString(),
+                    ),
                     onChanged: (text) {
-                      data["quantity"] = int.tryParse(text) ?? 1;
+                      item.quantity = int.tryParse(text) ?? 1;
                     },
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       prefixText: "x ",
                       labelText: "Quantity",
-                      hintText: "How many of this do you want?",
+                      hintText: "e.g. 1, 2, 3",
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -120,17 +145,15 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                 SizedBox(
                   width: screenWidth / 3,
                   child: TextField(
-                    controller: TextEditor.getController(
-                      data["price"]?.toStringAsFixed(2) ?? "0.00"
-                    ),
+                    controller: TextEditor.getController(item.price.toString()),
                     onChanged: (text) {
-                      data["price"] = double.tryParse(text) ?? 0;
+                      item.price = double.tryParse(text) ?? 0;
                     },
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      prefixText: widget.currency + " ",
+                      prefixText: "$currency ",
                       labelText: "Price",
-                      hintText: "How much is this?",
+                      hintText: "How much?",
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -148,8 +171,6 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                           pricePerItem = value ?? false;
                         });
                       },
-                      activeColor: AppTheme.color["accent-primary"],
-                      checkColor: AppTheme.color["white"],
                     ),
                   ],
                 ),
@@ -172,10 +193,10 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
                         width: screenWidth,
                         height: 320,
                         child: ShopsList(
-                          selected: List<String>.from(data["shops"] ?? []),
+                          selected: List<String>.from(item.shops),
                           onChanged: (value) {
                             setState(() {
-                              data["shops"] = value;
+                              item.shops = value;
                             });
                           }
                         ),
@@ -205,9 +226,9 @@ class _ShopItemsDetailsState extends State<ShopItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["desc"]),
+              controller: TextEditor.getController(item.desc),
               onChanged: (text) {
-                data["desc"] = text;
+                item.desc = text;
               },
               keyboardType: TextInputType.multiline,
               minLines: 2,

@@ -1,155 +1,73 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:nobrainer/src/Database/db.dart';
-import 'package:nobrainer/src/ShopPage/ShopItemDetails.dart';
-import 'package:sqflite/sqflite.dart';
+import 'dart:convert';
 
-// Default ShopItem
-Map defaultShopItem = {
-  "id": "set shop item id",
-  "status": false,
-  "title": "New Item",
-  "price": 0,
-  "quantity": "1",
-  "shops": [],
-  "desc": "",
-};
-
-class ShopItem extends StatefulWidget {
-  Map data;
-  Function onDelete, onUpdate;
+class ShopItem {
+  late int          id;
+  late int          cellid;
+  late String       title;
+  late String       desc;
+  late int          status;
+  late double       price;
+  late int          quantity;
+  late List<String> shops;
 
   ShopItem({
-    required Map this.data,
-    required Function this.onDelete,
-    required this.onUpdate,
-    Key? key,
-  }) : super(key: key);
+    this.id       = -1,
+    this.cellid   = -1,
+    this.title    = "",
+    this.desc     = "",
+    this.status   = 0,
+    this.price    = 0,
+    this.quantity = 1,
+    this.shops    = const [],
+  });
 
-  @override
-  State<StatefulWidget> createState() => _ShopItemState(data);
+  static ShopItem from(Map row) {
+    List<dynamic> shops = json.decode(row["shops"]);
+    return ShopItem(
+      id:       row["id"],
+      cellid:   row["cellid"],
+      title:    row["title"],
+      desc:     row["desc"],
+      status:   row["status"],
+      price:    row["price"],
+      quantity: row["quantity"],
+      shops:    shops.map((e) => e.toString()).toList(),
+    );
+  }
+
+  Map<String, Object?> toMap({List<String> exclude = const []}) {
+    Map<String, Object?> map = {
+      "id":       id,
+      "cellid":   cellid,
+      "title":    title,
+      "desc":     desc,
+      "status":   status,
+      "price":    price,
+      "quantity": quantity,
+      "shops":    json.encode(shops),
+    };
+    exclude.forEach((key) {
+      map.remove(key);
+    });
+    return map;
+  }
 }
 
-class _ShopItemState extends State<ShopItem> {
-  bool status = false;
-  String currency = "\$";
+class ShopListFilter {
+  static const String sortStatus = "status";
+  static const String sortItem   = "item";
 
-  _ShopItemState(data) {
-    status = data["status"] ?? status;
-    getCurrencySymbol();
-  }
+  String       sortMode = ShopListFilter.sortStatus;
+  List<String> shops    = [];
 
-  /// Show delete confirmation popup.
-  ///
-  /// If confirmed, call the callback function.
-  void _onDelete(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          key: Key("delete-alert-" + widget.data["id"]),
-          title: const Text("Delete Confirmation"),
-          content: const Text("Are you sure you want to delete this item?"),
-          actions: <Widget>[
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Cancel")),
-            TextButton(
-                onPressed: () {
-                  widget.onDelete(widget.data["id"]);
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Confirm")),
-          ],
-        );
-      },
-    );
-  }
-
-  /// Handles status selection.
-  ///
-  /// Calls back the updated data.
-  void _onSelectStatus(value) {
-    setState(() {
-      status = value ?? false;
-      widget.data["status"] = status;
-      widget.onUpdate(widget.data);
-    });
-  }
-
-  getCurrencySymbol() async {
-    final Database db = await DbHelper.database;
-    final dbMap = await db.query(
-      "settings",
-      where: "name = ?",
-      whereArgs: ["currency"],
-    );
-    if (dbMap.isNotEmpty) {
-      setState(() {
-        currency = currencySymbol[dbMap[0]["value"]] ?? "\$";
-      });
+  static String getFilterLabel(String value) {
+    switch (value) {
+      case ShopListFilter.sortStatus:
+        return "Status";
+      case ShopListFilter.sortItem:
+        return "Title";
+      default:
+        return "Error";
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-      horizontalTitleGap: 4,
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ShopItemDetails(
-            onUpdate: widget.onUpdate,
-            data: widget.data,
-            currency: currency,
-          ),
-        ));
-      },
-      leading: Wrap(
-        direction: Axis.horizontal,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 0,
-        children: [
-          Checkbox(
-            value: status,
-            onChanged: _onSelectStatus,
-            activeColor: AppTheme.color["accent-primary"],
-            checkColor: AppTheme.color["white"],
-          ),
-          Container(
-            width: 36,
-            padding: const EdgeInsets.only(right: 10),
-            child: Text(
-              widget.data["quantity"].toString() + " x",
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-      title: Text(
-        widget.data["title"].toString(),
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 2,
-      ),
-      subtitle: Text(
-        widget.data["shops"]?.join(", ")??"",
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-      ),
-      trailing: IconButton(
-        onPressed: () {
-          _onDelete(context);
-        },
-        icon: const Icon(Icons.close),
-      ),
-    );
   }
 }

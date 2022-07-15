@@ -42,12 +42,10 @@ class Settings {
   // Default settings
   String themeName;
   String currency;
-  List<dynamic> moneyCategories;
 
   Settings({
     this.themeName       = "light",
     this.currency        = "dollar",
-    this.moneyCategories = const [],
   });
 
   setValue(String key, String value) {
@@ -58,9 +56,6 @@ class Settings {
       case "currency":
         currency = value;
         break;
-      case "moneyCategories":
-        moneyCategories = json.decode(value);
-        break;
     }
   }
 
@@ -68,7 +63,6 @@ class Settings {
     return {
       "themeName":       themeName,
       "currency":        currency,
-      "moneyCategories": json.encode(moneyCategories),
     };
   }
 }

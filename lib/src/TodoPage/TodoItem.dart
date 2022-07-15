@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 class TodoItem {
-  late int id;
-  late int cellid;
-  late String title;
-  late String desc;
-  late String status;
+  late int      id;
+  late int      cellid;
+  late String   title;
+  late String   desc;
+  late String   status;
   late DateTime deadline;
-  late int notifyid;
+  late int      notifyid;
 
   TodoItem({
     this.id       = -1,
     this.cellid   = -1,
-    this.title    = "My Task",
+    this.title    = "",
     this.desc     = "",
     this.status   = TodoStatus.todo,
     this.notifyid = -1,

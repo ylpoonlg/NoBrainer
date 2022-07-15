@@ -102,15 +102,31 @@ class _NewBraincellState extends State<NewBraincell> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("New Braincell"),
+        leadingWidth: 80,
+        leading: TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text("Cancel"),
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all(
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+        ),
         actions: [
           TextButton(
-              onPressed: () {
-                addBraincell(context);
-              },
-              child: Text(
-                widget.isEditMode ? "Save" : "Add",
-                style: TextStyle(color: AppTheme.color["white"]),
-              ))
+            onPressed: () {
+              addBraincell(context);
+            },
+            child: Text(
+              widget.isEditMode ? "Save" : "Add",
+              style: TextStyle(color: AppTheme.color["white"]),
+            ),
+            style: ButtonStyle(
+              fixedSize: MaterialStateProperty.all(const Size(80, 64)),
+            ),
+          ),
         ],
       ),
       body: ListView(

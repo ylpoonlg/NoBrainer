@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/TodoPage/TodoDetailsPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
@@ -14,6 +15,7 @@ import 'package:uuid/uuid.dart';
 
 class TodoPage extends StatefulWidget {
   final int cellid;
+
   const TodoPage({required this.cellid, Key? key}) : super(key: key);
 
   @override
@@ -32,7 +34,7 @@ class _TodoPageState extends State<TodoPage> {
   _loadItems() async {
     Database db = await DbHelper.database;
     List<Map> rows = await db.query(
-      "TodoItems",
+      DbTableName.todoItems,
       where: "cellid = ?",
       whereArgs: [widget.cellid],
     );
@@ -50,7 +52,7 @@ class _TodoPageState extends State<TodoPage> {
   _newItem(TodoItem item) async {
     Database db = await DbHelper.database;
     await db.insert(
-      "TodoItems",
+      DbTableName.todoItems,
       item.toMap(exclude: ["id"]),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -59,9 +61,6 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   _editItem(TodoItem item) async {
-    setState(() {
-      isItemsLoaded = false;
-    });
     _addNotifier(item);
 
     if (item.id < 0) {
@@ -71,7 +70,7 @@ class _TodoPageState extends State<TodoPage> {
 
     Database db = await DbHelper.database;
     await db.update(
-      "TodoItems",
+      DbTableName.todoItems,
       item.toMap(exclude: ["id", "cellid"]),
       where: "id = ?",
       whereArgs: [item.id],
@@ -86,9 +85,13 @@ class _TodoPageState extends State<TodoPage> {
       isItemsLoaded = false;
     });
 
+    // Cancel notification if any
+    item.notifyid = -1;
+    await _addNotifier(item);
+
     Database db = await DbHelper.database;
     await db.delete(
-      "TodoItems",
+      DbTableName.todoItems,
       where: "id = ?",
       whereArgs: [item.id],
     );
@@ -103,7 +106,7 @@ class _TodoPageState extends State<TodoPage> {
 
     Database db = await DbHelper.database;
     await db.delete(
-      "TodoItems",
+      DbTableName.todoItems,
       where: "cellid = ? AND status = ?",
       whereArgs: [widget.cellid, TodoStatus.done],
     );
@@ -137,9 +140,9 @@ class _TodoPageState extends State<TodoPage> {
             TodoStatus.done,
           ].map((status) => SimpleDialogOption(
               onPressed: () {
-                setState(() async {
+                setState(() {
                   item.status = status;
-                  await _editItem(item);
+                  _editItem(item);
                   Navigator.of(context).pop();
                 });
               },
