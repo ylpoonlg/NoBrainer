@@ -171,8 +171,8 @@ ThemeData darkTheme = ThemeData.from(
 ).copyWith(
   useMaterial3: true,
   brightness: Brightness.dark,
-  appBarTheme: const AppBarTheme(
-    backgroundColor: Palette.backgroundDark,
+  appBarTheme: AppBarTheme(
+    backgroundColor: Palette.darken(Palette.backgroundDark),
     foregroundColor: Palette.foregroundDark,
   ),
   floatingActionButtonTheme: lightTheme.floatingActionButtonTheme,

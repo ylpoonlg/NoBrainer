@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/FinancePage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget buildThemeSetting() {
     return ListTile(
+      leading: const Icon(Icons.dark_mode),
       title: const Text("Dark Mode"),
       trailing: Switch(
         value: settings.themeName == "dark",
@@ -44,6 +46,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget buildCurrencySetting() {
     return ListTile(
+      leading: const Icon(Icons.currency_exchange),
       title: const Text("Currency"),
       trailing: PopupMenuButton(
         initialValue: settings.currency,
@@ -55,31 +58,22 @@ class _SettingsPageState extends State<SettingsPage> {
         },
         itemBuilder: ((context) {
           return [
-            PopupMenuItem(
-              value: "dollar",
-              child: Text(currencySymbol["dollar"] ?? ""),
+            Currencies.dollar,
+            Currencies.pound,
+            Currencies.euro,
+            Currencies.yen,
+            Currencies.ruble,
+          ].map((currency) => PopupMenuItem(
+            value: currency,
+            child: Text(
+              Currencies.getCurrencySymbol(currency),
             ),
-            PopupMenuItem(
-              value: "pound",
-              child: Text(currencySymbol["pound"] ?? ""),
-            ),
-            PopupMenuItem(
-              value: "euro",
-              child: Text(currencySymbol["euro"] ?? ""),
-            ),
-            PopupMenuItem(
-              value: "yen",
-              child: Text(currencySymbol["yen"] ?? ""),
-            ),
-            PopupMenuItem(
-              value: "ruble",
-              child: Text(currencySymbol["ruble"] ?? ""),
-            ),
-          ];
+          )).toList();
         }),
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10, vertical: 4,
+          ),
           alignment: Alignment.center,
           width: 36,
           child: Text(currencySymbol[settings.currency] ?? "\$"),

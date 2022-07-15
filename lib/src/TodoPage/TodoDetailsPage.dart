@@ -1,30 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
-class TodoItemDetails extends StatefulWidget {
-  Map data;
-  Function onUpdate;
+class TodoDetailsPage extends StatefulWidget {
+  final TodoItem item;
+  final Function(TodoItem) onEdit;
 
-  TodoItemDetails({required this.data, required this.onUpdate, Key? key})
-      : super(key: key);
+  const TodoDetailsPage({
+    required this.item,
+    required this.onEdit,
+    Key? key
+  }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() =>
-      _TodoItemsDetailsState(new Map.from(data));
+  State<StatefulWidget> createState() => _TodoItemsDetailsState();
 }
 
-class _TodoItemsDetailsState extends State<TodoItemDetails> {
-  final Map data;
-  _TodoItemsDetailsState(this.data);
+class _TodoItemsDetailsState extends State<TodoDetailsPage> {
+  late TodoItem item;
+
+  @override
+  void initState() {
+    super.initState();
+    item = widget.item;
+  }
 
   void _onSelectDeadline(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => DatePickerDialog(
-        initialDate: DateTime.parse(data["deadline"]),
+        initialDate: item.deadline,
         firstDate: DateTime(2000),
         lastDate: DateTime(3000),
         initialCalendarMode: DatePickerMode.day,
@@ -34,17 +42,17 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
         // Pick Time
         showTimePicker(
           context: context,
-          initialTime: TimeOfDay.fromDateTime(DateTime.parse(data["deadline"])),
+          initialTime: TimeOfDay.fromDateTime(item.deadline),
         ).then((time) {
           setState(() {
             if (time != null) {
-              data["deadline"] = DateTime(
+              item.deadline = DateTime(
                 date.year,
                 date.month,
                 date.day,
                 time.hour,
                 time.minute,
-              ).toString();
+              );
             }
           });
         });
@@ -54,9 +62,6 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
-
     const EdgeInsetsGeometry listTilePadding = EdgeInsets.only(
       top: 16,
       left: 16,
@@ -66,17 +71,27 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
-        title: const Text("Edit Todo Task"),
+        title: item.id >= 0 ?
+          const Text("Edit Task") : const Text("New Task"),
+        leadingWidth: 80,
+        leading: TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text("Cancel"),
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all(Palette.foregroundDark),
+          ),
+        ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: () {
-              widget.onUpdate(data);
+              widget.onEdit(item);
               Navigator.of(context).pop();
             },
-            child: const Text(
-              "Save",
-              style: TextStyle(color: Colors.white),
+            child: const Text("Save"),
+            style: ButtonStyle(
+              fixedSize: MaterialStateProperty.all(const Size(80, 64)),
             ),
           ),
         ],
@@ -87,9 +102,9 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["title"]),
+              controller: TextEditor.getController(item.title),
               onChanged: (text) {
-                data["title"] = text;
+                item.title = text;
               },
               decoration: const InputDecoration(
                 labelText: "Title",
@@ -103,9 +118,9 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["desc"]),
+              controller: TextEditor.getController(item.desc),
               onChanged: (text) {
-                data["desc"] = text;
+                item.desc = text;
               },
               keyboardType: TextInputType.multiline,
               minLines: 2,
@@ -127,7 +142,7 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
                 _onSelectDeadline(context);
               },
               child: Text(
-                DateTimeFormat.dateFormat(DateTime.parse(data["deadline"])),
+                DateTimeFormat.dateFormat(item.deadline),
               ),
             ),
           ),
@@ -139,11 +154,11 @@ class _TodoItemsDetailsState extends State<TodoItemDetails> {
             trailing: Switch(
               onChanged: (value) {
                 setState(() {
-                  data["notify"] = value;
+                  // TODO: Need some way to determine the notify id
+                  item.notifyid = value ? 1 : -1;
                 });
               },
-              value: data["notify"] ?? false,
-              activeColor: AppTheme.color["accent-primary"],
+              value: item.notifyid >= 0,
             ),
             // trailing: MaterialButton(
             //   onPressed: () async {

@@ -5,14 +5,9 @@ import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/AboutPage/AboutPage.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/Database/db.dart';
-import 'package:nobrainer/src/FinancePage/FinancePage.dart';
 import 'package:nobrainer/src/HomePage/BraincellTile.dart';
-import 'package:nobrainer/src/HomePage/ImportBraincell.dart';
 import 'package:nobrainer/src/HomePage/NewBraincell.dart';
-import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/SettingsPage/SettingsPage.dart';
-import 'package:nobrainer/src/ShopPage/ShopPage.dart';
-import 'package:nobrainer/src/TodoPage/TodoPage.dart';
 import 'package:reorderable_grid/reorderable_grid.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -98,8 +93,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  /// Restore braincells from local database
-  /// Sets isBraincellsLoaded = true when complete
   _loadBraincells() async {
     final Database db = await DbHelper.database;
     final List<Map> folders = await db.query("CellFolders",
@@ -134,8 +127,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  /// Add new braincell to state list
-  /// Either created or imported
   _newBraincell(BrainCell cell) {
     bool newCell = true;
     for (var i = 0; i < braincells.length; i++) {

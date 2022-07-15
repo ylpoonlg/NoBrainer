@@ -32,6 +32,7 @@ const List<String> dbTables = [
       cellid INTEGER,
       title TEXT,
       desc TEXT,
+      status TEXT,
       deadline TEXT,
       notifyid INTEGER
     )

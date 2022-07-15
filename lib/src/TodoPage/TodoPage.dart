@@ -5,229 +5,325 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/TodoPage/TodoDetailsPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
-import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
 import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class TodoPage extends StatefulWidget {
-  final String uuid;
-  const TodoPage({Key? key, required String this.uuid}) : super(key: key);
+  final int cellid;
+  const TodoPage({required this.cellid, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TodoPageState();
 }
 
 class _TodoPageState extends State<TodoPage> {
-  List<dynamic> todoList = []; // Current status of the todo list
-  bool isTodoListLoaded = false;
+  List<TodoItem> cellItems = []; // Current status of the todo list
+  bool isItemsLoaded       = false;
+  String todoSortMode      = TodoItemSort.deadline; // Sorting modes for todo items
 
-  String todoSortMode =
-      todoSortModes[0]["value"]; // Sorting modes for todo items
-  String displayGroup = "all"; // group to display
-
-  _TodoPageState() : super() {
-    _loadTodoList();
+  _TodoPageState() {
+    _loadItems();
   }
 
-  // Updates braincell content in database
-  // Braincell must exist already in database.
-  void _saveTodoList() async {
-    setState(() {
-      isTodoListLoaded = false;
-    });
+  _loadItems() async {
+    Database db = await DbHelper.database;
+    List<Map> rows = await db.query(
+      "TodoItems",
+      where: "cellid = ?",
+      whereArgs: [widget.cellid],
+    );
 
-    final Database db = await DbHelper.database;
-    await db.update(
-      "braincells",
-      {
-        'content': json.encode(todoList),
-      },
-      where: "uuid = ?",
-      whereArgs: [widget.uuid],
+    cellItems = [];
+    for (Map row in rows) {
+      cellItems.add(TodoItem.from(row));
+    }
+
+    setState(() {
+      isItemsLoaded = true;
+    });
+  }
+
+  _newItem(TodoItem item) async {
+    Database db = await DbHelper.database;
+    await db.insert(
+      "TodoItems",
+      item.toMap(exclude: ["id"]),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    setState(() {
-      isTodoListLoaded = true;
-    });
+    _loadItems();
   }
 
-  void _loadTodoList() async {
-    final Database db = await DbHelper.database;
-    final List<dynamic> dbMap = await db.query(
-      "braincells",
-      where: "uuid = ?",
-      whereArgs: [widget.uuid],
-      distinct: true,
+  _editItem(TodoItem item) async {
+    setState(() {
+      isItemsLoaded = false;
+    });
+    _addNotifier(item);
+
+    if (item.id < 0) {
+      _newItem(item);
+      return;
+    }
+
+    Database db = await DbHelper.database;
+    await db.update(
+      "TodoItems",
+      item.toMap(exclude: ["id", "cellid"]),
+      where: "id = ?",
+      whereArgs: [item.id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    if (dbMap.isEmpty) {
-      todoList = [];
-    } else {
-      todoList = json.decode(dbMap[0]["content"] ?? "[]");
-    }
+    _loadItems();
+  }
 
+  _deleteItem(TodoItem item) async {
     setState(() {
-      isTodoListLoaded = true;
+      isItemsLoaded = false;
     });
+
+    Database db = await DbHelper.database;
+    await db.delete(
+      "TodoItems",
+      where: "id = ?",
+      whereArgs: [item.id],
+    );
+
+    _loadItems();
   }
 
-  void _addTodoItem() {
-    Map newItem = Map.from(defaultTodoItem);
-    newItem["id"] = "todo-item-" + const Uuid().v1();
-    newItem["deadline"] = DateTime.now().toString();
-    todoList.add(newItem);
-    _saveTodoList(); // Save to local storage first
-
-    // Jump to directly to the detail page
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => TodoItemDetails(
-        onUpdate: _updateTodoItem,
-        data: newItem,
-      ),
-    ));
-  }
-
-  void _deleteTodoItem(id) {
-    todoList.removeWhere((item) {
-      return item["id"] == id;
+  _clearDoneTasks() async {
+    setState(() {
+      isItemsLoaded = false;
     });
-    _saveTodoList();
+
+    Database db = await DbHelper.database;
+    await db.delete(
+      "TodoItems",
+      where: "cellid = ? AND status = ?",
+      whereArgs: [widget.cellid, TodoStatus.done],
+    );
+
+    _loadItems();
   }
 
-  void _clearDoneTasks() {
-    todoList.removeWhere((item) {
-      return item["status"] == "completed";
-    });
-    _saveTodoList();
-  }
-
-  void _updateTodoItem(data) {
-    for (int i = 0; i < todoList.length; i++) {
-      if (todoList[i]["id"] == data["id"]) {
-        todoList[i] = data;
-
-        if (data["notify"] == true && data["status"] != "completed") {
-          TodoNotifier().scheduleNotification(data);
-        } else {
-          TodoNotifier().unscheduleNotification(data["id"].hashCode);
-        }
-        break;
+  _addNotifier(TodoItem item) {
+    if (item.notifyid >= 0) {
+      if (item.status == TodoStatus.done) {
+        TodoNotifier().unscheduleNotification(item);
+      } else {
+        TodoNotifier().scheduleNotification(item);
       }
+    } else {
+      TodoNotifier().unscheduleNotification(item);
     }
-    _saveTodoList();
   }
 
-  /// Sort the list according to the sort mode.
-  ///
-  /// Returns widgets of the todo list.
-  List<Widget> _getTodoList() {
-    List<Map> sortedList = List.from(todoList);
 
-    sortedList.sort((i, j) {
-      const Map<String, int> statusValue = {
-        "urgent": 1,
-        "todo": 2,
-        "ongoing": 3,
-        "completed": 4,
-      };
-      var iStatus = statusValue[i["status"]] ?? 0;
-      var jStatus = statusValue[j["status"]] ?? 0;
-      var iTime = DateTime.parse(i["deadline"]);
-      var jTime = DateTime.parse(j["deadline"]);
+  void _onSelectStatus(TodoItem item) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text("Select a status"),
+          children: [
+            TodoStatus.todo,
+            TodoStatus.urgent,
+            TodoStatus.ongoing,
+            TodoStatus.done,
+          ].map((status) => SimpleDialogOption(
+              onPressed: () {
+                setState(() async {
+                  item.status = status;
+                  await _editItem(item);
+                  Navigator.of(context).pop();
+                });
+              },
+              child: Text(TodoStatus.getStatusLabel(status)),
+          )).toList(),
+        );
+      },
+    );
+  }
 
-      if (todoSortMode == "status") {
-        int cmpStatus = iStatus.compareTo(jStatus);
-        // If same status, sort by deadline
-        return cmpStatus == 0 ? iTime.compareTo(jTime) : cmpStatus;
+  Widget buildItemTile(TodoItem item) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      horizontalTitleGap: 2,
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => TodoDetailsPage(
+            item: item,
+            onEdit: _editItem,
+          )
+        ));
+      },
+      leading: RawMaterialButton(
+        onPressed: () {
+          _onSelectStatus(item);
+        },
+        fillColor: TodoStatus.getStatusColor(item.status),
+        shape: const CircleBorder(),
+      ),
+      title: Text(
+        item.title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      subtitle: Text(
+        DateTimeFormat.dateFormat(item.deadline),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+      trailing: IconButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              key: Key("delete-task-${item.id}"),
+              title: const Text("Delete Confirmation"),
+              content: Text(
+                "Do you want to delete task \"${item.title}\"?",
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await _deleteItem(item);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Delete"),
+                ),
+              ],
+            ),
+          );
+        },
+        icon: const Icon(Icons.close),
+      ),
+    );
+  }
+
+  List<TodoItem> sortItems() {
+    List<TodoItem> sortedItems = List.from(cellItems);
+    sortedItems.sort((i, j) {
+      int cmpStatus = TodoStatus.compare(i.status, j.status);
+      int cmpTime = i.deadline.compareTo(j.deadline);
+
+      if (todoSortMode == TodoItemSort.status) {
+        return cmpStatus == 0 ? cmpTime : cmpStatus;
       }
-      // Default to deadline mode
-      return iTime.compareTo(jTime);
+      return cmpTime;
     });
+    return sortedItems;
+  }
 
+  List<Widget> buildItemList() {
     List<Widget> items = [];
-    for (int i = 0; i < sortedList.length; i++) {
-      items.add(TodoItem(
-        key: Key("todoitem-" + const Uuid().v1()),
-        data: sortedList[i],
-        onDelete: _deleteTodoItem,
-        onUpdate: _updateTodoItem,
-      ));
+    for (TodoItem item in sortItems()) {
+      items.add(buildItemTile(item));
     }
     return items;
+  }
+  
+  Widget buildClearDone() {
+    return IconButton(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            key: const Key("clear-done-tasks"),
+            title: const Text("Delete Confirmation"),
+            content: const Text(
+                "Are you sure you want to remove all the done tasks?"),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await _clearDoneTasks();
+                  Navigator.of(context).pop();
+                },
+                child: const Text("Remove"),
+              ),
+            ],
+          ),
+        );
+      },
+      icon: const Icon(Icons.remove_done),
+      tooltip: "Clear completed tasks",
+    );
+  }
+
+  Widget buildSortBy() {
+    return PopupMenuButton(
+      initialValue: todoSortMode,
+      onSelected: (value) {
+        setState(() {
+          todoSortMode = value.toString();
+        });
+      },
+      icon: const Icon(Icons.sort),
+      tooltip: "Sort by",
+      itemBuilder: (BuildContext context) {
+        return [
+          TodoItemSort.deadline,
+          TodoItemSort.status,
+        ].map((String mode) {
+          return PopupMenuItem<String>(
+            value: mode, child: Text(TodoItemSort.getSortModeLabel(mode)),
+          );
+        }).toList();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Todo List"),
         actions: [
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  key: const Key("clear-done-tasks"),
-                  title: const Text("Delete Confirmation"),
-                  content: const Text(
-                      "Are you sure you want to remove all the done tasks?"),
-                  actions: <Widget>[
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("Cancel")),
-                    TextButton(
-                        onPressed: () {
-                          _clearDoneTasks();
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("Confirm")),
-                  ],
-                ),
-              );
-            },
-            icon: const Icon(Icons.remove_done),
-            tooltip: "Clear completed tasks",
-          ),
-          PopupMenuButton(
-            initialValue: todoSortMode,
-            onSelected: (value) {
-              setState(() {
-                todoSortMode = value.toString();
-              });
-            },
-            icon: const Icon(Icons.sort),
-            tooltip: "Sort",
-            itemBuilder: (BuildContext context) {
-              return todoSortModes.map((Map mode) {
-                return PopupMenuItem<String>(
-                    value: mode["value"], child: Text(mode["label"]));
-              }).toList();
-            },
-          ),
+          buildClearDone(),
+          buildSortBy(),
         ],
       ),
-      body: isTodoListLoaded
-          ? ListView(
-              key: const Key("todolistview"),
-              children: _getTodoList(),
-            )
-          : Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.color["accent-primary"],
-              ),
-            ),
+      body: isItemsLoaded ?
+        ListView(
+          key: const Key("todolistview"),
+          children: buildItemList(),
+        ) :
+        const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.color["accent-primary"],
-        foregroundColor: AppTheme.color["white"],
         child: const Icon(Icons.add),
-        onPressed: _addTodoItem,
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => TodoDetailsPage(
+              item: TodoItem(
+                cellid: widget.cellid,
+              ),
+              onEdit: _editItem,
+            )
+          ));
+        },
       ),
     );
   }
 }
+

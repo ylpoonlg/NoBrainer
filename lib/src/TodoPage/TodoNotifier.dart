@@ -1,19 +1,19 @@
 import 'dart:convert';
 
-import 'package:nobrainer/src/TodoPage/TodoItemDetails.dart';
+import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoNotifyScreen.dart';
 import 'package:nobrainer/src/app.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class TodoNotifier {
   late final FlutterLocalNotificationsPlugin _notificationsPlugin;
 
   TodoNotifier() {
     _initNotificationPlugin();
-    tz.initializeTimeZones();
+    initializeTimeZones();
   }
 
   _initNotificationPlugin() async {
@@ -35,40 +35,42 @@ class TodoNotifier {
 
   void _onSelectNotification(String? payload) async {
     if (payload != null) {
-      Map todoItem = json.decode(payload);
+      Map      row  = json.decode(payload);
+      TodoItem item = TodoItem.from(row);
       Navigator.of(NavKey.navigatorKey.currentContext!).push(
         MaterialPageRoute<void>(
-          builder: (context) => TodoNotifyScreen(todoItem: todoItem),
+          builder: (context) => TodoNotifyScreen(item: item),
         ),
       );
     }
   }
 
-  scheduleNotification(Map todoItem) async {
-    tz.TZDateTime scheduledTime =
-        tz.TZDateTime.from(DateTime.parse(todoItem["deadline"]), tz.local);
+  scheduleNotification(TodoItem item) async {
+    tz.TZDateTime scheduledTime = tz.TZDateTime.from(item.deadline, tz.local);
 
     if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
 
     FlutterLocalNotificationsPlugin plugin = await _getNotificationPlugin();
     await plugin.zonedSchedule(
-      todoItem["id"].hashCode,
-      todoItem["title"],
-      todoItem["desc"],
+      "todo-${item.id}".hashCode,
+      item.title,
+      item.desc,
       scheduledTime,
       const NotificationDetails(
         android: AndroidNotificationDetails('todo', 'Todo Item Alarm',
             channelDescription: 'Do this item'),
       ),
       androidAllowWhileIdle: true,
-      payload: json.encode(todoItem),
+      payload: json.encode(item.toMap()),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
-  unscheduleNotification(int id) async {
+  unscheduleNotification(TodoItem item) async {
     FlutterLocalNotificationsPlugin plugin = await _getNotificationPlugin();
-    await plugin.cancel(id);
+    await plugin.cancel(
+      "todo-${item.id}".hashCode
+    );
   }
 }

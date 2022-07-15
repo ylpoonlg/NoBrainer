@@ -82,8 +82,8 @@ class DbHelper {
 
     try {
       // DB operations
-      
 
+      //debugPrint("Done running db operation");
     } catch (e) {
       debugPrint("database debug operation error:\n" + e.toString());
     }
