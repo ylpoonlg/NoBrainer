@@ -4,10 +4,11 @@ import 'package:csv/csv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/FinancePage/CategoryList.dart';
+import 'package:nobrainer/src/FinancePage/Currencies.dart';
 import 'package:nobrainer/src/FinancePage/PayMethods.dart';
 import 'package:nobrainer/src/Functions/Functions.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
@@ -93,7 +94,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     );
     if (dbMap.isNotEmpty) {
       setState(() {
-        currency = currencySymbol[dbMap[0]["value"]] ?? "\$";
+        currency = Currencies.getCurrencySymbol(dbMap[0]["value"].toString());
       });
     }
   }

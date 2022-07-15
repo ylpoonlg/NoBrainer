@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
@@ -154,8 +153,6 @@ class _ShopsListState extends State<ShopsList> {
                 .map(
                   (shop) => ListTile(
                     leading: Checkbox(
-                      activeColor: AppTheme.color["accent-primary"],
-                      checkColor: AppTheme.color["white"],
                       value: selected.contains(shop),
                       onChanged: (value) {
                         setState(() {

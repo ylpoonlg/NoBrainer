@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
-import 'package:uuid/uuid.dart';
 
 class NewBraincell extends StatefulWidget {
-  bool isEditMode = false;
-  BrainCell cell;
-  Function callback;
+  final bool      isEditMode;
+  final BrainCell cell;
+  final Function  callback;
 
-  NewBraincell({
-    Key? key,
+  const NewBraincell({
     this.isEditMode = false,
     required this.cell,
     required this.callback,
-  }) : super();
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _NewBraincellState();
@@ -95,9 +92,9 @@ class _NewBraincellState extends State<NewBraincell> {
 
   @override
   Widget build(BuildContext context) {
-    final Color foregroundColor = cell.color.computeLuminance() < 0.5 ?
-      AppTheme.color["white"] :
-      AppTheme.color["black"];
+    final Color foregroundColor = cell.color.computeLuminance() < 0.5
+      ? Colors.white
+      : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
@@ -119,10 +116,7 @@ class _NewBraincellState extends State<NewBraincell> {
             onPressed: () {
               addBraincell(context);
             },
-            child: Text(
-              widget.isEditMode ? "Save" : "Add",
-              style: TextStyle(color: AppTheme.color["white"]),
-            ),
+            child: Text(widget.isEditMode ? "Save" : "Add"),
             style: ButtonStyle(
               fixedSize: MaterialStateProperty.all(const Size(80, 64)),
             ),

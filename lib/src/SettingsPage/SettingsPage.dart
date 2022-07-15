@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/FinancePage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 
@@ -76,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           alignment: Alignment.center,
           width: 36,
-          child: Text(currencySymbol[settings.currency] ?? "\$"),
+          child: Text(Currencies.getCurrencySymbol(settings.currency)),
         ),
       ),
     );

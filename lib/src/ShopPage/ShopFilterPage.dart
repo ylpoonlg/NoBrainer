@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopsList.dart';
 import 'package:nobrainer/src/Widgets/BorderButton.dart';
 
 class ShopFilterPage extends StatefulWidget {
-  ShopListFilter           filter;
-  Function(ShopListFilter) onApply;
-  ShopFilterPage({
+  final ShopListFilter           filter;
+  final Function(ShopListFilter) onApply;
+  const ShopFilterPage({
     Key? key,
     required this.filter,
     required this.onApply,

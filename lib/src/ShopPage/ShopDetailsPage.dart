@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/FinancePage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';

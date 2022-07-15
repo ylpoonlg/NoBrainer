@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/TodoPage/TodoDetailsPage.dart';
@@ -11,7 +8,6 @@ import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
 
 class TodoPage extends StatefulWidget {
   final int cellid;

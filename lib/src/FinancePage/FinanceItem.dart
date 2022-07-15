@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
+import 'package:nobrainer/src/FinancePage/Currencies.dart';
 import 'package:nobrainer/src/FinancePage/FinanceItemDetails.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
@@ -14,7 +14,7 @@ Map defaultFinanceItem = {
   "spending": true,
   "paymethod": "",
   "cat": "",
-  "color": AppTheme.colorToMap(AppTheme.color["gray"]),
+  "color": AppTheme.colorToMap(Colors.grey),
   "time": "a datetime object",
   "desc": "",
 };
@@ -87,7 +87,7 @@ class _FinanceItemState extends State<FinanceItem> {
     );
     if (dbMap.isNotEmpty) {
       setState(() {
-        currency = currencySymbol[dbMap[0]["value"]] ?? "\$";
+        currency = Currencies.getCurrencySymbol(dbMap[0]["value"].toString());
       });
     }
   }

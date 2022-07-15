@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
-import 'package:nobrainer/src/HomePage/NewBraincell.dart';
 
 class BraincellTile extends StatelessWidget {
-  BrainCell cell;
-  Widget page;
-  Function onEdit, onDelete;
+  final BrainCell           cell;
+  final Widget              page;
+  final Function(BrainCell) onEdit;
+  final Function(BrainCell) onDelete;
 
-  BraincellTile({
+  const BraincellTile({
     required this.cell,
     required this.page,
     required this.onEdit,
@@ -20,11 +17,12 @@ class BraincellTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color foregroundColor = cell.color.computeLuminance() < 0.5 ?
-      AppTheme.color["white"] :
-      AppTheme.color["black"];
+    final Color foregroundColor = cell.color.computeLuminance() < 0.5
+      ? Colors.white
+      : Colors.black;
 
     return Container(
+      margin: const EdgeInsets.all(0),
       child: Card(
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20))
@@ -45,10 +43,10 @@ class BraincellTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "    " + typeLabel[cell.type].toString(),
+                      "   " + BrainCellType.getBrainCellTypeLabel(cell.type),
                       style: TextStyle(
                         fontSize: 16,
-                        color: foregroundColor.withAlpha(80),
+                        color:    foregroundColor.withAlpha(80),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -71,7 +69,7 @@ class BraincellTile extends StatelessWidget {
                     ),
                     itemBuilder: (context) {
                       return const [
-                        PopupMenuItem(value: "edit", child: Text("Edit")),
+                        PopupMenuItem(value: "edit"  , child: Text("Edit")  ),
                         PopupMenuItem(value: "delete", child: Text("Delete")),
                       ];
                     },
@@ -84,7 +82,7 @@ class BraincellTile extends StatelessWidget {
                   cell.title,
                   style: TextStyle(
                     fontSize: 24,
-                    color: foregroundColor,
+                    color:    foregroundColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,

@@ -1,16 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/ShopPage/ShopFilterPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopDetailsPage.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
 
 class ShopPage extends StatefulWidget {
   final int cellid;

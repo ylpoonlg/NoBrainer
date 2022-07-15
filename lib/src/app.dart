@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/HomePage/HomePage.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Database/db.dart';

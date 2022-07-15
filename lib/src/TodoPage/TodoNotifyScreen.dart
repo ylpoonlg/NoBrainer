@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
 
 class TodoNotifyScreen extends StatefulWidget {
@@ -35,12 +33,12 @@ class _TodoNotifyScreen extends State<TodoNotifyScreen> {
                   // TODO: Return to task
                   //SystemNavigator.pop(animated: true);
                 },
-                child: const Text("DONE"),
-                minWidth: 80,
-                height: 80,
-                shape: const CircleBorder(),
-                color: AppTheme.color["green"],
-                textColor: AppTheme.color["white"],
+                child:     const Text("DONE"),
+                minWidth:  80,
+                height:    80,
+                shape:     const CircleBorder(),
+                color:     const Color(0xff16cc10),
+                textColor: Colors.white,
               ),
             ],
           ),

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/AboutPage/AboutPage.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/Database/db.dart';

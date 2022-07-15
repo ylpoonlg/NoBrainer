@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/res/Theme/AppTheme.dart';
 import 'package:nobrainer/src/TodoPage/TodoItem.dart';
-import 'package:nobrainer/src/TodoPage/TodoNotifier.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 

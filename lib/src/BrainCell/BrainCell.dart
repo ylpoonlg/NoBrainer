@@ -8,6 +8,19 @@ class BrainCellType {
   static const String shopList = "shoplist";
   static const String moneyPit = "moneypit";
   static const String none     = "none";
+
+  static String getBrainCellTypeLabel(String type) {
+    switch (type) {
+      case BrainCellType.todoList:
+        return "Todo List";
+      case BrainCellType.shopList:
+        return "Shopping List";
+      case BrainCellType.moneyPit:
+        return "Money Pit";
+      default:
+        return "Error";
+    }
+  }
 }
 
 class BrainCell {
