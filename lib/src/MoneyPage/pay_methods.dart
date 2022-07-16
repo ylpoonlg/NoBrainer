@@ -1,45 +1,38 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 import 'package:sqflite/sqflite.dart';
 
 class PayMethods {
-  static List<String> payMethods = [];
-
-  static getPayMethods() async {
-    final Database db = await DbHelper.database;
-    dynamic dbMap = await db.query(
-      "settings",
-      where: "name = ?",
-      whereArgs: ["finance-paymethods"],
+  static Future<List<String>> getPayMethods() async {
+    Database  db   = await DbHelper.database;
+    List<Map> rows = await db.query(
+      DbTableName.payMethods,
     );
-    if (dbMap.isEmpty) {
-      payMethods = [];
-    } else {
-      payMethods = List<String>.from(json.decode(dbMap[0]["value"]).toList());
-    }
+    return rows.map((row) => row["name"].toString()).toList();
   }
 
-  static savePayMethod() async {
-    final Database db = await DbHelper.database;
-    await db.execute(
-      "INSERT OR REPLACE INTO settings (name, value) "
-      "VALUES (?, ?)",
-      ["finance-paymethods", json.encode(payMethods)],
+  static Future<void> newPayMethod(String payMethod) async {
+    Database db = await DbHelper.database;
+    await db.insert(
+      DbTableName.payMethods,
+      {
+        "name": payMethod,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  static addPayMethod(String methodName) {
-    payMethods.add(methodName);
-    savePayMethod();
-  }
-
-  static deletePayMethod(String methodName) {
-    payMethods.removeWhere((item) => item == methodName);
-    savePayMethod();
+  static Future<void> deletePayMethod(String payMethod) async {
+    Database db = await DbHelper.database;
+    await db.delete(
+      DbTableName.payMethods,
+      where:     "name = ?",
+      whereArgs: [payMethod],
+    );
   }
 }
 
@@ -54,35 +47,34 @@ class PayMethodsList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _PayMethodsListState(payMethod);
+  State<StatefulWidget> createState() => _PayMethodsListState();
 }
 
 class _PayMethodsListState extends State<PayMethodsList> {
-  String _payMethod = "";
-  bool isLoaded = false;
+  String       _payMethod = "";
+  List<String> payMethods = [];
+  bool         isLoaded   = false;
 
-  _PayMethodsListState(this._payMethod) {
+  _PayMethodsListState() {
     loadPayMethods();
   }
 
   loadPayMethods() async {
-    await PayMethods.getPayMethods();
+    _payMethod = widget.payMethod;
+    payMethods = await PayMethods.getPayMethods();
     setState(() {
       isLoaded = true;
     });
   }
 
   addPayMethod(String methodName) async {
-    setState(() {
-      isLoaded = false;
-    });
-    await PayMethods.addPayMethod(methodName);
-    await loadPayMethods();
+    await PayMethods.newPayMethod(methodName);
+    loadPayMethods();
   }
 
   deletePayMethod(String methodName) async {
     await PayMethods.deletePayMethod(methodName);
-    await loadPayMethods();
+    loadPayMethods();
   }
 
   onNewMethod() {
@@ -165,7 +157,7 @@ class _PayMethodsListState extends State<PayMethodsList> {
                     },
                   ),
                 ),
-                ...PayMethods.payMethods
+                ...payMethods
                     .map(
                       (method) => ListTile(
                         leading: Radio(

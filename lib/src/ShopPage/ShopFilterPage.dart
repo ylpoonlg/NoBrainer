@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopsList.dart';
-import 'package:nobrainer/src/Widgets/BorderButton.dart';
 
 class ShopFilterPage extends StatefulWidget {
   final ShopListFilter           filter;
@@ -18,6 +17,16 @@ class ShopFilterPage extends StatefulWidget {
 
 class _ShopFilterPageState extends State<ShopFilterPage> {
   late ShopListFilter filter;
+  List<String>        shops = [];
+  
+  _ShopFilterPageState() {
+    loadShops();
+  }
+  
+  loadShops() async {
+    shops = await Shops.getShops();
+    setState(() {});
+  }
 
   _onApply() {
     Navigator.of(context).pop();
@@ -39,10 +48,12 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
   );
 
   Widget buildShopsTile() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
       title: const Text("Shops"),
-      trailing: BorderButton(
-        padding: selectorPadding,
+      trailing: TextButton(
         onPressed: () {
           showDialog(
             context: context,
@@ -55,11 +66,7 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
                     direction: Axis.horizontal,
                     alignment: WrapAlignment.spaceEvenly,
                     children: [
-                      BorderButton(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
+                      OutlinedButton(
                         onPressed: () {
                           setState(() {
                             filter.shops = [];
@@ -68,11 +75,7 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
                         },
                         child: const Text("Clear"),
                       ),
-                      BorderButton(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
+                      ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -82,7 +85,7 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
                   ),
                 ),
                 const Divider(),
-                ...ShopsList.shops.map(
+                ...shops.map(
                   (shop) => ShopFilterList(
                     shop: shop,
                     value: filter.shops.contains(shop),
@@ -120,23 +123,19 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
       body: ListView(
         children: [
           ListTile(
-            title: Text(
-              "Filter",
-              style: Theme.of(context).textTheme.headline5,
-            ),
-            trailing: TextButton(
+            title: ElevatedButton.icon(
               onPressed: _onApply,
-              child: const Text("Apply"),
+              icon:  const Icon(Icons.check),
+              label: const Text("Apply Filter"),
             ),
           ),
           const Divider(),
           buildShopsTile(),
-          const Divider(),
+
           // Sort by
           ListTile(
             title: const Text("Sort by"),
-            trailing: BorderButton(
-              padding: selectorPadding,
+            trailing: OutlinedButton(
               onPressed: () {
                 showDialog(
                   context: context,

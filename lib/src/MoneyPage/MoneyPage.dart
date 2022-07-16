@@ -5,10 +5,10 @@ import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/BrainCell/CellPage.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
-import 'package:nobrainer/src/MoneyPage/FinanceFilter.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyDetailsPage.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
+import 'package:nobrainer/src/MoneyPage/money_filter_page.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
@@ -31,15 +31,9 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   List<MoneyItem> cellItems = [];
   @override
   bool isItemsLoaded = false;
-
   String currency = "\$";
-
-  Map filter = {
-    "cats": [],
-    "paymethod": [],
-    "date-from": null,
-    "date-to": null,
-  };
+  MoneyFilter filter = MoneyFilter();
+  bool isFilterPanelShown = false;
 
   _MoneyPageState() {
     loadItems();
@@ -121,26 +115,28 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
 
 
   bool _isFilterSet() {
-    return false;
+    return filter.categories.isNotEmpty || filter.payMethods.isNotEmpty ||
+      filter.dateFrom != null || filter.dateTo != null;
   }
 
   List<MoneyItem> filterItems() {
     List<MoneyItem> filteredItems = [];
 
     bool catInFilter(MoneyCategory? category) {
-      if (filter["cats"].isEmpty) return true;
-      for (Map catMap in filter["cats"]) {
-        if (category?.name == catMap["cat"]) return true;
+      if (filter.categories.isEmpty) return true;
+      for (String catName in filter.categories) {
+        if (category?.name == catName) return true;
       }
       return false;
     }
 
     bool dateInFilter(DateTime dt) {
-      if (filter["date-from"] != null) {
-        if (dt.compareTo(filter["date-from"]) < 0) return false;
+      if (filter.dateFrom != null) {
+        if (dt.compareTo(filter.dateFrom!) < 0) return false;
       }
-      if (filter["date-to"] != null) {
-        if (dt.compareTo(filter["date-to"].add(const Duration(days: 1))) > 0) {
+
+      if (filter.dateTo != null) {
+        if (dt.compareTo(filter.dateTo!.add(const Duration(days: 1))) > 0) {
           return false;
         }
       }
@@ -148,8 +144,8 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
     }
 
     bool payMethodInFilter(String payMethod) {
-      if (filter["paymethod"].isEmpty) return true;
-      for (String item in filter["paymethod"]) {
+      if (filter.payMethods.isEmpty) return true;
+      for (String item in filter.payMethods) {
         if (payMethod == item) return true;
       }
       return false;
@@ -267,6 +263,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.cell.title),
@@ -284,7 +281,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => FinanceFilter(
+                  builder: (context) => MoneyFilterPage(
                     filter: filter,
                     onApply: (newFilter) {
                       setState(() {
@@ -298,8 +295,8 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
             icon: Icon(
               Icons.filter_list,
               color: _isFilterSet()
-                ? Palette.secondary
-                : Colors.white,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface,
             ),
             tooltip: "Filter and Sort",
           ),
@@ -308,53 +305,76 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
       body: isItemsLoaded
         ? ListView(
             key: const Key("financelistview"),
-            children: buildItemList(),
+            padding: const EdgeInsets.only(bottom: 120),
+            children: <Widget>[
+              _isFilterSet()
+                ? MaterialButton(
+                  child: const Text("Clear Filter"),
+                  onPressed: () {
+                    setState(() {
+                      filter = MoneyFilter();
+                    });
+                  },
+                ) : const SizedBox()
+            ] + buildItemList(),
           )
         : const Center(child: CircularProgressIndicator()),
-      floatingActionButton: Wrap(
-        direction: Axis.vertical,
-        alignment: WrapAlignment.end,
-        crossAxisAlignment: WrapCrossAlignment.end,
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            child: FloatingActionButton(
-              heroTag: "finance-income-button",
-              backgroundColor: Palette.tertiary,
-              foregroundColor: Colors.white,
-              child: const Icon(Icons.trending_up),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => MoneyDetailsPage(
-                    item: MoneyItem(
-                      cellid: widget.cell.cellid, isSpending: false,
-                    ),
-                    onEdit: editItem,
-                  )
-                ));
-              },
+
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
+        width: screenWidth,
+        margin: const EdgeInsets.only(bottom: 20),
+        child: Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceEvenly,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          children: [
+            SizedBox(
+              width:  screenWidth * 0.4,
+              height: 60,
+              child:  ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => MoneyDetailsPage(
+                      item: MoneyItem(
+                        cellid: widget.cell.cellid, isSpending: false,
+                      ),
+                      onEdit: editItem,
+                    )
+                  ));
+                },
+                icon:  const Icon(Icons.login),
+                label: const Text("Income"),
+                style: const ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll(Palette.positive),
+                  foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                ),
+              ),
             ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            child: FloatingActionButton(
-              heroTag: "finance-spending-button",
-              backgroundColor: Palette.secondary,
-              foregroundColor: Palette.backgroundDark,
-              child: const Icon(Icons.credit_card),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => MoneyDetailsPage(
-                    item: MoneyItem(
-                      cellid: widget.cell.cellid, isSpending: true,
-                    ),
-                    onEdit: editItem,
-                  )
-                ));
-              },
+            SizedBox(
+              width:  screenWidth * 0.4,
+              height: 60,
+              child:  ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => MoneyDetailsPage(
+                      item: MoneyItem(
+                        cellid: widget.cell.cellid, isSpending: true,
+                      ),
+                      onEdit: editItem,
+                    )
+                  ));
+                },
+                icon:  const Icon(Icons.logout),
+                label: const Text("Expense"),
+                style: const ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll(Palette.negative),
+                  foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

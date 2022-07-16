@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
+import 'package:nobrainer/src/MoneyPage/pay_methods.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
-import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
@@ -24,12 +24,10 @@ class MoneyDetailsPage extends StatefulWidget {
 
 class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
   late MoneyItem item;
-  //Map? currentCategory;
   String currency = "\$";
 
   _MoneyDetailsPageState() {
     loadCurrency();
-    _getPayMethods();
   }
 
   loadCurrency() async {
@@ -37,12 +35,6 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
     setState(() {
       currency = Currencies.getCurrencySymbol(settings.currency);
     });
-  }
-
-  _getPayMethods() async {
-    await PayMethods.getPayMethods();
-    List<String> payMethods = PayMethods.payMethods;
-    setState(() {});
   }
 
   _onSelectCategory(MoneyCategory? category) {
@@ -156,6 +148,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
           ),
         ],
       ),
+
       body: ListView(
         children: [
           // Title
@@ -232,6 +225,14 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
           ListTile(
             contentPadding: listTilePadding,
             title: ElevatedButton.icon(
+              style: ButtonStyle(
+                backgroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.surface,
+                ),
+                foregroundColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
               onPressed: () {
                 showDialog(
                     context: context,
@@ -241,7 +242,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
                         title: const Text("Category"),
                         content: SizedBox(
                           width: screenWidth,
-                          height: screenHeight,
+                          height: 420,
                           child: CategoryList(
                             onSelect: _onSelectCategory,
                           ),

@@ -60,10 +60,12 @@ class _CategoryListState extends State<CategoryList> {
     List<Widget> listTiles = [];
     listTiles.add(
       ListTile(
-        onTap: () {
+        title: MaterialButton(
+          onPressed: () {
           widget.onSelect(null);
-        },
-        title: const Text("None"),
+          },
+          child: const Text("None"),
+        ),
       ),
     );
 

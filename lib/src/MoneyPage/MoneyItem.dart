@@ -71,11 +71,11 @@ class MoneyItem {
 }
 
 
-class MoneyFitler {
-  List<String> category  = [];
-  List<String> dateFrom  = [];
-  List<String> dateTo    = [];
-  List<String> payMethod = [];
+class MoneyFilter {
+  List<String> categories = [];
+  DateTime?    dateFrom;
+  DateTime?    dateTo;
+  List<String> payMethods = [];
 }
 
 

@@ -313,7 +313,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
             icon: Icon(
               Icons.filter_list,
               color: _isFilterSet()
-                ? Palette.secondary
+                ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.onSurface,
             ),
             tooltip: "Filter and Sort",
@@ -323,7 +323,17 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
       body: isItemsLoaded ?
         ListView(
           key:      const Key("shoplistview"),
-          children: buildItemList(),
+          children: <Widget>[
+            _isFilterSet()
+              ? MaterialButton(
+                child: const Text("Clear Filter"),
+                onPressed: () {
+                  setState(() {
+                    filter = ShopListFilter();
+                  });
+                },
+              ) : const SizedBox()
+            ] + buildItemList(),
         ) : const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
