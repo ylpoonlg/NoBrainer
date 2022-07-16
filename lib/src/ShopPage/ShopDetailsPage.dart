@@ -48,7 +48,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   @override
   void initState() {
     super.initState();
-    item = widget.item;
+    item = widget.item.clone();
     _loadCurrencySymbol();
   }
 
@@ -68,6 +68,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         title: item.id >= 0
           ? const Text("Edit Shopping Item")
           : const Text("New Shopping Item"),
+        centerTitle: true,
         leadingWidth: 80,
         leading: TextButton(
           onPressed: () {

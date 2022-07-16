@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/BrainCell/CellPage.dart';
+import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
@@ -12,9 +14,9 @@ import 'package:nobrainer/src/ShopPage/ShopDetailsPage.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ShopPage extends StatefulWidget {
-  final int cellid;
+  final BrainCell cell;
 
-  const ShopPage({required this.cellid, Key? key}) : super(key: key);
+  const ShopPage({required this.cell, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ShopPageState();
@@ -38,7 +40,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
   loadCurrency() async {
     Settings settings = await settingsHandler.getSettings();
     setState(() {
-      currency = settings.currency;
+      currency = Currencies.getCurrencySymbol(settings.currency);
     });
   }
 
@@ -48,7 +50,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
     List<Map> rows = await db.query(
       DbTableName.shopItems,
       where: "cellid = ?",
-      whereArgs: [widget.cellid],
+      whereArgs: [widget.cell.cellid],
     );
 
     cellItems = [];
@@ -117,7 +119,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
     await db.delete(
       DbTableName.shopItems,
       where: "cellid = ? AND status > ?",
-      whereArgs: [widget.cellid, 0],
+      whereArgs: [widget.cell.cellid, 0],
     );
 
     loadItems();
@@ -261,7 +263,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Shopping List"),
+        title: Text(widget.cell.title),
         actions: [
           IconButton(
             // Clear Button
@@ -329,7 +331,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => ShopDetailsPage(
               item: ShopItem(
-                cellid: widget.cellid,
+                cellid: widget.cell.cellid,
               ),
               onEdit: editItem,
             )

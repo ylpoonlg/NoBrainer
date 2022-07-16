@@ -33,6 +33,18 @@ class TodoItem {
     );
   }
 
+  TodoItem clone() {
+    return TodoItem(
+      id:       id,
+      cellid:   cellid,
+      title:    title,
+      desc:     desc,
+      status:   status,
+      deadline: deadline,
+      notifyid: notifyid,
+    );
+  }
+
   Map<String, Object?> toMap({List<String> exclude = const []}) {
     Map<String, Object?> map = {
       "id":       id,

@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
@@ -13,14 +12,23 @@ import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
 
 class AnalysisPage extends StatefulWidget {
-  List<dynamic> financeList = [];
-  AnalysisPage({required this.financeList});
+  List<MoneyItem> cellItems;
+  AnalysisPage({required this.cellItems});
   @override
-  createState() => _AnalysisPageState(financeList);
+  createState() => _AnalysisPageState();
 }
 
 class _AnalysisPageState extends State<AnalysisPage> {
-  final List<dynamic> financeList; // Current status of the shopping list
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Analytics")),
+      body:   const Text("Work in Progress"),
+    );
+  }
+
+  /*
+  late List<dynamic> cellItems; // Current status of the shopping list
   Map<String, double> catSpending = {};
   Map<String, double> methodSpending = {};
   String currency = "\$";
@@ -30,13 +38,13 @@ class _AnalysisPageState extends State<AnalysisPage> {
   DateTime dateEnd = DateTime.now();
   String timeScope = financeAnalyzeScope[0]["value"];
 
-  _AnalysisPageState(this.financeList) {
+  _AnalysisPageState() {
     getCurrencySymbol();
     DateTime now = DateTime.now();
     dateEnd = DateTime(now.year, now.month, now.day);
     dateStart = _getPreviousDate(dateEnd, timeScope);
-    _analyzeFinanceList();
   }
+
 
   _onExportData() async {
     if (!await DbHelper.checkPermissions()) return;
@@ -329,6 +337,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    cellItems = widget.cellItems;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
@@ -521,4 +535,5 @@ class _AnalysisPageState extends State<AnalysisPage> {
       ),
     );
   }
+  */
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
 import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/BorderButton.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
@@ -80,7 +79,8 @@ class _FinanceFilterState extends State<FinanceFilter> {
             title: const Text("Categories"),
             trailing: BorderButton(
               padding: selectorPadding,
-              onPressed: () {
+              onPressed: () async {
+                List<MoneyCategory> categories = await MoneyCategory.getCategories();
                 showDialog(
                   context: context,
                   builder: (context) => SimpleDialog(
@@ -119,10 +119,10 @@ class _FinanceFilterState extends State<FinanceFilter> {
                         ),
                       ),
                       const Divider(),
-                      ...CategoryListState.categories
+                      ...categories
                           .map(
                             (cat) => FinanceFilterList(
-                              item: cat["cat"],
+                              item: cat.name,
                               value: filter!["cats"].contains(cat),
                               onChanged: (value) {
                                 setState(() {
@@ -316,32 +316,41 @@ class _FinanceFilterState extends State<FinanceFilter> {
   }
 }
 
+
+
 class FinanceFilterList extends StatefulWidget {
-  String item;
-  bool? value;
-  Function(bool?) onChanged;
-  FinanceFilterList({
-    Key? key,
+  final String         item;
+  final bool           value;
+  final Function(bool) onChanged;
+  const FinanceFilterList({
     required this.item,
     required this.value,
     required this.onChanged,
+    Key? key,
   }) : super(key: key);
   @override
   State<StatefulWidget> createState() => _FinanceFilterListState();
 }
 
 class _FinanceFilterListState extends State<FinanceFilterList> {
+  bool value = false;
+
+  @override
+  void initState() {
+    super.initState();
+    value = widget.value;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Checkbox(
-        value: widget.value,
-        activeColor: AppTheme.color["accent-primary"],
-        checkColor: AppTheme.color["white"],
-        onChanged: (value) {
+        value: value,
+        onChanged: (newVal) {
+          if (newVal == null) return;
           setState(() {
-            widget.value = value;
-            widget.onChanged(value);
+            value = newVal;
+            widget.onChanged(newVal);
           });
         },
       ),

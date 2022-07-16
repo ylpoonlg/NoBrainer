@@ -23,7 +23,7 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
   @override
   void initState() {
     super.initState();
-    item = widget.item;
+    item = widget.item.clone();
   }
 
   void _onSelectDeadline(BuildContext context) {

@@ -35,6 +35,19 @@ class ShopItem {
     );
   }
 
+  ShopItem clone() {
+    return ShopItem(
+      id:       id,
+      cellid:   cellid,
+      title:    title,
+      desc:     desc,
+      status:   status,
+      price:    price,
+      quantity: quantity,
+      shops:    shops,
+    );
+  }
+
   Map<String, Object?> toMap({List<String> exclude = const []}) {
     Map<String, Object?> map = {
       "id":       id,

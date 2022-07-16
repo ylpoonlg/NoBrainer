@@ -1,142 +1,64 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
 import 'package:nobrainer/src/MoneyPage/NewCategory.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
-import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:nobrainer/src/Database/db.dart';
-import 'package:sqflite/sqflite.dart';
 
 class CategoryList extends StatefulWidget {
-  final Function(Map?) onSelect;
+  final Function(MoneyCategory?) onSelect;
 
   const CategoryList({Key? key, required this.onSelect}) : super(key: key);
   @override
-  State<StatefulWidget> createState() => CategoryListState();
+  State<StatefulWidget> createState() => _CategoryListState();
 }
 
-class CategoryListState extends State<CategoryList> {
-  static List<Map> categories = [];
-  static List<Map> _customCat = [];
-  static bool isCategoriesLoaded = false;
+class _CategoryListState extends State<CategoryList> {
+  List<MoneyCategory> categories = [];
+  bool isCategoriesLoaded = false;
 
-  CategoryListState() : super() {
-    getCategories();
+  _CategoryListState() {
+    loadCategories();
   }
-
-  static getCategories() async {
-    final Database db = await DbHelper.database;
-    dynamic dbMap = await db.query(
-      "settings",
-      where: "name = ?",
-      whereArgs: ["finance-custom-cat"],
-    );
-    final List stringCat = json.decode(dbMap[0]["value"]).toList();
-    CategoryListState._customCat = stringCat
-        .map((cat) => {
-              "cat": cat["cat"],
-              "icon": AppTheme.icon[cat["icon"]],
-              "icon_string": cat["icon"],
-              "color": AppTheme.mapToColor(cat["color"]),
-            })
-        .toList();
-
-    List<Map> categories = List.from(defaultCategories);
-    categories.addAll(CategoryListState._customCat);
-
-    CategoryListState.categories = categories;
-    isCategoriesLoaded = true;
-  }
-
-  saveCategories() async {
-    setState(() {
-      isCategoriesLoaded = false;
-    });
-
-    final Database db = await DbHelper.database;
-    await db.update(
-      "settings",
-      {
-        "value": json.encode(_customCat
-            .map((cat) => {
-                  "cat": cat["cat"],
-                  "icon": cat["icon_string"],
-                  "color": AppTheme.colorToMap(cat["color"]),
-                })
-            .toList()),
-      },
-      where: "name = ?",
-      whereArgs: ["finance-custom-cat"],
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
+  
+  loadCategories() async {
+    categories = await MoneyCategory.getCategories();
     setState(() {
       isCategoriesLoaded = true;
     });
   }
 
-  /// Prompt user to create a new category and add to both local list and database
-  _onAddCat() {
+  _onNewCategory() async {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => NewCategory((newCat) {
-          categories.add(newCat);
-          _customCat.add(newCat);
-          saveCategories();
-        }),
+        builder: (context) => NewCategory(
+          onCreate: (newCat) async {
+            MoneyCategory.newCategory(newCat);
+            setState(() {
+              loadCategories();
+            });
+          },
+        ),
       ),
     );
   }
 
-  /// Delete Custom Categories
-  _onDeleteCat(String catname) {
-    categories.removeWhere((cat) => cat["cat"] == catname);
-    _customCat.removeWhere((cat) => cat["cat"] == catname);
-    saveCategories();
+  _onDeleteCategory(MoneyCategory category) async {
+    await MoneyCategory.deleteCategory(category);
+    setState(() {
+      loadCategories();
+    });
   }
 
-  _getListTiles() {
+  bool isCategoryDeletable(MoneyCategory category) {
+    return true;
+  }
+
+  List<Widget> buildItemList() {
     const listTilePadding = EdgeInsets.symmetric(horizontal: 0);
 
-    final listTiles = categories.map((cat) {
-      return ListTile(
-        contentPadding: listTilePadding,
-        onTap: () {
-          widget.onSelect(cat);
-        },
-        leading: Icon(
-          cat["icon"],
-          color: cat["color"],
-        ),
-        title: Text(cat["cat"]),
-        trailing: CategoryListState._customCat.indexWhere(
-                  (custom) => custom["cat"] == cat["cat"],
-                ) !=
-                -1
-            ? IconButton(
-                onPressed: () {
-                  _onDeleteCat(cat["cat"]);
-                },
-                icon: const Icon(Icons.delete),
-              )
-            : Container(
-                width: 0,
-                height: 0,
-              ),
-      );
-    }).toList();
+    List<Widget> listTiles = [];
     listTiles.add(
-      ListTile(
-        contentPadding: listTilePadding,
-        title: TextButton(
-          onPressed: _onAddCat,
-          child: const Text("+ Add a custom category"),
-        ),
-      ),
-    );
-
-    listTiles.insert(
-      0,
       ListTile(
         onTap: () {
           widget.onSelect(null);
@@ -144,21 +66,50 @@ class CategoryListState extends State<CategoryList> {
         title: const Text("None"),
       ),
     );
+
+    for (MoneyCategory category in categories) {
+      listTiles.add(ListTile(
+        contentPadding: listTilePadding,
+        onTap: () {
+          widget.onSelect(category);
+        },
+        leading: Icon(
+          category.icon,
+          color: category.color,
+        ),
+        title: Text(category.name),
+        trailing: isCategoryDeletable(category)
+          ? IconButton(
+              onPressed: () {
+                _onDeleteCategory(category);
+              },
+              icon: const Icon(Icons.delete),
+            )
+          : const SizedBox(width: 0, height: 0),
+      ));
+    }
+
+    listTiles.add(
+      ListTile(
+        contentPadding: listTilePadding,
+        title: TextButton(
+          onPressed: _onNewCategory,
+          child: const Text("+ Add a custom category"),
+        ),
+      ),
+    );
+
     return listTiles;
   }
 
   @override
   Widget build(BuildContext context) {
     return isCategoriesLoaded
-        ? Scrollbar(
-            thumbVisibility: true,
-            trackVisibility: true,
-            child: ListView(children: _getListTiles()),
-          )
-        : Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.color["accent-primary"],
-            ),
-          );
+      ? Scrollbar(
+          thumbVisibility: true,
+          trackVisibility: true,
+          child: ListView(children: buildItemList()),
+        )
+      : const Center(child: CircularProgressIndicator());
   }
 }

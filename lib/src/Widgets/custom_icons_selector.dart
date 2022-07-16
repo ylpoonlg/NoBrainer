@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Theme/custom_icons.dart';
 
 class CustomIconSelector extends StatefulWidget {
-  Function onSelect;
-  double width, height;
-  int columns;
+  final Function(IconData) onSelect;
+  final int                columns;
 
-  CustomIconSelector({
+  const CustomIconSelector({
     required this.onSelect,
-    required this.width,
-    required this.height,
     this.columns = 4,
-  });
+    Key? key,
+  }) : super(key: key);
   @override
   State<StatefulWidget> createState() {
     return _CustomIconSelectorState();
@@ -21,13 +19,13 @@ class CustomIconSelector extends StatefulWidget {
 class _CustomIconSelectorState extends State<CustomIconSelector> {
   List<Widget> getIcons() {
     List<Widget> result = [];
-    List iconNames = AppTheme.icon.keys.toList();
+    List<IconData> icons = CustomIcons.getIcons();
 
-    for (int i = 0; i < iconNames.length; i++) {
+    for (IconData icon in icons) {
       result.add(InkWell(
-        child: Icon(AppTheme.icon[iconNames[i].toString()]),
+        child: Icon(icon),
         onTap: () {
-          widget.onSelect(iconNames[i].toString());
+          widget.onSelect(icon);
         },
       ));
     }
@@ -39,13 +37,9 @@ class _CustomIconSelectorState extends State<CustomIconSelector> {
     return Scrollbar(
       thumbVisibility: true,
       trackVisibility: true,
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-        child: GridView.count(
-          crossAxisCount: widget.columns,
-          children: getIcons(),
-        ),
+      child: GridView.count(
+        crossAxisCount: widget.columns,
+        children: getIcons(),
       ),
     );
   }

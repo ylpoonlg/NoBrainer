@@ -43,14 +43,13 @@ class BrainCell {
 
   StatefulWidget getPage() {
     switch (type) {
-      case BrainCellType.todoList:
-        return TodoPage(cellid: cellid);
       case BrainCellType.shopList:
-        return ShopPage(cellid: cellid);
+        return ShopPage(cell: this);
       case BrainCellType.moneyPit:
         return MoneyPage(cell: this);
+      case BrainCellType.todoList:
       default:
-        return TodoPage(cellid: cellid);
+        return TodoPage(cell: this);
     }
   }
 }

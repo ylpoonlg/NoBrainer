@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/BrainCell/CellPage.dart';
 import 'package:nobrainer/src/Database/tables.dart';
+import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/MoneyPage/FinanceFilter.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyDetailsPage.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
+import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage.dart';
-import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 
 import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
 
 class MoneyPage extends StatefulWidget {
   final BrainCell cell;
@@ -27,9 +29,10 @@ class MoneyPage extends StatefulWidget {
 class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   @override
   List<MoneyItem> cellItems = [];
-
   @override
   bool isItemsLoaded = false;
+
+  String currency = "\$";
 
   Map filter = {
     "cats": [],
@@ -38,16 +41,31 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
     "date-to": null,
   };
 
-  List<Map> categories = [];
-
   _MoneyPageState() {
     loadItems();
   }
 
+
   @override
   loadItems() async {
+    // Load currency
+    Settings settings = await settingsHandler.getSettings();
+    currency = Currencies.getCurrencySymbol(settings.currency);
+
     Database db = await DbHelper.database;
-    await CategoryListState.getCategories();
+
+    List<Map> rows = await db.query(
+      DbTableName.moneyPitItems,
+      where: "cellid = ?",
+      whereArgs: [widget.cell.cellid],
+    );
+
+    cellItems = [];
+    for (Map row in rows) {
+      MoneyCategory? category =
+        await MoneyCategory.getCategory(row["category"]);
+      cellItems.add(MoneyItem.from(row, category));
+    }
 
     setState(() {
       isItemsLoaded = true;
@@ -55,17 +73,50 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   }
 
   @override
-  newItem(MoneyItem item) {
+  newItem(MoneyItem item) async {
+    Database db = await DbHelper.database;
+    await db.insert(
+      DbTableName.moneyPitItems,
+      item.toMap(exclude: ["id"]),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
 
+    loadItems();
   }
 
   @override
   editItem(MoneyItem item) async {
-    newItem(item);
+    if (item.id < 0) {
+      newItem(item);
+      return;
+    }
+
+    Database db = await DbHelper.database;
+    await db.update(
+      DbTableName.moneyPitItems,
+      item.toMap(exclude: ["id", "cellid"]),
+      where: "id = ?",
+      whereArgs: [item.id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    loadItems();
   }
 
   @override
   deleteItem(MoneyItem item) async {
+    setState(() {
+      isItemsLoaded = false;
+    });
+
+    Database db = await DbHelper.database;
+    await db.delete(
+      DbTableName.moneyPitItems,
+      where: "id = ?",
+      whereArgs: [item.id],
+    );
+
+    loadItems();
   }
 
 
@@ -76,10 +127,10 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   List<MoneyItem> filterItems() {
     List<MoneyItem> filteredItems = [];
 
-    bool catInFilter(String cat) {
+    bool catInFilter(MoneyCategory? category) {
       if (filter["cats"].isEmpty) return true;
       for (Map catMap in filter["cats"]) {
-        if (cat == catMap["cat"]) return true;
+        if (category?.name == catMap["cat"]) return true;
       }
       return false;
     }
@@ -104,6 +155,16 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
       return false;
     }
 
+    for (MoneyItem item in cellItems) {
+      if (
+        catInFilter(item.category) &&
+        dateInFilter(item.time) &&
+        payMethodInFilter(item.payMethod)
+      ) {
+        filteredItems.add(item);
+      }
+    }
+
     filteredItems.sort(
       (i, j) => j.time.compareTo(i.time),
     );
@@ -114,8 +175,83 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   @override
   Widget buildItemTile(MoneyItem item) {
     return ListTile(
-      leading: const Icon(Icons.currency_bitcoin),
-      title: Text(item.title),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      horizontalTitleGap: 4,
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => MoneyDetailsPage(
+            onEdit: editItem,
+            item: item,
+          ),
+        ));
+      },
+      leading: Container(
+        padding: const EdgeInsets.only(
+          left: 15, right: 10,
+        ),
+        child: Icon(
+          item.category?.icon,
+          color: item.category?.color,
+        ),
+      ),
+      title: Text(
+        item.title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      subtitle: Text(
+        DateTimeFormat.dateFormat(item.time),
+      ),
+      trailing: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            (item.isSpending ? "-" : "+") +
+            currency +
+            item.amount.toStringAsFixed(2),
+            style: TextStyle(
+              color: item.isSpending
+                ? Palette.negative
+                : Palette.positive,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    key:     Key("delete-alert-${item.id}"),
+                    title:   const Text("Delete Confirmation"),
+                    content: Text("Do you want to delete \"${item.title}\"?"),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Cancel"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          deleteItem(item);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Confirm"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
     );
   }
 
@@ -131,9 +267,6 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.cell.title),
@@ -141,7 +274,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
           IconButton(
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => AnalysisPage(financeList: const []),
+                builder: (context) => AnalysisPage(cellItems: cellItems),
               ));
             },
             icon: const Icon(Icons.analytics),

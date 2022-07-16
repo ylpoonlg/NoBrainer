@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
 import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
@@ -24,12 +24,11 @@ class MoneyDetailsPage extends StatefulWidget {
 
 class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
   late MoneyItem item;
-  Map? currentCategory = null;
+  //Map? currentCategory;
   String currency = "\$";
 
   _MoneyDetailsPageState() {
     loadCurrency();
-    _getCategories();
     _getPayMethods();
   }
 
@@ -46,25 +45,9 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
     setState(() {});
   }
 
-
-  _getCategories() async {
-    await CategoryListState.getCategories();
-    CategoryListState.categories.forEach((cat) {
-      if (cat["cat"] == item.category) {
-        currentCategory = cat;
-      }
-    });
-    setState(() {});
-  }
-
-  _onSelectPayMethod(String methodName) {
-  }
-
-  /// onSelect called from category list
-  _onSelectCategory(Map? cat) {
+  _onSelectCategory(MoneyCategory? category) {
     setState(() {
-      currentCategory = cat;
-      item.category = cat == null ? "" : cat["cat"];
+      item.category = category;
     });
     Navigator.of(context).pop();
   }
@@ -79,7 +62,8 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
         builder: (context) => AlertDialog(
           title: const Text("Invalid Input"),
           content: const Text(
-              "Please check that the title must not be empty and amount must not be a negative number."),
+            "Please check that the title must not be empty and amount must not be a negative number."
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -125,11 +109,10 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
     });
   }
 
-
   @override
   void initState() {
     super.initState();
-    item = widget.item;
+    item = widget.item.clone();
   }
 
   @override
@@ -150,6 +133,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
           (item.id >= 0 ? "Edit " : "New ") +
           (item.isSpending ? "Spending" : "Income")
         ),
+        centerTitle: true,
         leadingWidth: 80,
         leading: TextButton(
           onPressed: () {
@@ -247,7 +231,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
           // Category
           ListTile(
             contentPadding: listTilePadding,
-            title: TextButton(
+            title: ElevatedButton.icon(
               onPressed: () {
                 showDialog(
                     context: context,
@@ -273,39 +257,25 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
                       );
                     });
               },
-              // Current Category Button
-              child: Row(
-                children: (currentCategory == null)
-                  ? [const Text("Select a Category")]
-                  : [
-                      Icon(
-                        currentCategory!["icon"],
-                        color: currentCategory!["color"],
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        currentCategory!["cat"],
-                        style: TextStyle(color: currentCategory!["color"]),
-                      ),
-                    ],
+              label: Text(
+                item.category?.name ?? "Select A Category",
+                style: TextStyle(color: item.category?.color),
+              ),
+              icon: Icon(
+                item.category?.icon,
+                color: item.category?.color,
               ),
             ),
           ),
 
           // Date
           ListTile(
-            title: Text(
-              "Date",
-              style: TextStyle(color: AppTheme.color["white"]),
-            ),
+            title: const Text("Date"),
             trailing: TextButton(
               onPressed: () {
                 _onSelectDeadline(context);
               },
-              child: Text(
-                DateTimeFormat.dateFormat(item.time),
-                style: TextStyle(color: AppTheme.color["white"]),
-              ),
+              child: Text(DateTimeFormat.dateFormat(item.time)),
             ),
           ),
 

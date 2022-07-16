@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
+import 'package:nobrainer/src/BrainCell/CellPage.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/TodoPage/TodoDetailsPage.dart';
@@ -10,29 +12,33 @@ import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';
 
 class TodoPage extends StatefulWidget {
-  final int cellid;
+  final BrainCell cell;
 
-  const TodoPage({required this.cellid, Key? key}) : super(key: key);
+  const TodoPage({required this.cell, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TodoPageState();
 }
 
-class _TodoPageState extends State<TodoPage> {
-  List<TodoItem> cellItems = []; // Current status of the todo list
-  bool isItemsLoaded       = false;
-  String todoSortMode      = TodoItemSort.deadline; // Sorting modes for todo items
+class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
+  @override
+  List<TodoItem> cellItems = [];
+  @override
+  bool isItemsLoaded = false;
+
+  String todoSortMode = TodoItemSort.deadline;
 
   _TodoPageState() {
-    _loadItems();
+    loadItems();
   }
 
-  _loadItems() async {
+  @override
+  loadItems() async {
     Database db = await DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.todoItems,
       where: "cellid = ?",
-      whereArgs: [widget.cellid],
+      whereArgs: [widget.cell.cellid],
     );
 
     cellItems = [];
@@ -45,7 +51,8 @@ class _TodoPageState extends State<TodoPage> {
     });
   }
 
-  _newItem(TodoItem item) async {
+  @override
+  newItem(TodoItem item) async {
     Database db = await DbHelper.database;
     await db.insert(
       DbTableName.todoItems,
@@ -53,14 +60,15 @@ class _TodoPageState extends State<TodoPage> {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    _loadItems();
+    loadItems();
   }
 
-  _editItem(TodoItem item) async {
+  @override
+  editItem(TodoItem item) async {
     _addNotifier(item);
 
     if (item.id < 0) {
-      _newItem(item);
+      newItem(item);
       return;
     }
 
@@ -73,10 +81,11 @@ class _TodoPageState extends State<TodoPage> {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    _loadItems();
+    loadItems();
   }
 
-  _deleteItem(TodoItem item) async {
+  @override
+  deleteItem(TodoItem item) async {
     setState(() {
       isItemsLoaded = false;
     });
@@ -92,7 +101,7 @@ class _TodoPageState extends State<TodoPage> {
       whereArgs: [item.id],
     );
 
-    _loadItems();
+    loadItems();
   }
 
   _clearDoneTasks() async {
@@ -104,10 +113,10 @@ class _TodoPageState extends State<TodoPage> {
     await db.delete(
       DbTableName.todoItems,
       where: "cellid = ? AND status = ?",
-      whereArgs: [widget.cellid, TodoStatus.done],
+      whereArgs: [widget.cell.cellid, TodoStatus.done],
     );
 
-    _loadItems();
+    loadItems();
   }
 
   _addNotifier(TodoItem item) {
@@ -138,7 +147,7 @@ class _TodoPageState extends State<TodoPage> {
               onPressed: () {
                 setState(() {
                   item.status = status;
-                  _editItem(item);
+                  editItem(item);
                   Navigator.of(context).pop();
                 });
               },
@@ -149,6 +158,7 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
+  @override
   Widget buildItemTile(TodoItem item) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
@@ -157,7 +167,7 @@ class _TodoPageState extends State<TodoPage> {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => TodoDetailsPage(
             item: item,
-            onEdit: _editItem,
+            onEdit: editItem,
           )
         ));
       },
@@ -201,7 +211,7 @@ class _TodoPageState extends State<TodoPage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await _deleteItem(item);
+                    await deleteItem(item);
                     Navigator.of(context).pop();
                   },
                   child: const Text("Delete"),
@@ -229,6 +239,7 @@ class _TodoPageState extends State<TodoPage> {
     return sortedItems;
   }
 
+  @override
   List<Widget> buildItemList() {
     List<Widget> items = [];
     for (TodoItem item in sortItems()) {
@@ -297,27 +308,26 @@ class _TodoPageState extends State<TodoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Todo List"),
+        title: Text(widget.cell.title),
         actions: [
           buildClearDone(),
           buildSortBy(),
         ],
       ),
-      body: isItemsLoaded ?
-        ListView(
+      body: isItemsLoaded
+        ? ListView(
           key: const Key("todolistview"),
           children: buildItemList(),
-        ) :
-        const Center(child: CircularProgressIndicator()),
+        ) : const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => TodoDetailsPage(
               item: TodoItem(
-                cellid: widget.cellid,
+                cellid: widget.cell.cellid,
               ),
-              onEdit: _editItem,
+              onEdit: editItem,
             )
           ));
         },

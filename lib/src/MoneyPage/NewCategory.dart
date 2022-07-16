@@ -1,46 +1,50 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
-import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
-import 'package:nobrainer/src/Widgets/CustomIconSelector.dart';
+import 'package:nobrainer/src/Widgets/custom_icons_selector.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class NewCategory extends StatefulWidget {
-  Function(Map) onCreate;
+  final Function(MoneyCategory) onCreate;
 
-  NewCategory(this.onCreate) : super();
+  const NewCategory({required this.onCreate, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _NewCategoryState();
 }
 
 class _NewCategoryState extends State<NewCategory> {
-  Map<String, dynamic> newCat = {
-    "cat": "Custom Category",
-    "icon": Icons.brush,
-    "icon_string": "custom",
-    "color": AppTheme.color["orange"],
-  };
+  MoneyCategory newCat =
+    MoneyCategory(name: "", icon: null, color: Colors.grey);
 
-  _onCreate() {
+  _onCreate() async {
+    // Validate
     bool catExist = false;
-    CategoryListState.categories.forEach((cat) {
-      if (cat["cat"] == newCat["cat"]) {
+    List<MoneyCategory> categories = await MoneyCategory.getCategories();
+    for (MoneyCategory category in categories) {
+      if (category.name == newCat.name) {
         catExist = true;
+        break;
       }
-    });
-    if (!catExist && newCat["cat"] != "") {
+    }
+
+    if (!catExist && newCat.name != "") {
       widget.onCreate(newCat);
       Navigator.of(context).pop();
     } else {
+      String alertMessage;
+      if (newCat.name == "") {
+        alertMessage = "Invalid category name";
+      } else {
+        alertMessage = "Category already exist";
+      }
       showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: const Text("Failed to Create New Category"),
-            content: const Text(
-                "This category already exist.\nTry a different name."),
+            content: Text(alertMessage),
             actions: [
               TextButton(
                 onPressed: () {
@@ -62,16 +66,17 @@ class _NewCategoryState extends State<NewCategory> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Select an Icon"),
-        content: CustomIconSelector(
+        content: SizedBox(
           width: screenWidth - 100,
           height: screenHeight - 500,
-          onSelect: (iconName) {
-            Navigator.of(context).pop();
-            setState(() {
-              newCat["icon_string"] = iconName;
-              newCat["icon"] = AppTheme.icon[iconName];
-            });
-          },
+          child: CustomIconSelector(
+            onSelect: (icon) {
+              setState(() {
+                newCat.icon = icon;
+              });
+              Navigator.of(context).pop();
+            },
+          ),
         ),
         actions: [
           TextButton(
@@ -91,11 +96,11 @@ class _NewCategoryState extends State<NewCategory> {
       builder: (context) => AlertDialog(
         content: SingleChildScrollView(
           child: ColorPicker(
-            pickerColor: newCat["color"],
+            pickerColor: newCat.color,
             paletteType: PaletteType.hueWheel,
             onColorChanged: (color) {
               setState(() {
-                newCat["color"] = color;
+                newCat.color = color;
               });
             },
           ),
@@ -123,15 +128,11 @@ class _NewCategoryState extends State<NewCategory> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
         title: const Text("Create New Category"),
         actions: [
           TextButton(
             onPressed: _onCreate,
-            child: Text(
-              "Create",
-              style: TextStyle(color: AppTheme.color["white"]),
-            ),
+            child: const Text("Create"),
           )
         ],
       ),
@@ -141,63 +142,70 @@ class _NewCategoryState extends State<NewCategory> {
         },
         child: ListView(
           children: [
+            const SizedBox(height: 20),
+
+            ListTile(
+              title: Card(
+                child: Container(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        child: Icon(
+                          newCat.icon,
+                          size: 64,
+                          color: newCat.color,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: newCat.color,
+                          ),
+                          borderRadius:
+                            const BorderRadius.all(Radius.circular(100)),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              _onSelectIcon(context);
+                            },
+                            child: const Text("Icon"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _onSelectColor(context);
+                            },
+                            child: const Text("Color"),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
             ListTile(
               contentPadding: listTilePadding,
               title: TextField(
-                controller: TextEditor.getController(newCat["cat"]),
+                controller: TextEditor.getController(newCat.name),
                 onChanged: (text) {
-                  newCat["cat"] = text;
+                  newCat.name = text;
                 },
                 decoration: const InputDecoration(
-                  labelText: "Title",
-                  hintText: "Enter the title of the task",
+                  labelText: "Category Name",
+                  hintText: "e.g. Transportation, Bills",
                   border: OutlineInputBorder(),
                 ),
               ),
             ),
 
-            // Icon Preview
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Icon(
-                newCat["icon"],
-                size: 64,
-                color: newCat["color"],
-              ),
-            ),
-            ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        _onSelectIcon(context);
-                      },
-                      child: Text(
-                        "Icon",
-                        style: TextStyle(
-                          color: AppTheme.color["white"],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        _onSelectColor(context);
-                      },
-                      child: Text(
-                        "Color",
-                        style: TextStyle(
-                          color: AppTheme.color["white"],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
