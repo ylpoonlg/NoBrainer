@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/BrainCell/CellPage.dart';
+import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
@@ -18,16 +20,30 @@ class ShopPage extends StatefulWidget {
   State<StatefulWidget> createState() => _ShopPageState();
 }
 
-class _ShopPageState extends State<ShopPage> {
-  List<ShopItem> cellItems     = []; // Current status of the shopping list
-  bool           isItemsLoaded = false;
-  ShopListFilter filter = ShopListFilter();
+class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
+  @override
+  List<ShopItem> cellItems = [];
+
+  @override
+  bool isItemsLoaded = false;
+
+  ShopListFilter filter   = ShopListFilter();
+  String         currency = "\$";
 
   _ShopPageState() {
-    _loadItems();
+    loadItems();
+    loadCurrency();
   }
 
-  _loadItems() async {
+  loadCurrency() async {
+    Settings settings = await settingsHandler.getSettings();
+    setState(() {
+      currency = settings.currency;
+    });
+  }
+
+  @override
+  loadItems() async {
     Database db = await DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.shopItems,
@@ -45,7 +61,8 @@ class _ShopPageState extends State<ShopPage> {
     });
   }
 
-  _newItem(ShopItem item) async {
+  @override
+  newItem(ShopItem item) async {
     Database db = await DbHelper.database;
     await db.insert(
       DbTableName.shopItems,
@@ -53,12 +70,13 @@ class _ShopPageState extends State<ShopPage> {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    _loadItems();
+    loadItems();
   }
 
-  _editItem(ShopItem item) async {
+  @override
+  editItem(ShopItem item) async {
     if (item.id < 0) {
-      _newItem(item);
+      newItem(item);
       return;
     }
 
@@ -71,10 +89,11 @@ class _ShopPageState extends State<ShopPage> {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    _loadItems();
+    loadItems();
   }
 
-  _deleteItem(ShopItem item) async {
+  @override
+  deleteItem(ShopItem item) async {
     setState(() {
       isItemsLoaded = false;
     });
@@ -86,7 +105,7 @@ class _ShopPageState extends State<ShopPage> {
       whereArgs: [item.id],
     );
 
-    _loadItems();
+    loadItems();
   }
 
   _clearBoughtItems() async {
@@ -101,7 +120,7 @@ class _ShopPageState extends State<ShopPage> {
       whereArgs: [widget.cellid, 0],
     );
 
-    _loadItems();
+    loadItems();
   }
 
   bool _isFilterSet() {
@@ -109,6 +128,7 @@ class _ShopPageState extends State<ShopPage> {
   }
 
 
+  @override
   Widget buildItemTile(ShopItem item) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
@@ -117,7 +137,7 @@ class _ShopPageState extends State<ShopPage> {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => ShopDetailsPage(
             item: item,
-            onEdit: _editItem,
+            onEdit: editItem,
           ),
         ));
       },
@@ -131,7 +151,7 @@ class _ShopPageState extends State<ShopPage> {
             onChanged: (value) {
               value ??= false;
               item.status = value ? 1 : 0;
-              _editItem(item);
+              editItem(item);
             },
           ),
           Container(
@@ -158,33 +178,45 @@ class _ShopPageState extends State<ShopPage> {
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
       ),
-      trailing: IconButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                key: Key("delete-alert-${item.id}"),
-                title: const Text("Delete Confirmation"),
-                content: const Text("Are you sure you want to delete this item?"),
-                actions: <Widget>[
-                  TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text("Cancel")),
-                  TextButton(
-                      onPressed: () {
-                        _deleteItem(item);
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text("Confirm")),
-                ],
+      trailing: Wrap(
+        direction: Axis.horizontal,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            "$currency ${item.price.toStringAsFixed(2)}",
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    key:     Key("delete-alert-${item.id}"),
+                    title:   const Text("Delete Confirmation"),
+                    content: Text("Do you want to delete \"${item.title}\"?"),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Cancel"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          deleteItem(item);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Confirm"),
+                      ),
+                    ],
+                  );
+                },
               );
             },
-          );
-        },
-        icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close),
+          ),
+        ],
       ),
     );
   }
@@ -216,6 +248,7 @@ class _ShopPageState extends State<ShopPage> {
     return filteredItems;
   }
 
+  @override
   List<Widget> buildItemList() {
     List<Widget> items = [];
     for (ShopItem item in filterItems()) {
@@ -298,7 +331,7 @@ class _ShopPageState extends State<ShopPage> {
               item: ShopItem(
                 cellid: widget.cellid,
               ),
-              onEdit: _editItem,
+              onEdit: editItem,
             )
           ));
         },

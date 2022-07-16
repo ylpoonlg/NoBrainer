@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/FinancePage/Currencies.dart';
+import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopsList.dart';
@@ -73,7 +73,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text("Cancel"),
+          child: const Text("Discard"),
           style: ButtonStyle(
             foregroundColor: MaterialStateProperty.all(
               Theme.of(context).colorScheme.onSurface.withOpacity(0.8),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
-import 'package:nobrainer/src/FinancePage/CategoryList.dart';
-import 'package:nobrainer/src/FinancePage/PayMethods.dart';
+import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
+import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/BorderButton.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 

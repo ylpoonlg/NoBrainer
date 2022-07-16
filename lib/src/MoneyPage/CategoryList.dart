@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/MoneyPage/NewCategory.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/res/values/DisplayValues.dart';
 import 'package:nobrainer/src/Database/db.dart';
-import 'package:nobrainer/src/FinancePage/NewCategory.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CategoryList extends StatefulWidget {

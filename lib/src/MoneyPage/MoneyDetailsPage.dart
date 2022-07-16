@@ -1,36 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/MoneyPage/Currencies.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
+import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
-import 'package:nobrainer/src/FinancePage/CategoryList.dart';
-import 'package:nobrainer/src/FinancePage/PayMethods.dart';
+import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
+import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
-class FinanceItemDetails extends StatefulWidget {
-  Map data;
-  Function onUpdate;
-  String currency;
+class MoneyDetailsPage extends StatefulWidget {
+  final MoneyItem item;
+  final Function(MoneyItem) onEdit;
 
-  FinanceItemDetails({
-    required this.data,
-    required this.onUpdate,
-    this.currency = "\$",
+  const MoneyDetailsPage({
+    required this.item,
+    required this.onEdit,
     Key? key,
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() =>
-      _FinanceItemsDetailsState(new Map.from(data));
+  State<StatefulWidget> createState() => _MoneyDetailsPageState();
 }
 
-class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
-  /// A copy of the original data
-  final Map data;
+class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
+  late MoneyItem item;
   Map? currentCategory = null;
+  String currency = "\$";
 
-
-  _FinanceItemsDetailsState(this.data) {
+  _MoneyDetailsPageState() {
+    loadCurrency();
     _getCategories();
     _getPayMethods();
+  }
+
+  loadCurrency() async {
+    Settings settings = await settingsHandler.getSettings();
+    setState(() {
+      currency = Currencies.getCurrencySymbol(settings.currency);
+    });
   }
 
   _getPayMethods() async {
@@ -43,7 +50,7 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
   _getCategories() async {
     await CategoryListState.getCategories();
     CategoryListState.categories.forEach((cat) {
-      if (cat["cat"] == data["cat"]) {
+      if (cat["cat"] == item.category) {
         currentCategory = cat;
       }
     });
@@ -57,14 +64,14 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
   _onSelectCategory(Map? cat) {
     setState(() {
       currentCategory = cat;
-      data["cat"] = cat == null ? "" : cat["cat"];
+      item.category = cat == null ? "" : cat["cat"];
     });
     Navigator.of(context).pop();
   }
 
   void validateData() {
-    if (data["title"].length > 0 && data["amount"] >= 0) {
-      widget.onUpdate(data);
+    if (item.title.isNotEmpty && item.amount >= 0) {
+      widget.onEdit(item);
       Navigator.of(context).pop();
     } else {
       showDialog(
@@ -90,7 +97,7 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
     showDialog(
       context: context,
       builder: (context) => DatePickerDialog(
-        initialDate: DateTime.parse(data["time"]),
+        initialDate: item.time,
         firstDate: DateTime(2000),
         lastDate: DateTime(3000),
         initialCalendarMode: DatePickerMode.day,
@@ -100,22 +107,29 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
         // Pick Time
         showTimePicker(
           context: context,
-          initialTime: TimeOfDay.fromDateTime(DateTime.parse(data["time"])),
+          initialTime: TimeOfDay.fromDateTime(item.time),
         ).then((time) {
           setState(() {
             if (time != null) {
-              data["time"] = DateTime(
+              item.time = DateTime(
                 date.year,
                 date.month,
                 date.day,
                 time.hour,
                 time.minute,
-              ).toString();
+              );
             }
           });
         });
       });
     });
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    item = widget.item;
   }
 
   @override
@@ -132,14 +146,28 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.color["appbar-background"],
-        title: Text(data["spending"] ?? true ? "Edit Spending" : "Edit Income"),
+        title: Text(
+          (item.id >= 0 ? "Edit " : "New ") +
+          (item.isSpending ? "Spending" : "Income")
+        ),
+        leadingWidth: 80,
+        leading: TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text("Discard"),
+          style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all(
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+        ),
         actions: [
-          MaterialButton(
+          TextButton(
             onPressed: validateData,
-            child: const Text(
-              "Save",
-              style: TextStyle(color: Colors.white),
+            child: const Text("Save"),
+            style: ButtonStyle(
+              fixedSize: MaterialStateProperty.all(const Size(80, 64)),
             ),
           ),
         ],
@@ -150,14 +178,16 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["title"]),
+              controller: TextEditor.getController(item.title),
               onChanged: (text) {
-                data["title"] = text;
+                item.title = text;
               },
-              decoration: const InputDecoration(
-                labelText: "Title",
-                hintText: "Enter the title of the item",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: item.isSpending ? "Spending" : "Income",
+                hintText: item.isSpending
+                  ? "e.g. Restaurant, Shopping"
+                  : "e.g. Salary, Investments",
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -166,15 +196,15 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["amount"] != null
-                  ? data["amount"].toStringAsFixed(2)
-                  : "0"),
+              controller: TextEditor.getController(
+                item.amount.toStringAsFixed(2)
+              ),
               onChanged: (text) {
-                data["amount"] = double.tryParse(text) ?? 0;
+                item.amount = double.tryParse(text) ?? 0;
               },
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                prefixText: widget.currency + " ",
+                prefixText: currency + " ",
                 labelText: "Amount",
                 border: const OutlineInputBorder(),
               ),
@@ -192,9 +222,9 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                         width: screenWidth,
                         height: 320,
                         child: PayMethodsList(
-                          payMethod: data["paymethod"] ?? "",
+                          payMethod: item.payMethod,
                           onChanged: (value) {
-                            data["paymethod"] = value;
+                            item.payMethod = value;
                           }
                         ),
                       ),
@@ -246,18 +276,18 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
               // Current Category Button
               child: Row(
                 children: (currentCategory == null)
-                    ? [const Text("Select a Category")]
-                    : [
-                        Icon(
-                          currentCategory!["icon"],
-                          color: currentCategory!["color"],
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          currentCategory!["cat"],
-                          style: TextStyle(color: currentCategory!["color"]),
-                        ),
-                      ],
+                  ? [const Text("Select a Category")]
+                  : [
+                      Icon(
+                        currentCategory!["icon"],
+                        color: currentCategory!["color"],
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        currentCategory!["cat"],
+                        style: TextStyle(color: currentCategory!["color"]),
+                      ),
+                    ],
               ),
             ),
           ),
@@ -273,7 +303,7 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
                 _onSelectDeadline(context);
               },
               child: Text(
-                DateTimeFormat.dateFormat(DateTime.parse(data["time"])),
+                DateTimeFormat.dateFormat(item.time),
                 style: TextStyle(color: AppTheme.color["white"]),
               ),
             ),
@@ -283,9 +313,9 @@ class _FinanceItemsDetailsState extends State<FinanceItemDetails> {
           ListTile(
             contentPadding: listTilePadding,
             title: TextField(
-              controller: TextEditor.getController(data["desc"]),
+              controller: TextEditor.getController(item.desc),
               onChanged: (text) {
-                data["desc"] = text;
+                item.desc = text;
               },
               keyboardType: TextInputType.multiline,
               minLines: 2,

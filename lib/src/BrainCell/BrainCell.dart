@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/FinancePage/FinancePage.dart';
+import 'package:nobrainer/src/MoneyPage/MoneyPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
 import 'package:nobrainer/src/TodoPage/TodoPage.dart';
 
@@ -48,7 +48,7 @@ class BrainCell {
       case BrainCellType.shopList:
         return ShopPage(cellid: cellid);
       case BrainCellType.moneyPit:
-        return FinancePage(uuid: cellid.toString());
+        return MoneyPage(cell: this);
       default:
         return TodoPage(cellid: cellid);
     }

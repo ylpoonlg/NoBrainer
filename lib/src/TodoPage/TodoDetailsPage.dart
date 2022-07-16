@@ -76,7 +76,7 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text("Cancel"),
+          child: const Text("Discard"),
           style: ButtonStyle(
             foregroundColor: MaterialStateProperty.all(
               Theme.of(context).colorScheme.onSurface.withOpacity(0.8),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/FinancePage/Currencies.dart';
+import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 
 class SettingsPage extends StatefulWidget {
