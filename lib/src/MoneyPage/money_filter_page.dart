@@ -32,7 +32,7 @@ class _MoneyFilterPageState extends State<MoneyFilterPage> {
 
   _onApply() {
     widget.onApply(filter);
-    Navigator.of(context).pop();
+    //Navigator.of(context).pop();
   }
 
   _formatCategoryList() {
@@ -58,14 +58,6 @@ class _MoneyFilterPageState extends State<MoneyFilterPage> {
       ? result.substring(0, maxLength) + "..."
       : result;
   }
-
-
-  @override
-  void initState() {
-    super.initState();
-    filter = widget.filter;
-  }
-
 
   Widget buildCategoriesTile() {
     return ListTile(
@@ -293,23 +285,22 @@ class _MoneyFilterPageState extends State<MoneyFilterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ListView(
-        children: [
-          ListTile(
-            title: ElevatedButton.icon(
-              onPressed: _onApply,
-              icon:  const Icon(Icons.check),
-              label: const Text("Apply Filter"),
-            ),
+    filter = widget.filter;
+    return ListView(
+      children: [
+        ListTile(
+          title: ElevatedButton.icon(
+            onPressed: _onApply,
+            icon:  const Icon(Icons.check),
+            label: const Text("Apply Filter"),
           ),
-          const Divider(),
-          buildCategoriesTile(),
-          buildPayMethodTile(),
-          buildDateFromTile(),
-          buildDateToTile(),
-        ],
-      ),
+        ),
+        const Divider(),
+        buildCategoriesTile(),
+        buildPayMethodTile(),
+        buildDateFromTile(),
+        buildDateToTile(),
+      ],
     );
   }
 }

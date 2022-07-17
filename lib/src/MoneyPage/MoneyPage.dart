@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
@@ -14,6 +15,7 @@ import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
+import 'package:nobrainer/src/Widgets/filter_panel.dart';
 
 import 'package:sqflite/sqflite.dart';
 
@@ -279,18 +281,9 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
           IconButton(
             // Filter Button
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => MoneyFilterPage(
-                    filter: filter,
-                    onApply: (newFilter) {
-                      setState(() {
-                        filter = newFilter;
-                      });
-                    },
-                  ),
-                ),
-              );
+              setState(() {
+                isFilterPanelShown = !isFilterPanelShown;
+              });
             },
             icon: Icon(
               Icons.filter_list,
@@ -302,79 +295,122 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
           ),
         ],
       ),
-      body: isItemsLoaded
-        ? ListView(
-            key: const Key("financelistview"),
-            padding: const EdgeInsets.only(bottom: 120),
-            children: <Widget>[
-              _isFilterSet()
-                ? MaterialButton(
-                  child: const Text("Clear Filter"),
-                  onPressed: () {
-                    setState(() {
-                      filter = MoneyFilter();
-                    });
-                  },
-                ) : const SizedBox()
-            ] + buildItemList(),
-          )
-        : const Center(child: CircularProgressIndicator()),
+
+      body: Stack(
+        children: [
+          Container(
+            child: isItemsLoaded
+            ? ListView(
+                key: const Key("financelistview"),
+                padding: const EdgeInsets.only(bottom: 120),
+                children: <Widget>[
+                  _isFilterSet()
+                    ? MaterialButton(
+                      child: const Text("Clear Filter"),
+                      onPressed: () {
+                        setState(() {
+                          filter = MoneyFilter();
+                        });
+                      },
+                    ) : const SizedBox()
+                ] + buildItemList(),
+              )
+            : const Center(child: CircularProgressIndicator()),
+          ),
+
+          GestureDetector(
+            onTap: isFilterPanelShown
+              ? () {
+                setState(() {
+                  isFilterPanelShown = false;
+                });
+              } : null,
+            onVerticalDragDown: isFilterPanelShown
+              ? (_) {
+                setState(() {
+                  isFilterPanelShown = false;
+                });
+              } : null,
+            child: isFilterPanelShown
+              ? Container(color: Colors.black.withOpacity(0.4))
+              : null,
+          ),
+
+          Positioned(
+            bottom: 0,
+            child: FilterPanel(
+              isShown: isFilterPanelShown,
+              child: MoneyFilterPage(
+                filter: filter,
+                onApply: (newFilter) {
+                  setState(() {
+                    filter = newFilter;
+                    isFilterPanelShown = false;
+                  });
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Container(
-        width: screenWidth,
-        margin: const EdgeInsets.only(bottom: 20),
-        child: Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.spaceEvenly,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          children: [
-            SizedBox(
-              width:  screenWidth * 0.4,
-              height: 60,
-              child:  ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => MoneyDetailsPage(
-                      item: MoneyItem(
-                        cellid: widget.cell.cellid, isSpending: false,
-                      ),
-                      onEdit: editItem,
-                    )
-                  ));
-                },
-                icon:  const Icon(Icons.login),
-                label: const Text("Income"),
-                style: const ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(Palette.positive),
-                  foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+      floatingActionButton: isFilterPanelShown
+        ? Container()
+        : Container(
+          width: screenWidth,
+          margin: const EdgeInsets.only(bottom: 20),
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.spaceEvenly,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            children: [
+              SizedBox(
+                width:  screenWidth * 0.4,
+                height: 60,
+                child:  ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => MoneyDetailsPage(
+                        item: MoneyItem(
+                          cellid: widget.cell.cellid, isSpending: false,
+                        ),
+                        onEdit: editItem,
+                      )
+                    ));
+                  },
+                  icon:  const Icon(Icons.login),
+                  label: const Text("Income"),
+                  style: const ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(Palette.positive),
+                    foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(
-              width:  screenWidth * 0.4,
-              height: 60,
-              child:  ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => MoneyDetailsPage(
-                      item: MoneyItem(
-                        cellid: widget.cell.cellid, isSpending: true,
-                      ),
-                      onEdit: editItem,
-                    )
-                  ));
-                },
-                icon:  const Icon(Icons.logout),
-                label: const Text("Expense"),
-                style: const ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(Palette.negative),
-                  foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+              SizedBox(
+                width:  screenWidth * 0.4,
+                height: 60,
+                child:  ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => MoneyDetailsPage(
+                        item: MoneyItem(
+                          cellid: widget.cell.cellid, isSpending: true,
+                        ),
+                        onEdit: editItem,
+                      )
+                    ));
+                  },
+                  icon:  const Icon(Icons.logout),
+                  label: const Text("Expense"),
+                  style: const ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(Palette.negative),
+                    foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ),
     );
   }

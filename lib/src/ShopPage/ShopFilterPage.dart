@@ -29,7 +29,6 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
   }
 
   _onApply() {
-    Navigator.of(context).pop();
     widget.onApply(filter);
   }
 
@@ -119,55 +118,53 @@ class _ShopFilterPageState extends State<ShopFilterPage> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      body: ListView(
-        children: [
-          ListTile(
-            title: ElevatedButton.icon(
-              onPressed: _onApply,
-              icon:  const Icon(Icons.check),
-              label: const Text("Apply Filter"),
-            ),
+    return ListView(
+      children: [
+        ListTile(
+          title: ElevatedButton.icon(
+            onPressed: _onApply,
+            icon:  const Icon(Icons.check),
+            label: const Text("Apply Filter"),
           ),
-          const Divider(),
-          buildShopsTile(),
+        ),
+        const Divider(),
+        buildShopsTile(),
 
-          // Sort by
-          ListTile(
-            title: const Text("Sort by"),
-            trailing: OutlinedButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => SimpleDialog(
-                    title: const Text("Sort by"),
-                    children: [
-                      ShopListFilter.sortStatus,
-                      ShopListFilter.sortItem,
-                    ].map((String mode) {
-                      return ListTile(
-                        title: Text(
-                          ShopListFilter.getFilterLabel(mode)
-                        ),
-                        onTap: () {
-                          setState(() {
-                            filter.sortMode = mode;
-                            Navigator.of(context).pop();
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                );
-              },
-              child: Text(
-                ShopListFilter.getFilterLabel(filter.sortMode),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+        // Sort by
+        ListTile(
+          title: const Text("Sort by"),
+          trailing: OutlinedButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => SimpleDialog(
+                  title: const Text("Sort by"),
+                  children: [
+                    ShopListFilter.sortStatus,
+                    ShopListFilter.sortItem,
+                  ].map((String mode) {
+                    return ListTile(
+                      title: Text(
+                        ShopListFilter.getFilterLabel(mode)
+                      ),
+                      onTap: () {
+                        setState(() {
+                          filter.sortMode = mode;
+                          Navigator.of(context).pop();
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              );
+            },
+            child: Text(
+              ShopListFilter.getFilterLabel(filter.sortMode),
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

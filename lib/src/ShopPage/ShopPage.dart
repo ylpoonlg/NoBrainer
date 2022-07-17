@@ -5,12 +5,12 @@ import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/BrainCell/CellPage.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/ShopPage/ShopFilterPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopItem.dart';
 import 'package:nobrainer/src/ShopPage/ShopDetailsPage.dart';
+import 'package:nobrainer/src/Widgets/filter_panel.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ShopPage extends StatefulWidget {
@@ -25,11 +25,10 @@ class ShopPage extends StatefulWidget {
 class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
   @override
   List<ShopItem> cellItems = [];
-
   @override
   bool isItemsLoaded = false;
-
   ShopListFilter filter   = ShopListFilter();
+  bool isFilterPanelShown = false;
   String         currency = "\$";
 
   _ShopPageState() {
@@ -297,18 +296,9 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
           IconButton(
             // Filter Button
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ShopFilterPage(
-                    filter: filter,
-                    onApply: (newFilter) {
-                      setState(() {
-                        filter = newFilter;
-                      });
-                    },
-                  ),
-                ),
-              );
+              setState(() {
+                isFilterPanelShown = !isFilterPanelShown;
+              });
             },
             icon: Icon(
               Icons.filter_list,
@@ -320,21 +310,58 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
           ),
         ],
       ),
-      body: isItemsLoaded ?
-        ListView(
-          key:      const Key("shoplistview"),
-          children: <Widget>[
-            _isFilterSet()
-              ? MaterialButton(
-                child: const Text("Clear Filter"),
-                onPressed: () {
+      body: Stack(
+        children: [
+          Container(
+            child: isItemsLoaded ?
+            ListView(
+              key:      const Key("shoplistview"),
+              children: <Widget>[
+                _isFilterSet()
+                  ? MaterialButton(
+                    child: const Text("Clear Filter"),
+                    onPressed: () {
+                      setState(() {
+                        filter = ShopListFilter();
+                      });
+                    },
+                  ) : const SizedBox()
+                ] + buildItemList(),
+            ) : const Center(child: CircularProgressIndicator()),
+          ),
+
+          GestureDetector(
+            onTap: isFilterPanelShown
+              ? () {
+                setState(() {
+                  isFilterPanelShown = false;
+                });
+              } : null,
+            onVerticalDragDown: isFilterPanelShown
+              ? (_) {
+                setState(() {
+                  isFilterPanelShown = false;
+                });
+              } : null,
+          ),
+
+          Positioned(
+            bottom: 0,
+            child: FilterPanel(
+              isShown: isFilterPanelShown,
+              child:   ShopFilterPage(
+                filter: filter,
+                onApply: (newFilter) {
                   setState(() {
-                    filter = ShopListFilter();
+                    filter = newFilter;
+                    isFilterPanelShown = false;
                   });
                 },
-              ) : const SizedBox()
-            ] + buildItemList(),
-        ) : const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
