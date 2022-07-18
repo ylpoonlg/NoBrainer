@@ -14,6 +14,8 @@ class Palette {
   static const Color foregroundLight = Color(0xFF121212);
   static const Color foregroundDark  = Color(0xFFFDFDFD);
 
+  static const Color surfaceDark     = Color(0xFF202337);
+
   static const Color error           = Color(0xFFE22662);
   static const Color primary         = Color(0xFF062B5A);
   static const Color secondary       = Color(0xFFEBD5AE);
@@ -104,8 +106,8 @@ ThemeData darkTheme = ThemeData.from(
     onError:      Palette.foregroundDark,
     background:   Palette.backgroundDark,
     onBackground: Palette.foregroundDark,
-    surface:      Palette.lighten(Palette.backgroundDark),
-    onSurface:    Palette.foregroundDark.withOpacity(0.9),
+    surface:      Palette.surfaceDark,
+    onSurface:    Palette.foregroundDark.withOpacity(0.8),
   )
 ).copyWith(
   useMaterial3: true,

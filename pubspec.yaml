@@ -48,6 +48,7 @@ dependencies:
   device_info_plus: ^3.2.3
   flutter_local_notifications: ^9.5.3+1
   timezone: ^0.8.0
+  scroll_snap_list: ^0.9.1
 
 dev_dependencies:
   flutter_test:

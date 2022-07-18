@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/data_exporter.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/time_scope_controller.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
@@ -7,6 +10,7 @@ import 'package:nobrainer/src/MoneyPage/Currencies.dart';
 import 'package:nobrainer/src/MoneyPage/pay_methods.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
+import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:vs_scrollbar/vs_scrollbar.dart';
 
 class AnalysisPage extends StatefulWidget {
@@ -34,7 +38,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
   Map<String, double> methodSpending = {};
   DateTime dateStart    = DateTime.now();
   DateTime dateEnd      = DateTime.now();
-  String timeScope      = TimeScope.unset;
+  String   timeScope    = TimeScope.unset;
+
+  ScrollController catListScrollController    = ScrollController();
+  ScrollController methodListScrollController = ScrollController();
 
   _AnalysisPageState() {
     getResources();
@@ -170,60 +177,60 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   List<Widget> buildTotalItems() {
-    EdgeInsets paddings = const EdgeInsets.only(
-      left: 30,
-      right: 30,
-      top: 5,
-      bottom: 5,
-    );
-    return <Widget>[
-      const SizedBox(height: 15),
-      Container(
-        padding: paddings,
-        child: Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text("Total", style: Theme.of(context).textTheme.headline4),
-            Text(
-              (totalIncome <= totalSpendings ? "-" : "+") +
-                  currency +
-                  (totalIncome - totalSpendings).abs().toStringAsFixed(2),
-              style: Theme.of(context).textTheme.headline5,
-            ),
-          ],
+    return [
+      Text(
+        "Overview",
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      ListTile(
+        title: Text(
+          "Total",
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        trailing: Text(
+          (totalIncome <= totalSpendings ? "-" : "+")
+            + currency
+            + (totalIncome - totalSpendings).abs().toStringAsFixed(2),
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
       ),
-      Container(
-        padding: paddings,
-        child: Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text("  Spendings", style: Theme.of(context).textTheme.headline6),
-            Text(
-              "-" + currency + totalSpendings.toStringAsFixed(2),
-            ),
-          ],
+
+      ListTile(
+        dense: true,
+        visualDensity: const VisualDensity(vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+        title: Text(
+          "Spendings",
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        trailing: Text(
+          "-" + currency + totalSpendings.toStringAsFixed(2),
         ),
       ),
-      Container(
-        padding: paddings,
-        child: Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text("  Income", style: Theme.of(context).textTheme.headline6),
-            Text(
-              "+" + currency + totalIncome.toStringAsFixed(2),
-            ),
-          ],
+
+      ListTile(
+        dense: true,
+        visualDensity: const VisualDensity(vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+        title: Text(
+          "Income",
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        trailing: Text(
+          "+" + currency + totalIncome.toStringAsFixed(2),
         ),
       ),
+
       const Divider(),
+
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
+      const ListTile(title: Text("Test")),
     ];
   }
 
@@ -277,55 +284,28 @@ class _AnalysisPageState extends State<AnalysisPage> {
     return result;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    cellItems = widget.cellItems;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const double bottomSheetHeight = 200;
-
-    ScrollController catListScrollController    = ScrollController();
-    ScrollController methodListScrollController = ScrollController();
-
-    _analyzeFinanceList();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Analytics"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.file_download),
-            onPressed: _onExportData,
-          ),
+  List<Widget> buildAnalysisPages({required double height}) {
+    return [
+      Column(
+        mainAxisAlignment:  MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...buildTotalItems(),
         ],
       ),
 
-      body: ListView(
+      Column(
+        mainAxisAlignment:  MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ...buildTotalItems(),
-
-          // Categories
-          Container(
-            padding: const EdgeInsets.only(
-              left: 30,
-              right: 30,
-              top: 5,
-              bottom: 10,
-            ),
-            child: Text(
-              "Categories",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+          Text(
+            "Categories",
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
-
           Container(
-            height: 160,
+            height: max(140, height - 140),
             margin: const EdgeInsets.symmetric(
-              horizontal: 25,
-              vertical: 5,
+              vertical: 20,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
@@ -340,25 +320,21 @@ class _AnalysisPageState extends State<AnalysisPage> {
               ),
             ),
           ),
+        ],
+      ),
 
-          // Payment Methods
-          Container(
-            padding: const EdgeInsets.only(
-              left: 30,
-              right: 30,
-              top: 15,
-              bottom: 10,
-            ),
-            child: Text(
-              "Payment Methods",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+      Column(
+        mainAxisAlignment:  MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            "Payment Methods",
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
           Container(
-            height: 160,
+            height: max(140, height - 140),
             margin: const EdgeInsets.symmetric(
-              horizontal: 25,
-              vertical: 5,
+              vertical: 20,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
@@ -373,8 +349,77 @@ class _AnalysisPageState extends State<AnalysisPage> {
               ),
             ),
           ),
-          const SizedBox(height: bottomSheetHeight + 50),
         ],
+      ),
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cellItems = widget.cellItems;
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double bottomSheetHeight = MediaQuery.of(context).size.height < 500
+      ? 0 : 200;
+    double pageHeight        =
+      MediaQuery.of(context).size.height - bottomSheetHeight - 160;
+    double pageWidth         = MediaQuery.of(context).size.width - 80;
+
+
+    _analyzeFinanceList();
+    List<Widget> pages = buildAnalysisPages(height: pageHeight);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Analytics"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            onPressed: _onExportData,
+          ),
+        ],
+      ),
+
+      body: Center(
+        child: Container(
+          margin:  EdgeInsets.only(bottom: bottomSheetHeight),
+          child:  ScrollSnapList(
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, i) {
+              return Container(
+                width:   pageWidth,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 30, horizontal: 10,
+                ),
+                child: Card(
+                  child: Container(
+                    padding: const EdgeInsets.all(15),
+                    height: pageHeight,
+                    child: ListView(
+                      children: [pages[i]]
+                    ),
+                  ),
+                ),
+              );
+            },
+            itemCount: pages.length,
+            itemSize: pageWidth,
+            onItemFocus: (i) {
+            },
+          ),
+        ),
       ),
 
       bottomSheet: TimeScopeController(
