@@ -13,7 +13,7 @@ import 'package:nobrainer/src/MoneyPage/money_filter_page.dart';
 import 'package:nobrainer/src/SettingsHandler.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Database/db.dart';
-import 'package:nobrainer/src/MoneyPage/AnalysisPage.dart';
+import 'package:nobrainer/src/MoneyPage/AnalysisPage/analysis_page.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/filter_panel.dart';
 
@@ -30,12 +30,13 @@ class MoneyPage extends StatefulWidget {
 
 class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   @override
-  List<MoneyItem> cellItems = [];
+  List<MoneyItem> cellItems          = [];
   @override
-  bool isItemsLoaded = false;
-  String currency = "\$";
-  MoneyFilter filter = MoneyFilter();
-  bool isFilterPanelShown = false;
+  bool            isItemsLoaded      = false;
+
+  String          currency           = "\$";
+  MoneyFilter     filter             = MoneyFilter();
+  bool            isFilterPanelShown = false;
 
   _MoneyPageState() {
     loadItems();
@@ -49,7 +50,6 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
     currency = Currencies.getCurrencySymbol(settings.currency);
 
     Database db = await DbHelper.database;
-
     List<Map> rows = await db.query(
       DbTableName.moneyPitItems,
       where: "cellid = ?",
@@ -272,15 +272,6 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => AnalysisPage(cellItems: cellItems),
-              ));
-            },
-            icon: const Icon(Icons.analytics),
-          ),
-          IconButton(
-            // Filter Button
-            onPressed: () {
               setState(() {
                 isFilterPanelShown = !isFilterPanelShown;
               });
@@ -366,7 +357,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
             crossAxisAlignment: WrapCrossAlignment.start,
             children: [
               SizedBox(
-                width:  screenWidth * 0.4,
+                width:  screenWidth * 0.3,
                 height: 60,
                 child:  ElevatedButton.icon(
                   onPressed: () {
@@ -382,13 +373,38 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                   icon:  const Icon(Icons.login),
                   label: const Text("Income"),
                   style: const ButtonStyle(
-                    backgroundColor: MaterialStatePropertyAll(Palette.positive),
-                    foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                    backgroundColor: MaterialStatePropertyAll(
+                      Palette.positive
+                    ),
+                    foregroundColor: MaterialStatePropertyAll(
+                      Palette.foregroundDark
+                    ),
                   ),
                 ),
               ),
+              Container(
+                width:  min(screenWidth * 0.2, 60),
+                height: 60,
+                decoration: BoxDecoration(
+                  boxShadow: [BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: 5,
+                  )],
+                  borderRadius: const BorderRadius.all(Radius.circular(100)),
+                ),
+                child:  FloatingActionButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => AnalysisPage(cellItems: cellItems),
+                    ));
+                  },
+                  child:  const Icon(Icons.analytics),
+                  shape: const CircleBorder(),
+                ),
+              ),
               SizedBox(
-                width:  screenWidth * 0.4,
+                width:  screenWidth * 0.3,
                 height: 60,
                 child:  ElevatedButton.icon(
                   onPressed: () {
@@ -404,8 +420,12 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                   icon:  const Icon(Icons.logout),
                   label: const Text("Expense"),
                   style: const ButtonStyle(
-                    backgroundColor: MaterialStatePropertyAll(Palette.negative),
-                    foregroundColor: MaterialStatePropertyAll(Palette.foregroundDark),
+                    backgroundColor: MaterialStatePropertyAll(
+                      Palette.negative
+                    ),
+                    foregroundColor: MaterialStatePropertyAll(
+                      Palette.foregroundDark
+                    ),
                   ),
                 ),
               ),

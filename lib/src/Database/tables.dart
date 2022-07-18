@@ -34,7 +34,7 @@ const List<String> dbTables = [
       desc TEXT,
       status TEXT,
       deadline TEXT,
-      notifyid INTEGER
+      notifytime INTEGER
     )
   ''',
 
@@ -47,6 +47,7 @@ const List<String> dbTables = [
       title TEXT,
       desc TEXT,
       amount REAL,
+      isspending INTEGER,
       paymethod TEXT,
       category TEXT,
       time TEXT

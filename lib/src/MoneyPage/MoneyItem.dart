@@ -27,14 +27,15 @@ class MoneyItem {
 
   static MoneyItem from(Map row, MoneyCategory? category) {
     return MoneyItem(
-      id:        row["id"],
-      cellid:    row["cellid"],
-      title:     row["title"],
-      desc:      row["desc"],
-      amount:    row["amount"],
-      payMethod: row["paymethod"],
-      category:  category,
-      time:      DateTime.parse(row["time"]),
+      id:         row["id"],
+      cellid:     row["cellid"],
+      title:      row["title"],
+      desc:       row["desc"],
+      amount:     row["amount"],
+      payMethod:  row["paymethod"],
+      category:   category,
+      time:       DateTime.parse(row["time"]),
+      isSpending: row["isspending"] == 1,
     );
   }
 
@@ -54,14 +55,15 @@ class MoneyItem {
   
   Map<String, Object?> toMap({List<String> exclude = const []}) {
     Map<String, Object?> map = {
-      "id":        id,
-      "cellid":    cellid,
-      "title":     title,
-      "desc":      desc,
-      "amount":    amount,
-      "paymethod": payMethod,
-      "category":  category?.name,
-      "time":      time.toString(),
+      "id":         id,
+      "cellid":     cellid,
+      "title":      title,
+      "desc":       desc,
+      "amount":     amount,
+      "paymethod":  payMethod,
+      "category":   category?.name,
+      "time":       time.toString(),
+      "isspending": isSpending ? 1 : 0,
     };
     exclude.forEach((key) {
       map.remove(key);

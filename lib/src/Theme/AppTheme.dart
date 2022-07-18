@@ -19,7 +19,7 @@ class Palette {
   static const Color secondary       = Color(0xFFEBD5AE);
   static const Color tertiary        = Color(0xFF707299);
 
-  static const Color positive        = Color(0xFF1AFFA1);
+  static const Color positive        = Color(0xFF08CC7A);
   static const Color negative        = Color(0xFFE22662);
 
   static Color darken(Color color, {double weight = 0.9}) {

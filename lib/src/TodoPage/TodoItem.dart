@@ -7,15 +7,15 @@ class TodoItem {
   late String   desc;
   late String   status;
   late DateTime deadline;
-  late int      notifyid;
+  late int      notifytime;
 
   TodoItem({
-    this.id       = -1,
-    this.cellid   = -1,
-    this.title    = "",
-    this.desc     = "",
-    this.status   = TodoStatus.todo,
-    this.notifyid = -1,
+    this.id         = -1,
+    this.cellid     = -1,
+    this.title      = "",
+    this.desc       = "",
+    this.status     = TodoStatus.todo,
+    this.notifytime = -1,
     DateTime? deadline,
   }) {
     this.deadline = deadline ?? DateTime.now();
@@ -23,37 +23,37 @@ class TodoItem {
 
   static TodoItem from(Map row) {
     return TodoItem(
-      id:       row["id"],
-      cellid:   row["cellid"],
-      title:    row["title"],
-      desc:     row["desc"],
-      status:   row["status"],
-      deadline: DateTime.parse(row["deadline"]),
-      notifyid: row["notifyid"],
+      id:         row["id"],
+      cellid:     row["cellid"],
+      title:      row["title"],
+      desc:       row["desc"],
+      status:     row["status"],
+      deadline:   DateTime.parse(row["deadline"]),
+      notifytime: row["notifytime"],
     );
   }
 
   TodoItem clone() {
     return TodoItem(
-      id:       id,
-      cellid:   cellid,
-      title:    title,
-      desc:     desc,
-      status:   status,
-      deadline: deadline,
-      notifyid: notifyid,
+      id:         id,
+      cellid:     cellid,
+      title:      title,
+      desc:       desc,
+      status:     status,
+      deadline:   deadline,
+      notifytime: notifytime,
     );
   }
 
   Map<String, Object?> toMap({List<String> exclude = const []}) {
     Map<String, Object?> map = {
-      "id":       id,
-      "cellid":   cellid,
-      "title":    title,
-      "desc":     desc,
-      "status":   status,
-      "deadline": deadline.toString(),
-      "notifyid": notifyid,
+      "id":         id,
+      "cellid":     cellid,
+      "title":      title,
+      "desc":       desc,
+      "status":     status,
+      "deadline":   deadline.toString(),
+      "notifytime": notifytime,
     };
     exclude.forEach((key) {
       map.remove(key);

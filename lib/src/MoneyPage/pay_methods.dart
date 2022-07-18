@@ -37,13 +37,13 @@ class PayMethods {
 }
 
 class PayMethodsList extends StatefulWidget {
-  final String payMethod;
+  final String           payMethod;
   final Function(String) onChanged;
 
   const PayMethodsList({
-    Key? key,
     required this.payMethod,
     required this.onChanged,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -51,7 +51,7 @@ class PayMethodsList extends StatefulWidget {
 }
 
 class _PayMethodsListState extends State<PayMethodsList> {
-  String       _payMethod = "";
+  String       payMethod = "";
   List<String> payMethods = [];
   bool         isLoaded   = false;
 
@@ -60,7 +60,6 @@ class _PayMethodsListState extends State<PayMethodsList> {
   }
 
   loadPayMethods() async {
-    _payMethod = widget.payMethod;
     payMethods = await PayMethods.getPayMethods();
     setState(() {
       isLoaded = true;
@@ -136,60 +135,74 @@ class _PayMethodsListState extends State<PayMethodsList> {
     );
   }
 
+  List<Widget> buildPayMethodsList() {
+    List<Widget> items = [];
+
+    items.add(
+      ListTile(
+        onTap: () {
+          setState(() {
+            payMethod = "";
+            widget.onChanged(payMethod);
+          });
+        },
+        title: const Text("None", textAlign: TextAlign.center),
+        tileColor: payMethod == ""
+          ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
+          : null,
+      ),
+    );
+
+    for (String method in payMethods) {
+      items.add(
+        ListTile(
+          onTap: () {
+            setState(() {
+              payMethod = method;
+              widget.onChanged(payMethod);
+            });
+          },
+          tileColor: payMethod == method
+            ? Colors.grey.withOpacity(0.2)
+            : null,
+          title: Text(method),
+          trailing: IconButton(
+            onPressed: () {
+              onDeleteMethod(method);
+            },
+            icon: const Icon(Icons.delete),
+          ),
+        )
+      );
+    }
+
+    items.add(ListTile(
+      title: TextButton.icon(
+        onPressed: onNewMethod,
+        icon:  const Icon(Icons.credit_card),
+        label: const Text("New Payment Method"),
+      ),
+    ));
+
+    return items;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    payMethod = widget.payMethod;
+  }
+
   @override
   Widget build(context) {
     return isLoaded
-        ? Scrollbar(
-            thumbVisibility: true,
-            trackVisibility: true,
-            child: ListView(
-              children: [
-                ListTile(
-                  title: const Text("None"),
-                  leading: Radio(
-                    value: "",
-                    groupValue: _payMethod,
-                    onChanged: (value) {
-                      setState(() {
-                        _payMethod = "";
-                        widget.onChanged(_payMethod);
-                      });
-                    },
-                  ),
-                ),
-                ...payMethods
-                    .map(
-                      (method) => ListTile(
-                        leading: Radio(
-                          value: method,
-                          groupValue: _payMethod,
-                          onChanged: (value) {
-                            setState(() {
-                              _payMethod = value.toString();
-                              widget.onChanged(_payMethod);
-                            });
-                          },
-                        ),
-                        title: Text(method),
-                        trailing: IconButton(
-                          onPressed: () {
-                            onDeleteMethod(method);
-                          },
-                          icon: const Icon(Icons.delete),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                ListTile(
-                  onTap: onNewMethod,
-                  leading: const Icon(Icons.add),
-                  title: const Text("New Payment Method"),
-                ),
-              ],
-            ),
-          )
-        : const Center(
-            child: CircularProgressIndicator(),
-          );
+      ? Scrollbar(
+          thumbVisibility: true,
+          trackVisibility: true,
+          child: ListView(
+            children: buildPayMethodsList(),
+          ),
+        )
+      : const Center(child: CircularProgressIndicator());
   }
 }

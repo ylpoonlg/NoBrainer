@@ -80,7 +80,7 @@ class DbHelper {
 
     try {
       // db.execute("ALTER TABLE ShopItems ADD COLUMN quantity INTEGER;");
-      // db.execute("ALTER TABLE ShopItems ADD COLUMN price REAL;");
+      //db.execute("ALTER TABLE TodoItems RENAME COLUMN notifyid TO notifytime;");
 
       //debugPrint("Done running db operation");
     } catch (e) {

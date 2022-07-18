@@ -9,7 +9,7 @@ import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:nobrainer/src/Widgets/TextEditor.dart';
 
 class MoneyDetailsPage extends StatefulWidget {
-  final MoneyItem item;
+  final MoneyItem           item;
   final Function(MoneyItem) onEdit;
 
   const MoneyDetailsPage({
@@ -202,6 +202,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
                           payMethod: item.payMethod,
                           onChanged: (value) {
                             item.payMethod = value;
+                            Navigator.of(context).pop();
                           }
                         ),
                       ),
@@ -210,7 +211,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: const Text("Confirm"),
+                          child: const Text("Cancel"),
                         )
                       ],
                     );
@@ -244,6 +245,7 @@ class _MoneyDetailsPageState extends State<MoneyDetailsPage> {
                           width: screenWidth,
                           height: 420,
                           child: CategoryList(
+                            category: item.category,
                             onSelect: _onSelectCategory,
                           ),
                         ),

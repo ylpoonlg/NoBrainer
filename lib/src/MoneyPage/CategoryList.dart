@@ -2,13 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
-import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
 import 'package:nobrainer/src/MoneyPage/NewCategory.dart';
 
 class CategoryList extends StatefulWidget {
+  final MoneyCategory?           category;
   final Function(MoneyCategory?) onSelect;
 
-  const CategoryList({Key? key, required this.onSelect}) : super(key: key);
+  const CategoryList({
+    required this.category,
+    required this.onSelect,
+    Key? key,
+  }) : super(key: key);
   @override
   State<StatefulWidget> createState() => _CategoryListState();
 }
@@ -55,23 +59,20 @@ class _CategoryListState extends State<CategoryList> {
   }
 
   List<Widget> buildItemList() {
-    const listTilePadding = EdgeInsets.symmetric(horizontal: 0);
-
     List<Widget> listTiles = [];
-    listTiles.add(
-      ListTile(
-        title: MaterialButton(
-          onPressed: () {
-          widget.onSelect(null);
-          },
-          child: const Text("None"),
-        ),
-      ),
-    );
+
+    listTiles.add(ListTile(
+      onTap: () {
+        widget.onSelect(null);
+      },
+      title: const Text("None", textAlign: TextAlign.center),
+      tileColor: widget.category == null
+        ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
+        : null,
+    ));
 
     for (MoneyCategory category in categories) {
       listTiles.add(ListTile(
-        contentPadding: listTilePadding,
         onTap: () {
           widget.onSelect(category);
         },
@@ -80,6 +81,9 @@ class _CategoryListState extends State<CategoryList> {
           color: category.color,
         ),
         title: Text(category.name),
+        tileColor: widget.category?.name == category.name
+          ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
+          : null,
         trailing: isCategoryDeletable(category)
           ? IconButton(
               onPressed: () {
@@ -93,7 +97,6 @@ class _CategoryListState extends State<CategoryList> {
 
     listTiles.add(
       ListTile(
-        contentPadding: listTilePadding,
         title: TextButton(
           onPressed: _onNewCategory,
           child: const Text("+ Add a custom category"),

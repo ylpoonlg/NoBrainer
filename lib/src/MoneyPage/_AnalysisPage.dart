@@ -6,7 +6,7 @@ import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/MoneyPage/CategoryList.dart';
 import 'package:nobrainer/src/MoneyPage/Currencies.dart';
-import 'package:nobrainer/src/MoneyPage/PayMethods.dart';
+import 'package:nobrainer/src/MoneyPage/pay_methods.dart';
 import 'package:nobrainer/src/Functions/Functions.dart';
 import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 import 'package:sqflite/sqflite.dart';

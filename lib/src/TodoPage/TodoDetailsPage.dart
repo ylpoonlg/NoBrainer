@@ -58,6 +58,26 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
     });
   }
 
+  Widget buildRemindTime() {
+    List<int> times       = [0, 5, 15, 30, 60];
+    int       currentTime = item.notifytime;
+    if (!times.contains(currentTime)) {
+      currentTime = 0;
+    }
+    return DropdownButton<int>(
+      value: currentTime,
+      items: times.map((time) => DropdownMenuItem(
+        child: Text("$time minutes"),
+        value: time,
+      )).toList(),
+      onChanged: (value) {
+        setState(() {
+          item.notifytime = value ?? 0;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const EdgeInsetsGeometry listTilePadding = EdgeInsets.only(
@@ -69,6 +89,7 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: item.id >= 0 ?
           const Text("Edit Task") : const Text("New Task"),
         leadingWidth: 80,
@@ -154,19 +175,27 @@ class _TodoItemsDetailsState extends State<TodoDetailsPage> {
             trailing: Switch(
               onChanged: (value) {
                 setState(() {
-                  // TODO: Need some way to determine the notify id
-                  item.notifyid = value ? 1 : -1;
+                  item.notifytime = value ? 0 : -1;
                 });
               },
-              value: item.notifyid >= 0,
+              value: item.notifytime >= 0,
             ),
-            // trailing: MaterialButton(
-            //   onPressed: () async {
-            //     await TodoNotifier().scheduleNotification(data);
-            //   },
-            //   child: const Text("Test"),
-            // ),
           ),
+          item.notifytime < 0
+          ? Container()
+          : ListTile(
+              contentPadding: const EdgeInsets.only(left: 30, right: 20),
+              title: const Text("Remind me"),
+              trailing: Wrap(
+                direction: Axis.horizontal,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                children: [
+                  buildRemindTime(),
+                  const Text("before"),
+                ],
+              ),
+            ),
         ],
       ),
     );

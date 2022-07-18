@@ -91,7 +91,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
     });
 
     // Cancel notification if any
-    item.notifyid = -1;
+    item.notifytime = -1;
     await _addNotifier(item);
 
     Database db = await DbHelper.database;
@@ -120,7 +120,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
   }
 
   _addNotifier(TodoItem item) {
-    if (item.notifyid >= 0) {
+    if (item.notifytime >= 0) {
       if (item.status == TodoStatus.done) {
         TodoNotifier().unscheduleNotification(item);
       } else {

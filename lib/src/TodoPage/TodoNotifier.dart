@@ -46,11 +46,16 @@ class TodoNotifier {
   }
 
   scheduleNotification(TodoItem item) async {
-    tz.TZDateTime scheduledTime = tz.TZDateTime.from(item.deadline, tz.local);
+    tz.TZDateTime scheduledTime = tz.TZDateTime.from(
+      item.deadline, tz.local,
+    ).subtract(Duration(minutes: item.notifytime));
+    tz.TZDateTime nowTime = tz.TZDateTime.now(tz.local);
 
-    if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
+    if (scheduledTime.isBefore(nowTime)) return;
 
-    FlutterLocalNotificationsPlugin plugin = await _getNotificationPlugin();
+    FlutterLocalNotificationsPlugin plugin =
+      await _getNotificationPlugin();
+
     await plugin.zonedSchedule(
       "todo-${item.id}".hashCode,
       item.title,
@@ -68,7 +73,9 @@ class TodoNotifier {
   }
 
   unscheduleNotification(TodoItem item) async {
-    FlutterLocalNotificationsPlugin plugin = await _getNotificationPlugin();
+    FlutterLocalNotificationsPlugin plugin =
+      await _getNotificationPlugin();
+
     await plugin.cancel(
       "todo-${item.id}".hashCode
     );

@@ -284,8 +284,13 @@ class _MoneyFilterPageState extends State<MoneyFilterPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     filter = widget.filter;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return ListView(
       children: [
         ListTile(
