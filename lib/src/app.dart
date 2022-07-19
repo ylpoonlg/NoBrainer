@@ -25,14 +25,15 @@ class NoBrainerAppState extends State<NoBrainerApp> {
   }
 
   _initApp() async {
+    // Init Database Instance
+    await DbHelper().initDatabase();
+
+
     // Listen for setting changes
     settingsHandler.addListener(() async {
       settings = await settingsHandler.getSettings();
       reloadApp();
     });
-
-    // Init Database Instance
-    await DbHelper().initDatabase();
 
     settings = await settingsHandler.getSettings();
 

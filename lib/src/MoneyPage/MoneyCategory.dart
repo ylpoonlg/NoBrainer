@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/Database/tables.dart';
-import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/Theme/custom_icons.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -17,7 +16,7 @@ class MoneyCategory {
   });
 
   static Future<List<MoneyCategory>> getCategories() async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     List<Map> rows = await db.query(DbTableName.moneyCategories);
     List<MoneyCategory> result = [];
     result = rows.map((row) => MoneyCategory(
@@ -30,7 +29,7 @@ class MoneyCategory {
 
   static Future<MoneyCategory?> getCategory(String? name) async {
     if (name == null) return null;
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.moneyCategories,
       where: "name = ?",
@@ -48,7 +47,7 @@ class MoneyCategory {
   }
 
   static Future<void> newCategory(MoneyCategory category) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.moneyCategories,
       {
@@ -61,7 +60,7 @@ class MoneyCategory {
   }
 
   static Future<void> deleteCategory(MoneyCategory category) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.moneyCategories,
       where: "name = ?",

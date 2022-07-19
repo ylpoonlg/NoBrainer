@@ -44,8 +44,8 @@ class Settings {
   String currency;
 
   Settings({
-    this.themeName       = "light",
-    this.currency        = "dollar",
+    this.themeName = "light",
+    this.currency  = "dollar",
   });
 
   setValue(String key, String value) {

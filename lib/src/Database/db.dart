@@ -31,7 +31,6 @@ class DbHelper {
     return true;
   }
 
-  /// Initialize database and set database to Future<Database> if null and permission granted.
   Future<void> initDatabase() async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -39,16 +38,19 @@ class DbHelper {
     bool isPermissionGranted = await checkPermissions();
     if (!isPermissionGranted) return;
 
+    // Create database if not exist
     List<String> paths = await ExternalPath.getExternalStorageDirectories();
     String      dbPath = paths[0] + "/NoBrainer/";
     Directory(dbPath).createSync(recursive: true);
     DbHelper.dbPath    = dbPath;
 
-    debugPrint(" ==> Open database at: " + dbPath);
+    debugPrint("==> Opening database at: " + dbPath);
 
     database = await openDatabase(
       join(dbPath, dbName),
       onCreate: (db, version) async {
+        // Check for old database location
+        await DbUpdate.updateDbVersion4(db);
         await DbUpdate.createTables(db);
       },
       onUpgrade: (db, oldver, newver) async {
