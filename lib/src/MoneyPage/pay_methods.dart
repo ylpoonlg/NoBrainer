@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 
 class PayMethods {
   static Future<List<String>> getPayMethods() async {
-    Database  db   = await DbHelper.database;
+    Database  db   = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.payMethods,
     );
@@ -16,7 +16,7 @@ class PayMethods {
   }
 
   static Future<void> newPayMethod(String payMethod) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.payMethods,
       {
@@ -27,7 +27,7 @@ class PayMethods {
   }
 
   static Future<void> deletePayMethod(String payMethod) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.payMethods,
       where:     "name = ?",

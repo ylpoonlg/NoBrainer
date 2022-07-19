@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 
 class Shops {
   static Future<List<String>> getShops() async {
-    Database  db   = await DbHelper.database;
+    Database  db   = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.shops,
     );
@@ -16,7 +16,7 @@ class Shops {
   }
 
   static Future<void> newShop(String shop) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.shops,
       {
@@ -27,7 +27,7 @@ class Shops {
   }
 
   static Future<void> deleteShop(String shop) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.shops,
       where:     "name = ?",

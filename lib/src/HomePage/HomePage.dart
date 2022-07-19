@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/Theme/AppTheme.dart';
 import 'package:nobrainer/src/AboutPage/AboutPage.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
@@ -37,7 +38,7 @@ class _HomePageState extends State<HomePage> {
       isBraincellsLoaded = false;
     });
 
-    final Database db = await DbHelper.database;
+    Database db = DbHelper.database;
 
     for (int i = 0; i < braincells.length; i++) {
       BrainCell cell = braincells[i];
@@ -45,15 +46,16 @@ class _HomePageState extends State<HomePage> {
       // Save to table BrainCells
       if (!cell.isFolder) {
         Map<String, Object?> newCell = {
-          "name": cell.title,
-          "type": cell.type,
-          "color": cell.color.value,
+          "name":     cell.title,
+          "type":     cell.type,
+          "color":    cell.color.value,
           "settings": json.encode(cell.settings),
         };
         if (cell.cellid != -1) {
           newCell["cellid"] = cell.cellid;
         }
-        await db.insert("BrainCells",
+        await db.insert(
+          DbTableName.braincells,
           newCell,
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -61,7 +63,8 @@ class _HomePageState extends State<HomePage> {
 
         List<Map> rowid = await db.rawQuery("SELECT last_insert_rowid();");
         if (rowid.isNotEmpty) {
-          List<Map> lastRow = await db.query("Braincells",
+          List<Map> lastRow = await db.query(
+            DbTableName.braincells,
             where: "rowid = ?", whereArgs: [rowid[0]["last_insert_rowid()"]],
           );
           cell.cellid = lastRow[0]["cellid"];
@@ -70,18 +73,20 @@ class _HomePageState extends State<HomePage> {
 
       // Save to table CellFolders
       Map<String, Object?> newFolder = {
-        "cellid": cell.cellid,
+        "cellid":  cell.cellid,
         "orderid": i,
-        "name": cell.title,
-        "parent": folderParent,
+        "name":    cell.title,
+        "parent":  folderParent,
       };
-      List<Map> folder = await db.query("CellFolders",
+      List<Map> folder = await db.query(
+        DbTableName.cellFolders,
         where: "cellid = ?", whereArgs: [cell.cellid],
       );
       if (folder.isNotEmpty) {
         newFolder["id"] = folder[0]["id"];
       }
-      await db.insert("CellFolders",
+      await db.insert(
+        DbTableName.cellFolders,
         newFolder,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -94,8 +99,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadBraincells() async {
-    final Database db = await DbHelper.database;
-    final List<Map> folders = await db.query("CellFolders",
+    Database db = DbHelper.database;
+    final List<Map> folders = await db.query(
+      DbTableName.cellFolders,
       where: "parent = ?", whereArgs: [folderParent],
       orderBy: "orderid",
     );
@@ -108,15 +114,16 @@ class _HomePageState extends State<HomePage> {
           title: folder["name"], isFolder: true,
         ));
       } else {
-        List<Map> braincell = await db.query("Braincells",
+        List<Map> braincell = await db.query(
+          DbTableName.braincells,
           where: "cellid = ?", whereArgs: [folder["cellid"]],
         );
         if (braincell.isEmpty) continue;
         braincells.add(BrainCell(
-          cellid: folder["cellid"],
-          title: braincell[0]["name"],
-          type: braincell[0]["type"],
-          color: Color(braincell[0]["color"]),  // Debug
+          cellid:   folder["cellid"],
+          title:    braincell[0]["name"],
+          type:     braincell[0]["type"],
+          color:    Color(braincell[0]["color"]),  // Debug
           settings: json.decode(braincell[0]["settings"]),
         ));
       }
@@ -186,9 +193,9 @@ class _HomePageState extends State<HomePage> {
                 isBraincellsLoaded = false;
               });
 
-              final Database db = await DbHelper.database;
+              Database db = DbHelper.database;
               await db.delete(
-                "Braincells",
+                DbTableName.braincells,
                 where: "cellid = ?",
                 whereArgs: [cell.cellid],
               );
@@ -211,15 +218,14 @@ class _HomePageState extends State<HomePage> {
   /// Returns a list of BraincellTiles
   List<Widget> getBraincellList() {
     return braincells.map(
-          (BrainCell cell) => BraincellTile(
-            key: Key("braincell-tile-" + cell.cellid.toString()),
-            cell: cell,
-            page: cell.getPage(),
-            onDelete: _deleteBraincell,
-            onEdit: _editBraincell,
-          ),
-        )
-        .toList();
+      (BrainCell cell) => BraincellTile(
+        key: Key("braincell-tile-" + cell.cellid.toString()),
+        cell: cell,
+        page: cell.getPage(),
+        onDelete: _deleteBraincell,
+        onEdit: _editBraincell,
+      ),
+    ).toList();
   }
 
   /// Returns a list of floating action buttons.
@@ -252,7 +258,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenWidth  = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
     final double braincellTilesAR = (screenWidth > screenHeight) ? 2 : 1.2;

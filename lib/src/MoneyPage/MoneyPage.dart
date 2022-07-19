@@ -39,10 +39,11 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
   MoneyFilter     filter             = MoneyFilter();
   bool            isFilterPanelShown = false;
 
-  _MoneyPageState() {
+  @override
+  void initState() {
+    super.initState();
     loadItems();
   }
-
 
   @override
   loadItems() async {
@@ -50,7 +51,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
     Settings settings = await settingsHandler.getSettings();
     currency = Currencies.getCurrencySymbol(settings.currency);
 
-    Database db = await DbHelper.database;
+    Database db    = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.moneyPitItems,
       where: "cellid = ?",
@@ -71,7 +72,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
 
   @override
   newItem(MoneyItem item) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.moneyPitItems,
       item.toMap(exclude: ["id"]),
@@ -88,7 +89,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
       return;
     }
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.update(
       DbTableName.moneyPitItems,
       item.toMap(exclude: ["id", "cellid"]),
@@ -106,7 +107,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
       isItemsLoaded = false;
     });
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.moneyPitItems,
       where: "id = ?",

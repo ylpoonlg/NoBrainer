@@ -9,7 +9,7 @@ SettingsHandler settingsHandler = SettingsHandler();
 
 class SettingsHandler with ChangeNotifier {
   Future<Settings> getSettings() async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     Settings result = Settings();
 
     List<Map> settingsTable = await db.query("Settings");
@@ -21,7 +21,7 @@ class SettingsHandler with ChangeNotifier {
   }
 
   void saveSettings(Settings settings) async {
-    final Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     settings.toMap().forEach((key, value) {
       db.insert(
         "Settings",

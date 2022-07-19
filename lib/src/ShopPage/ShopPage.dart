@@ -31,7 +31,9 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
   bool isFilterPanelShown = false;
   String         currency = "\$";
 
-  _ShopPageState() {
+  @override
+  void initState() {
+    super.initState();
     loadItems();
     loadCurrency();
   }
@@ -45,7 +47,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
 
   @override
   loadItems() async {
-    Database db = await DbHelper.database;
+    Database db    = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.shopItems,
       where: "cellid = ?",
@@ -64,7 +66,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
 
   @override
   newItem(ShopItem item) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.shopItems,
       item.toMap(exclude: ["id"]),
@@ -81,7 +83,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
       return;
     }
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.update(
       DbTableName.shopItems,
       item.toMap(exclude: ["id", "cellid"]),
@@ -99,7 +101,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
       isItemsLoaded = false;
     });
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.shopItems,
       where: "id = ?",
@@ -114,7 +116,7 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
       isItemsLoaded = false;
     });
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.shopItems,
       where: "cellid = ? AND status > ?",

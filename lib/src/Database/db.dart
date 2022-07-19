@@ -4,21 +4,16 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nobrainer/src/Database/tables.dart';
+import 'package:nobrainer/src/Database/updates.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DbHelper {
-  static dynamic database;
-
-  static const dbName = "nobrainer.db";
-  static String dbPath = "";
-
-  /// Current database version, increment by one for major updates
-  static const int dbVersion = 4;
-
-  DbHelper();
+  static late  Database database;
+  static       String   dbPath    = "";
+  static const String   dbName    = "nobrainer.db";
+  static const int      dbVersion = 4;
 
   static Future<bool> checkPermissions() async {
     PermissionStatus storagePermission = await Permission.storage.request();
@@ -37,50 +32,43 @@ class DbHelper {
   }
 
   /// Initialize database and set database to Future<Database> if null and permission granted.
-  Future initDatabase() async {
+  Future<void> initDatabase() async {
     WidgetsFlutterBinding.ensureInitialized();
-    if (database != null) return;
 
     // Check for permissions
     bool isPermissionGranted = await checkPermissions();
     if (!isPermissionGranted) return;
 
     List<String> paths = await ExternalPath.getExternalStorageDirectories();
-    String dbPath = paths[0] + "/NoBrainer/";
+    String      dbPath = paths[0] + "/NoBrainer/";
     Directory(dbPath).createSync(recursive: true);
-    debugPrint(" ==> Open database at: " + dbPath);
-    DbHelper.dbPath = dbPath;
+    DbHelper.dbPath    = dbPath;
 
-    database = openDatabase(
+    debugPrint(" ==> Open database at: " + dbPath);
+
+    database = await openDatabase(
       join(dbPath, dbName),
       onCreate: (db, version) async {
-        _createTables(db);
+        await DbUpdate.createTables(db);
       },
       onUpgrade: (db, oldver, newver) async {
-        // New tables structure
         if (oldver < 4) {
-          _createTables(db);
+          await DbUpdate.updateDbVersion4(db);
         }
       },
       version: dbVersion,
     );
 
-    await database;
     await _debug();
   }
 
-  void _createTables(db) async {
-    for (String table in dbTables) {
-      await db.execute("CREATE TABLE IF NOT EXISTS $table;");
-    }
-  }
-
   _debug() async {
-    final Database db = await database;
-
+    Database db = database;
     try {
-      // db.execute("ALTER TABLE ShopItems ADD COLUMN quantity INTEGER;");
-      //db.execute("ALTER TABLE TodoItems RENAME COLUMN notifyid TO notifytime;");
+      /* Useful SQLITE commands
+        ALTER TABLE {table} ADD COLUMN {column} {type};
+        ALTER TABLE {table} RENAME COLUMN {old_column} TO {new_column};
+      */
 
       //debugPrint("Done running db operation");
     } catch (e) {

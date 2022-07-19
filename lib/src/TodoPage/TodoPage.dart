@@ -28,13 +28,15 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
 
   String todoSortMode = TodoItemSort.deadline;
 
-  _TodoPageState() {
+  @override
+  void initState() {
+    super.initState();
     loadItems();
   }
 
   @override
   loadItems() async {
-    Database db = await DbHelper.database;
+    Database db    = DbHelper.database;
     List<Map> rows = await db.query(
       DbTableName.todoItems,
       where: "cellid = ?",
@@ -53,7 +55,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
 
   @override
   newItem(TodoItem item) async {
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.insert(
       DbTableName.todoItems,
       item.toMap(exclude: ["id"]),
@@ -72,7 +74,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
       return;
     }
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.update(
       DbTableName.todoItems,
       item.toMap(exclude: ["id", "cellid"]),
@@ -94,7 +96,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
     item.notifytime = -1;
     await _addNotifier(item);
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.todoItems,
       where: "id = ?",
@@ -109,7 +111,7 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
       isItemsLoaded = false;
     });
 
-    Database db = await DbHelper.database;
+    Database db = DbHelper.database;
     await db.delete(
       DbTableName.todoItems,
       where: "cellid = ? AND status = ?",
