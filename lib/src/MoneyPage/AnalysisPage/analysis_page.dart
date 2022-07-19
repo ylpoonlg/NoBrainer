@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/data_exporter.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/time_scope_controller.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
@@ -16,8 +17,10 @@ import 'package:vs_scrollbar/vs_scrollbar.dart';
 
 class AnalysisPage extends StatefulWidget {
   final List<MoneyItem> cellItems;
+  final BrainCell       cell;
 
   const AnalysisPage({
+    required this.cell,
     required this.cellItems,
     Key? key,
   }) : super(key: key);
@@ -49,6 +52,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   _onExportData() async {
     await DataExporter().exportData(
+      cell:      widget.cell,
       cellItems: cellItems,
       onSuccess: (path) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

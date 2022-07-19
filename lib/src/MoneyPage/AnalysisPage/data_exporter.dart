@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:csv/csv.dart';
-import 'package:flutter/material.dart';
+import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/Database/db.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyItem.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 
 class DataExporter {
   Future<void> exportData({
+    required BrainCell             cell,
     required List<MoneyItem>       cellItems,
     required Function(String path) onSuccess,
     Function(Object? error)?       onFailed,
@@ -37,11 +39,16 @@ class DataExporter {
     }
 
     try {
-      String csv = const ListToCsvConverter().convert(rows);
-      //String dir = (await ExternalPath.getExternalStorageDirectories())[0];
-      String dir = "/storage/emulated/0/";
-      File file = File(dir + "/NoBrainer/finance_data.csv");
-      debugPrint(file.path);
+      String     csv  = const ListToCsvConverter().convert(rows);
+      String     dir  = DbHelper.dbPath + "MoneyPit/";
+      String     date = DateTimeFormat.dateOnly(DateTime.now());
+      String filename = "${cell.title}_data_$date.csv";
+      filename = filename.replaceAll(
+        RegExp("[<>:\"/\\|?* \\n\\s]"),
+        "",
+      );
+
+      File file = File(dir + filename);
       file.createSync(recursive: true);
       file.writeAsString(csv);
 

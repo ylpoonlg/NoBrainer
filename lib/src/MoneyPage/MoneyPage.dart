@@ -397,7 +397,10 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                 child:  FloatingActionButton(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => AnalysisPage(cellItems: cellItems),
+                      builder: (context) => AnalysisPage(
+                        cell:      widget.cell,
+                        cellItems: cellItems,
+                      ),
                     ));
                   },
                   child:  const Icon(Ionicons.analytics_outline),
