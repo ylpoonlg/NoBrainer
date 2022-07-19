@@ -179,7 +179,7 @@ class _PayMethodsListState extends State<PayMethodsList> {
     items.add(ListTile(
       title: TextButton.icon(
         onPressed: onNewMethod,
-        icon:  const Icon(Icons.credit_card),
+        icon:  const Icon(Icons.add_card),
         label: const Text("New Payment Method"),
       ),
     ));

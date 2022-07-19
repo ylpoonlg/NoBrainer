@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/Theme/AppTheme.dart';
+import 'package:nobrainer/src/Widgets/DateTimeFormat.dart';
 
 class TimeScope {
   static const String week  = "week";
@@ -15,26 +17,94 @@ class TimeScope {
       case TimeScope.year:
         return "Year";
       default:
-        return "Unset";
+        return "Custom";
     }
   }
 
+
   late DateTime dateFrom;
   late DateTime dateTo;
-  String scope = TimeScope.unset;
+  late String   scope;
 
-  TimeScope({DateTime? from, DateTime? to}) {
+  TimeScope({DateTime? from, DateTime? to, this.scope = TimeScope.unset}) {
     dateFrom = from ?? DateTime.now();
     dateTo   = to   ?? DateTime.now();
+    setScope(scope: scope);
   }
 
+  void setScope({
+    required String scope,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) {
+    this.scope = scope;
+    if (dateFrom == null && dateTo == null) dateTo = this.dateTo;
+
+    if (dateTo == null && dateFrom != null) {
+      nextScope(dateTo: dateFrom.subtract(const Duration(days: 1)));
+    } else if (dateTo != null) {
+      previousScope(dateFrom: dateTo.add(const Duration(days: 1)));
+    }
+  }
+
+  void nextScope({DateTime? dateTo}) {
+    dateTo ??= this.dateTo;
+    dateFrom = dateTo.add(const Duration(days: 1));
+    switch (scope) {
+      case TimeScope.week:
+        this.dateTo = dateFrom.add(const Duration(days: 6));
+        break;
+      case TimeScope.month:
+        this.dateTo = DateTime(
+          dateTo.year,
+          dateTo.month + 1,
+          dateTo.day,
+        );
+        break;
+      case TimeScope.year:
+        this.dateTo = DateTime(
+          dateTo.year + 1,
+          dateTo.month,
+          dateTo.day,
+        );
+        break;
+    }
+  }
+
+  void previousScope({DateTime? dateFrom}) {
+    dateFrom ??= this.dateFrom;
+    dateTo = dateFrom.subtract(const Duration(days: 1));
+    switch (scope) {
+      case TimeScope.week:
+        this.dateFrom = dateTo.subtract(const Duration(days: 6));
+        break;
+      case TimeScope.month:
+        this.dateFrom = DateTime(
+          dateFrom.year,
+          dateFrom.month - 1,
+          dateFrom.day,
+        );
+        break;
+      case TimeScope.year:
+        this.dateFrom = DateTime(
+          dateFrom.year - 1,
+          dateFrom.month,
+          dateFrom.day,
+        );
+        break;
+    }
+  }
 }
 
 
 class TimeScopeController extends StatefulWidget {
-  final double height;
+  final TimeScope           scope;
+  final Function(TimeScope) onChange;
+  final double              height;
 
   const TimeScopeController({
+    required this.scope,
+    required this.onChange,
     required this.height,
     Key? key,
   }) : super(key: key);
@@ -44,28 +114,65 @@ class TimeScopeController extends StatefulWidget {
 }
 
 class _TimeScopeControllerState extends State<TimeScopeController> {
+  late TimeScope scope;
 
-  /*
-  void _onNextPeriod() {
+  void _onNextScope() {
     setState(() {
-      dateStart = dateEnd.add(const Duration(days: 1));
-      dateEnd = _getNextDate(dateStart, timeScope);
-      _analyzeFinanceList();
+      scope.nextScope();
+      widget.onChange(scope);
     });
   }
 
-  void _onPreviousPeriod() {
+  void _onPreviousScope() {
     setState(() {
-      dateEnd = dateStart.subtract(const Duration(days: 1));
-      dateStart = _getPreviousDate(dateEnd, timeScope);
-      _analyzeFinanceList();
+      scope.previousScope();
+      widget.onChange(scope);
     });
   }
-  */
+
+  void _onSetScope(String value) {
+    setState(() {
+      scope.setScope(scope: value);
+      widget.onChange(scope);
+    });
+  }
+
+  void _onSelectDate({bool isDateTo = true}) {
+    showDialog(
+      context: context,
+      builder: (context) => DatePickerDialog(
+        initialDate: isDateTo ? scope.dateTo : scope.dateFrom,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(3000),
+        initialCalendarMode: DatePickerMode.day,
+      ),
+    ).then((date) {
+      setState(() {
+        if (date != null) {
+          if (isDateTo) {
+            scope.dateTo = DateTime(
+              date.year,
+              date.month,
+              date.day,
+            );
+          } else {
+            scope.dateFrom = DateTime(
+              date.year,
+              date.month,
+              date.day,
+            );
+          }
+        }
+        scope.scope = TimeScope.unset;
+        widget.onChange(scope);
+      });
+    });
+  }
   
   @override
   void initState() {
     super.initState();
+    scope = widget.scope;
   }
 
   @override
@@ -75,101 +182,93 @@ class _TimeScopeControllerState extends State<TimeScopeController> {
     return Container(
       width:  screenWidth,
       height: widget.height,
-      color: Theme.of(context).colorScheme.surfaceVariant,
-      child: const Center(child: Text("TimeScopeController")),
-    );
-    /*
-    return Container(
-        width: screenWidth,
-        height: bottomSheetHeight,
-        color: crdColor,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        boxShadow: const [
+          BoxShadow(
+            color:        Colors.black87,
+            blurRadius:   20,
+            spreadRadius: -5,
+          ),
+        ],
+      ),
+      child: Center(
         child: Column(
+          mainAxisAlignment:  MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 20),
-            SizedBox(
-              width: screenWidth - 40,
-              child: Wrap(
-                direction: Axis.horizontal,
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text("Time Period",
-                      style: Theme.of(context).textTheme.headline6),
-                  PopupMenuButton(
-                    initialValue: timeScope,
-                    onSelected: (val) {
-                      setState(() {
-                        timeScope = val.toString();
-                        dateStart = _getPreviousDate(dateEnd, timeScope);
-                        _analyzeFinanceList();
-                      });
-                    },
-                    itemBuilder: (context) {
-                      return financeAnalyzeScope
-                          .map((item) => PopupMenuItem(
-                              value: item["value"], child: Text(item["label"])))
-                          .toList();
-                    },
-                    child: Container(
-                      height: 40,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: fgColor,
-                        ),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(5)),
-                      ),
-                      child: Center(
-                        child: Text(timeScope == ""
-                            ? "- - -"
-                            : financeAnalyzeScope.firstWhere(
-                                (item) => item["value"] == timeScope)["label"]),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            Wrap(
+              alignment: WrapAlignment.spaceAround,
+              direction: Axis.horizontal,
+              children: const [
+                SizedBox(
+                  width: 80,
+                  child: Text("From", textAlign: TextAlign.center),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Text("To", textAlign: TextAlign.center),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: screenWidth,
-              child: Wrap(
-                direction: Axis.horizontal,
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: _onPreviousPeriod,
-                    icon: const Icon(Icons.skip_previous),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _onSelectDate(context, isDateEnd: false);
-                    },
-                    child: Text(
-                      DateTimeFormat.dateOnly(dateStart),
-                    ),
-                  ),
-                  const Text("From - To"),
-                  TextButton(
-                    onPressed: () {
-                      _onSelectDate(context, isDateEnd: true);
-                    },
-                    child: Text(
-                      DateTimeFormat.dateOnly(dateEnd),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _onNextPeriod,
-                    icon: const Icon(Icons.skip_next),
-                  ),
-                ],
-              ),
+            Wrap(
+              alignment: WrapAlignment.spaceAround,
+              direction: Axis.horizontal,
+              children: [
+                OutlinedButton(
+                  onPressed: () {
+                    _onSelectDate(isDateTo: false);
+                  },
+                  child: Text(DateTimeFormat.dateOnly(scope.dateFrom)),
+                ),
+                OutlinedButton(
+                  onPressed: () {
+                    _onSelectDate(isDateTo: true);
+                  },
+                  child: Text(DateTimeFormat.dateOnly(scope.dateTo)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 30),
+
+            Wrap(
+              alignment: WrapAlignment.spaceAround,
+              direction: Axis.horizontal,
+              children: [
+                IconButton(
+                  onPressed: scope.scope == TimeScope.unset
+                    ? null : _onPreviousScope,
+                  icon: const Icon(Icons.navigate_before),
+                ),
+
+                DropdownButton<String>(
+                  value: scope.scope,
+                  items: [
+                    TimeScope.week,
+                    TimeScope.month,
+                    TimeScope.year,
+                    TimeScope.unset,
+                  ].map((scope) => DropdownMenuItem<String>(
+                    child: Text(TimeScope.getLabel(scope)),
+                    value: scope,
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      _onSetScope(value);
+                    }
+                  },
+                ),
+                IconButton(
+                  onPressed: scope.scope == TimeScope.unset
+                    ? null : _onNextScope,
+                  icon: const Icon(Icons.navigate_next),
+                ),
+              ],
             ),
           ],
         ),
       ),
-    }*/
+    );
   }
 }

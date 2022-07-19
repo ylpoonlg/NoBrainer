@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/data_exporter.dart';
 import 'package:nobrainer/src/MoneyPage/AnalysisPage/time_scope_controller.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyCategory.dart';
@@ -36,19 +37,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
   double totalIncome    = 0;
   Map<String, double> catSpending    = {};
   Map<String, double> methodSpending = {};
-  DateTime dateStart    = DateTime.now();
-  DateTime dateEnd      = DateTime.now();
-  String   timeScope    = TimeScope.unset;
+
+  TimeScope timeScope = TimeScope(scope: TimeScope.week);
 
   ScrollController catListScrollController    = ScrollController();
   ScrollController methodListScrollController = ScrollController();
 
   _AnalysisPageState() {
     getResources();
-    DateTime now = DateTime.now();
-    dateEnd      = DateTime(now.year, now.month, now.day);
-    //dateStart    = _getPreviousDate(dateEnd, timeScope);
-    dateStart    = dateEnd.subtract(const Duration(days: 7));
   }
 
   _onExportData() async {
@@ -76,78 +72,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
     setState(() {});
   }
 
-  /*
-  DateTime _getPreviousDate(DateTime dateEnd, String scope) {
-    int newYear = dateEnd.year;
-    int newMonth = dateEnd.month;
-    int newDay = dateEnd.day;
-    switch (scope) {
-      case "week":
-        return dateEnd.subtract(const Duration(days: 6));
-      case "month":
-        int daysOffset = daysInMonth(newMonth, newYear) - 1;
-        return DateTime(newYear, newMonth, newDay - daysOffset);
-      case "year":
-        newYear--;
-        if (newMonth == 2 && newDay == 29) newDay = 28;
-        break;
-    }
-    return DateTime(newYear, newMonth, newDay).add(const Duration(days: 1));
-  }
-
-  DateTime _getNextDate(DateTime dateStart, String scope) {
-    int newYear = dateStart.year;
-    int newMonth = dateStart.month;
-    int newDay = dateStart.day;
-    switch (scope) {
-      case "week":
-        return dateStart.add(const Duration(days: 6));
-      case "month":
-        int daysOffset = daysInMonth(newMonth, newYear) - 1;
-        return DateTime(newYear, newMonth, newDay + daysOffset);
-      case "year":
-        newYear++;
-        break;
-    }
-    return DateTime(newYear, newMonth, newDay)
-        .subtract(const Duration(days: 1));
-  }
-
-  void _onSelectDate(BuildContext context, {bool isDateEnd = true}) {
-    /// Prompts user for start or end date selection
-    showDialog(
-      context: context,
-      builder: (context) => DatePickerDialog(
-        initialDate: isDateEnd ? dateEnd : dateStart,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(3000),
-        initialCalendarMode: DatePickerMode.day,
-      ),
-    ).then((date) {
-      setState(() {
-        if (date != null) {
-          if (isDateEnd) {
-            dateEnd = DateTime(
-              date.year,
-              date.month,
-              date.day,
-            );
-          } else {
-            dateStart = DateTime(
-              date.year,
-              date.month,
-              date.day,
-            );
-          }
-        }
-        timeScope = "";
-        _analyzeFinanceList();
-      });
-    });
-  }
-  */
-
-  /// Returns a map of spendings for each category in financeList
   void _analyzeFinanceList() {
     totalSpendings = 0;
     totalIncome = 0;
@@ -160,7 +84,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
       DateTime date = item.time;
       date = DateTime(date.year, date.month, date.day);
 
-      if (date.compareTo(dateStart) >= 0 && date.compareTo(dateEnd) <= 0) {
+      if (date.compareTo(timeScope.dateFrom) >= 0
+          && date.compareTo(timeScope.dateTo) <= 0) {
         if (item.isSpending) {
           catSpending[catName] = catSpending[catName]??0 - item.amount;
           methodSpending[item.payMethod] =
@@ -182,73 +107,78 @@ class _AnalysisPageState extends State<AnalysisPage> {
         "Overview",
         style: Theme.of(context).textTheme.headlineSmall,
       ),
-      ListTile(
-        title: Text(
-          "Total",
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        trailing: Text(
-          (totalIncome <= totalSpendings ? "-" : "+")
-            + currency
-            + (totalIncome - totalSpendings).abs().toStringAsFixed(2),
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+
+      const SizedBox(height: 30),
+
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Total",
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          Text(
+            (totalIncome <= totalSpendings ? "-" : "+")
+              + currency
+              + (totalIncome - totalSpendings).abs().toStringAsFixed(2),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+        ],
       ),
 
-      ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: 0),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-        title: Text(
-          "Spendings",
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        trailing: Text(
-          "-" + currency + totalSpendings.toStringAsFixed(2),
-        ),
-      ),
+      const SizedBox(height: 5),
 
-      ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: 0),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-        title: Text(
-          "Income",
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        trailing: Text(
-          "+" + currency + totalIncome.toStringAsFixed(2),
-        ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "    Spendings",
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          Text(
+            "-" + currency + totalSpendings.toStringAsFixed(2),
+          ),
+        ],
+      ),
+      const SizedBox(height: 5),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "    Income",
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          Text(
+            "+" + currency + totalIncome.toStringAsFixed(2),
+          ),
+        ],
       ),
 
       const Divider(),
 
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
-      const ListTile(title: Text("Test")),
+      // Container(
+      //   height: 160,
+      //   color: Theme.of(context).colorScheme.background,
+      //   child: const Center(
+      //     child: Text("Graph/Comparison"),
+      //   ),
+      // ),
     ];
   }
 
   List<Widget> buildCategoriesList() {
-    /// Calculate the sutotal for each category and return a list of ListTiles
     List<Widget> result = [];
     for (MoneyCategory cat in categories) {
       double? amount = catSpending[cat.name];
       if (amount == null) continue;
 
       result.add(ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(5),
-          child: Icon(
-            cat.icon,
-            color: cat.color,
-          ),
+        leading: Icon(
+          cat.icon,
+          color: cat.color,
+          size: 20,
         ),
+        minLeadingWidth: 10,
         title: Text(cat.name),
         trailing: Text(
           (amount <= 0 ? "-" : "+") +
@@ -303,11 +233,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           Container(
-            height: max(140, height - 140),
+            height: max(140, height - 130),
             margin: const EdgeInsets.symmetric(
               vertical: 20,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
               color:        Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -332,11 +261,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           Container(
-            height: max(140, height - 140),
+            height: max(140, height - 130),
             margin: const EdgeInsets.symmetric(
               vertical: 20,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
               color:        Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -371,11 +299,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   @override
   Widget build(BuildContext context) {
-    double bottomSheetHeight = MediaQuery.of(context).size.height < 500
-      ? 0 : 200;
+    double bottomSheetHeight =
+      MediaQuery.of(context).size.height < 500 ? 0 : 200;
     double pageHeight        =
       MediaQuery.of(context).size.height - bottomSheetHeight - 160;
-    double pageWidth         = MediaQuery.of(context).size.width - 80;
+    double pageWidth         =
+      MediaQuery.of(context).size.width - 80;
 
 
     _analyzeFinanceList();
@@ -386,7 +315,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
         title: const Text("Analytics"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.file_download),
+            icon: const Icon(Ionicons.share_outline),
             onPressed: _onExportData,
           ),
         ],
@@ -423,6 +352,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
       ),
 
       bottomSheet: TimeScopeController(
+        scope: timeScope,
+        onChange: (scope) {
+          setState(() {
+            timeScope = scope;
+          });
+        },
         height: bottomSheetHeight,
       ),
     );

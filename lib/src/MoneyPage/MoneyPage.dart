@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:nobrainer/src/BrainCell/BrainCell.dart';
 import 'package:nobrainer/src/BrainCell/CellPage.dart';
 import 'package:nobrainer/src/Database/tables.dart';
@@ -370,7 +371,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                       )
                     ));
                   },
-                  icon:  const Icon(Icons.login),
+                  icon:  const Icon(Ionicons.log_in_outline),
                   label: const Text("Income"),
                   style: const ButtonStyle(
                     backgroundColor: MaterialStatePropertyAll(
@@ -399,7 +400,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                       builder: (context) => AnalysisPage(cellItems: cellItems),
                     ));
                   },
-                  child:  const Icon(Icons.analytics),
+                  child:  const Icon(Ionicons.analytics_outline),
                   shape: const CircleBorder(),
                 ),
               ),
@@ -417,7 +418,7 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                       )
                     ));
                   },
-                  icon:  const Icon(Icons.logout),
+                  icon:  const Icon(Ionicons.log_out_outline),
                   label: const Text("Expense"),
                   style: const ButtonStyle(
                     backgroundColor: MaterialStatePropertyAll(
