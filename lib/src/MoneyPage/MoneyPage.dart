@@ -401,14 +401,16 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
                   borderRadius: const BorderRadius.all(Radius.circular(100)),
                 ),
                 child:  FloatingActionButton(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => AnalysisPage(
-                        cell:      widget.cell,
-                        cellItems: cellItems,
-                      ),
-                    ));
-                  },
+                  onPressed: isItemsLoaded
+                    ? () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => AnalysisPage(
+                          cell:      widget.cell,
+                          cellItems: cellItems,
+                        ),
+                      ));
+                    }
+                    : null,
                   child:  const Icon(Ionicons.analytics_outline),
                   shape: const CircleBorder(),
                 ),

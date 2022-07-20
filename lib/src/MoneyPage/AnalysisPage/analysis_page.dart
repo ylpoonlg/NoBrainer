@@ -91,14 +91,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
       if (date.compareTo(timeScope.dateFrom) >= 0
           && date.compareTo(timeScope.dateTo) <= 0) {
         if (item.isSpending) {
-          catSpending[catName] = catSpending[catName]??0 - item.amount;
+          catSpending[catName] = (catSpending[catName]??0) - item.amount;
           methodSpending[item.payMethod] =
-              methodSpending[item.payMethod]??0 - item.amount;
+            (methodSpending[item.payMethod]??0) - item.amount;
           totalSpendings += item.amount;
         } else {
-          catSpending[catName] = catSpending[catName]??0 + item.amount;
+          catSpending[catName] = (catSpending[catName]??0) + item.amount;
           methodSpending[item.payMethod] =
-              methodSpending[item.payMethod]??0 + item.amount;
+            (methodSpending[item.payMethod]??0) + item.amount;
           totalIncome += item.amount;
         }
       }
