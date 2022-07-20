@@ -315,21 +315,27 @@ class _ShopPageState extends State<ShopPage> implements CellPage<ShopItem> {
       body: Stack(
         children: [
           Container(
-            child: isItemsLoaded ?
-            ListView(
-              key:      const Key("shoplistview"),
-              children: <Widget>[
-                _isFilterSet()
-                  ? MaterialButton(
-                    child: const Text("Clear Filter"),
-                    onPressed: () {
-                      setState(() {
-                        filter = ShopListFilter();
-                      });
-                    },
-                  ) : const SizedBox()
-                ] + buildItemList(),
-            ) : const Center(child: CircularProgressIndicator()),
+            child: isItemsLoaded
+              ? (cellItems.isNotEmpty
+                  ? ListView(
+                    key:      const Key("shoplistview"),
+                    children: <Widget>[
+                      _isFilterSet()
+                        ? MaterialButton(
+                            child: const Text("Clear Filter"),
+                            onPressed: () {
+                              setState(() {
+                                filter = ShopListFilter();
+                              });
+                            },
+                          ) : const SizedBox()
+                      ] + buildItemList(),
+                    )
+                  : const Center(
+                      child: Text("No shopping items found")
+                    )
+                )
+              : const Center(child: CircularProgressIndicator()),
           ),
 
           GestureDetector(

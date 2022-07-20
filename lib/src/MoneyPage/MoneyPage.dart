@@ -293,22 +293,27 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
         children: [
           Container(
             child: isItemsLoaded
-            ? ListView(
-                key: const Key("financelistview"),
-                padding: const EdgeInsets.only(bottom: 120),
-                children: <Widget>[
-                  _isFilterSet()
-                    ? MaterialButton(
-                      child: const Text("Clear Filter"),
-                      onPressed: () {
-                        setState(() {
-                          filter = MoneyFilter();
-                        });
-                      },
-                    ) : const SizedBox()
-                ] + buildItemList(),
-              )
-            : const Center(child: CircularProgressIndicator()),
+              ? (cellItems.isNotEmpty
+                  ? ListView(
+                      key: const Key("financelistview"),
+                      padding: const EdgeInsets.only(bottom: 120),
+                      children: <Widget>[
+                        _isFilterSet()
+                          ? MaterialButton(
+                            child: const Text("Clear Filter"),
+                            onPressed: () {
+                              setState(() {
+                                filter = MoneyFilter();
+                              });
+                            },
+                          ) : const SizedBox()
+                      ] + buildItemList(),
+                    )
+                  : const Center(
+                      child: Text("No money pit items found")
+                    )
+                )
+              : const Center(child: CircularProgressIndicator()),
           ),
 
           GestureDetector(

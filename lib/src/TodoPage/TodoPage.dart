@@ -317,10 +317,16 @@ class _TodoPageState extends State<TodoPage> implements CellPage<TodoItem> {
         ],
       ),
       body: isItemsLoaded
-        ? ListView(
-          key: const Key("todolistview"),
-          children: buildItemList(),
-        ) : const Center(child: CircularProgressIndicator()),
+        ? (cellItems.isNotEmpty
+            ? ListView(
+              key: const Key("todolistview"),
+              children: buildItemList(),
+            )
+            : const Center(
+                child: Text("No tasks found"),
+              )
+          )
+        : const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {

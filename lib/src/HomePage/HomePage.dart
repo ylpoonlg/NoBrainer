@@ -325,23 +325,34 @@ class _HomePageState extends State<HomePage> {
         children: getFloatingActionButtons(),
       ),
       body: Center(
-        child: !isBraincellsLoaded ?
-          const Center(
+        child: !isBraincellsLoaded
+          ? const Center(
             child: CircularProgressIndicator(),
-          ) :
-          Container(
-            child: ReorderableGridView.count(
-              crossAxisCount: 2,
-              childAspectRatio: braincellTilesAR,
-              mainAxisSpacing: 15,
-              crossAxisSpacing: 12,
-              children: getBraincellList(),
-              onReorder: _onReorder,
-              padding: const EdgeInsets.only(
-                top: 20, left: 20, right: 20, bottom: 85,
-              ),
+          )
+          : (braincells.isNotEmpty
+              ? Container(
+                padding: const EdgeInsets.all(0),
+                child: ReorderableGridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: braincellTilesAR,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 12,
+                  children: getBraincellList(),
+                  onReorder: _onReorder,
+                  padding: const EdgeInsets.only(
+                    top: 20, left: 20, right: 20, bottom: 85,
+                  ),
+                ),
+              )
+              : const Center(
+                  child: Text(
+                    "No BrainCells found"
+                    + "\n\n"
+                    + "Create a new BrainCell by tapping the '+' icon",
+                    textAlign: TextAlign.center,
+                  )
+                )
             ),
-          ),
       ),
     );
   }
