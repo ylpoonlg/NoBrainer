@@ -1,7 +1,10 @@
 # NoBrainer
+A ~~Cross-platform~~ mobile application intended to replace your brain for everyday tasks.
 
-A cross-platform mobile app that acts as your brain in daily life.
+Currently only Android is supported.
 
-## About
-
+## Development
 This app is written in Dart using Flutter
+
+## License
+This project is licensed under the [MIT License](https://github.com/ylpoonlg/NoBrainer/blob/master/LICENSE)
