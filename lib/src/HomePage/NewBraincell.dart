@@ -55,11 +55,26 @@ class _NewBraincellState extends State<NewBraincell> {
       case BrainCellType.todoList:
         return "Todo List";
       case BrainCellType.shopList:
-        return "Shop List";
+        return "Shopping List";
       case BrainCellType.moneyPit:
         return "Money Pit";
       default:
         return "Select a Braincell Type";
+    }
+  }
+  String cellTypeInfo(String type) {
+    switch (type) {
+      case BrainCellType.todoList:
+        return "Todo List cell can remind you of important tasks"
+          " and also send you notification";
+      case BrainCellType.shopList:
+        return "Shopping List shows all the items that you have to buy"
+          " when you enter a shop";
+      case BrainCellType.moneyPit:
+        return "Money Pit cell allows you to keep track of your expenses"
+          " and analyze them by different spending categories";
+      default:
+        return "Please choose a valid BrainCell type";
     }
   }
 
@@ -140,38 +155,81 @@ class _NewBraincellState extends State<NewBraincell> {
               ),
             ),
           ),
+
           !widget.isEditMode
-              ? PopupMenuButton(
-                  initialValue: cell.type,
-                  onSelected: (value) {
-                    setState(() {
-                      cell.type = value.toString();
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.all(20.0),
-                    child: Row(
-                      children: [
-                        const Spacer(),
-                        const Icon(Icons.list),
-                        Text("  "+cellTypeText(cell.type)),
-                        const Spacer(),
-                      ],
+            ? Text(
+              "\nBrainCell Type",
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall,
+            )
+            : Container(),
+
+          !widget.isEditMode
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical:   15,
+                ),
+                child: GridView.count(
+                  primary:          false,
+                  crossAxisCount:   2,
+                  childAspectRatio: 3,
+                  shrinkWrap:       true,
+                  children: [
+                    BrainCellType.todoList,
+                    BrainCellType.shopList,
+                    BrainCellType.moneyPit,
+                  ].map((String type) => Card(
+                    color: cell.type == type
+                      ? Theme.of(context).colorScheme
+                        .surface.withOpacity(0.10)
+                      : null,
+                    elevation: 1,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          cell.type = type;
+                        });
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              cellTypeText(type),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title:   Text(cellTypeText(type)),
+                                    content: Text(cellTypeInfo(type)),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text("OK"),
+                                      )
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            icon: const Icon(Icons.info_outline),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  itemBuilder: (BuildContext context) {
-                    return [
-                      BrainCellType.todoList,
-                      BrainCellType.shopList,
-                      BrainCellType.moneyPit,
-                    ].map((type) => PopupMenuItem<String>(
-                      value: type,
-                      child: Text(cellTypeText(type)),
-                    )).toList();
-                  },
+                  )).toList(),
                 )
-              // Placeholder: Imported Brinacells cannot have their type changed
-              : const Text(""),
+              )
+            : Container(),
+
           Container(
             height: 72,
             padding: const EdgeInsets.all(10),
