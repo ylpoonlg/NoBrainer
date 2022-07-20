@@ -98,9 +98,9 @@ class TodoStatus {
 
   static int getStatusOrder(String status) {
     switch (status) {
-      case TodoStatus.todo:
-        return 1;
       case TodoStatus.urgent:
+        return 1;
+      case TodoStatus.todo:
         return 2;
       case TodoStatus.ongoing:
         return 3;
