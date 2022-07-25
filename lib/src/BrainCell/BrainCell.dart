@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/MoneyPage/MoneyPage.dart';
 import 'package:nobrainer/src/ShopPage/ShopPage.dart';
@@ -24,7 +26,8 @@ class BrainCellType {
 }
 
 class BrainCell {
-  late bool   isFolder;
+  late bool   isFolder;  // true if cellid == -1
+  late int    folderId;
   late int    cellid;
   late String title;
   late String type;
@@ -34,6 +37,7 @@ class BrainCell {
   BrainCell({
     required this.title,
     this.cellid   = -1,
+    this.folderId = -1,
     this.type     = BrainCellType.none,
     this.color    = Colors.grey,
     this.isFolder = false,
@@ -41,15 +45,30 @@ class BrainCell {
   });
   
 
-  StatefulWidget getPage() {
+  Widget? getPage() {
     switch (type) {
+      case BrainCellType.todoList:
+        return TodoPage(cell: this);
       case BrainCellType.shopList:
         return ShopPage(cell: this);
       case BrainCellType.moneyPit:
         return MoneyPage(cell: this);
-      case BrainCellType.todoList:
       default:
-        return TodoPage(cell: this);
+        return null;
     }
+  }
+
+  Map<String, Object?> toBrainCellsMap({List<String> exclude = const []}) {
+    Map<String, Object?> map = {
+      "cellid":   cellid,
+      "name":     title,
+      "type":     type,
+      "color":    color.value,
+      "settings": json.encode(settings),
+    };
+    exclude.forEach((key) {
+      map.remove(key);
+    });
+    return map;
   }
 }

@@ -113,7 +113,7 @@ class _NewBraincellState extends State<NewBraincell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("New Braincell"),
+        title: Text(widget.isEditMode ? "Edit Braincell" : "New Braincell"),
         leadingWidth: 80,
         leading: TextButton(
           onPressed: () {

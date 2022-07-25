@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:nobrainer/src/Database/tables.dart';
@@ -20,89 +21,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  //List<Map<String, dynamic>> braincells = [];
   List<BrainCell> braincells = [];
-  bool isExpandAddOptions = false;
   bool isBraincellsLoaded = false;
 
-  int folderParent = 0;
+  List<int> folderParent = [0];
+  Map<int, String> folderName = {0: "root"};
 
   _HomePageState() {
     _loadBraincells();
-  }
-
-  /// Save braincells to local database
-  /// Created new row if haven't already
-  _saveBraincell() async {
-    setState(() {
-      isBraincellsLoaded = false;
-    });
-
-    Database db = DbHelper.database;
-
-    for (int i = 0; i < braincells.length; i++) {
-      BrainCell cell = braincells[i];
-
-      // Save to table BrainCells
-      if (!cell.isFolder) {
-        Map<String, Object?> newCell = {
-          "name":     cell.title,
-          "type":     cell.type,
-          "color":    cell.color.value,
-          "settings": json.encode(cell.settings),
-        };
-        if (cell.cellid != -1) {
-          newCell["cellid"] = cell.cellid;
-        }
-        await db.insert(
-          DbTableName.braincells,
-          newCell,
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-
-
-        List<Map> rowid = await db.rawQuery("SELECT last_insert_rowid();");
-        if (rowid.isNotEmpty) {
-          List<Map> lastRow = await db.query(
-            DbTableName.braincells,
-            where: "rowid = ?", whereArgs: [rowid[0]["last_insert_rowid()"]],
-          );
-          cell.cellid = lastRow[0]["cellid"];
-        }
-      }
-
-      // Save to table CellFolders
-      Map<String, Object?> newFolder = {
-        "cellid":  cell.cellid,
-        "orderid": i,
-        "name":    cell.title,
-        "parent":  folderParent,
-      };
-      List<Map> folder = await db.query(
-        DbTableName.cellFolders,
-        where: "cellid = ?", whereArgs: [cell.cellid],
-      );
-      if (folder.isNotEmpty) {
-        newFolder["id"] = folder[0]["id"];
-      }
-      await db.insert(
-        DbTableName.cellFolders,
-        newFolder,
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    
-
-    setState(() {
-      isBraincellsLoaded = true;
-    });
   }
 
   _loadBraincells() async {
     Database db = DbHelper.database;
     final List<Map> folders = await db.query(
       DbTableName.cellFolders,
-      where: "parent = ?", whereArgs: [folderParent],
+      where: "parent = ?", whereArgs: [folderParent.last],
       orderBy: "orderid",
     );
 
@@ -110,8 +43,11 @@ class _HomePageState extends State<HomePage> {
     for (Map folder in folders) {
       bool isFolder = folder["cellid"] == -1;
       if (isFolder) {
+        folderName[folder["id"]] = folder["name"];
         braincells.add(BrainCell(
-          title: folder["name"], isFolder: true,
+          title:    folder["name"],
+          folderId: folder["id"],
+          isFolder: true,
         ));
       } else {
         List<Map> braincell = await db.query(
@@ -120,10 +56,12 @@ class _HomePageState extends State<HomePage> {
         );
         if (braincell.isEmpty) continue;
         braincells.add(BrainCell(
+          folderId: folder["id"],
           cellid:   folder["cellid"],
           title:    braincell[0]["name"],
           type:     braincell[0]["type"],
-          color:    Color(braincell[0]["color"]),  // Debug
+          color:    Color(braincell[0]["color"]),
+          isFolder: false,
           settings: json.decode(braincell[0]["settings"]),
         ));
       }
@@ -134,97 +72,177 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  _newBraincell(BrainCell cell) {
-    bool newCell = true;
-    for (var i = 0; i < braincells.length; i++) {
-      if (braincells[i].cellid == cell.cellid) {
-        braincells[i] = cell;
-        newCell = false;
-        break;
-      }
-    }
-    if (newCell) {
-      braincells.add(cell);
-    }
-    _saveBraincell();
+  _newBraincell(BrainCell cell) async {
+    Database db = DbHelper.database;
+    await db.insert(
+      DbTableName.braincells,
+      cell.toBrainCellsMap(exclude: ["cellid"]),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    // Get cellid
+    List<Map> rowid   = await db.rawQuery("SELECT last_insert_rowid();");
+    List<Map> lastRow = await db.query(
+      DbTableName.braincells,
+      where: "rowid = ?", whereArgs: [rowid[0]["last_insert_rowid()"]],
+    );
+    cell.cellid = lastRow[0]["cellid"];
+
+    await db.insert(
+      DbTableName.cellFolders,
+      {
+        "cellid":  cell.cellid,
+        "orderid": braincells.length,
+        "name":    cell.title,
+        "parent":  folderParent.last,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+
+    await _loadBraincells();
   }
 
-  _editBraincell(BrainCell cell) {
+  _editBraincell(BrainCell cell) async {
+    Database db = DbHelper.database;
+
+    if (!cell.isFolder) {
+      await db.update(
+        DbTableName.braincells,
+        cell.toBrainCellsMap(exclude: ["cellid"]),
+        where: "cellid = ?",
+        whereArgs: [cell.cellid],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      await db.update(
+        DbTableName.cellFolders,
+        {
+          "name": cell.title,
+        },
+        where: "id = ?",
+        whereArgs: [cell.folderId],
+      );
+    }
+
+    _loadBraincells();
+  }
+
+  _deleteBraincell(BrainCell cell) async {
     setState(() {
-      isExpandAddOptions = false;
+      isBraincellsLoaded = false;
     });
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => NewBraincell(
-          isEditMode: true,
-          cell: cell,
-          callback: (cell) {
-            for (var i = 0; i < braincells.length; i++) {
-              if (braincells[i].cellid == cell.cellid) {
-                braincells[i] = cell;
-              }
-            }
-            _saveBraincell();
-          },
-        ),
-      ),
+
+    Database db = DbHelper.database;
+    await db.delete(
+      DbTableName.braincells,
+      where: "cellid = ?",
+      whereArgs: [cell.cellid],
     );
+
+    await db.delete(
+      DbTableName.cellFolders,
+      where: "id = ?",
+      whereArgs: [cell.folderId],
+    );
+
+    _loadBraincells();
   }
 
-  _deleteBraincell(BrainCell cell) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Confirmation"),
-        content: const Text("Are you sure you want to delete this braincell?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              braincells.removeWhere((cell2) => cell2.cellid == cell.cellid);
-
-              setState(() {
-                isBraincellsLoaded = false;
-              });
-
-              Database db = DbHelper.database;
-              await db.delete(
-                DbTableName.braincells,
-                where: "cellid = ?",
-                whereArgs: [cell.cellid],
-              );
-
-              _loadBraincells();
-            },
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
+  _onNewFolder(String title) async {
+    Database db = DbHelper.database;
+    List<Map> folders = await db.query(DbTableName.cellFolders);
+    Map<String, Object?> map = {
+      "cellid":  -1,
+      "orderid": braincells.length,
+      "name":    title,
+      "parent":  folderParent.last,
+    };
+    if (folders.isEmpty) {
+      map["id"] = 1;
+    }
+    await db.insert(
+      DbTableName.cellFolders,
+      map,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
+
+    await _loadBraincells();
   }
 
-  _onReorder(oldIndex, newIndex) {
-    final cell = braincells.removeAt(oldIndex);
+  _onOpenFolder(int folderId) {
+    setState(() {
+      isBraincellsLoaded = false;
+    });
+    int index = folderParent.indexOf(folderId);
+    if (index == -1) {
+      folderParent.add(folderId);
+    } else {
+      folderParent = folderParent.sublist(0, index + 1);
+    }
+    _loadBraincells();
+  }
+
+  _onMoveFolder(BrainCell cell, int parent) async {
+    Database db = DbHelper.database;
+    List<Map> cells = await db.query(
+      DbTableName.cellFolders,
+      where: "parent = ?",
+      whereArgs: [parent],
+    );
+
+    int orderid = cells.length;
+    await db.update(
+      DbTableName.cellFolders,
+      {
+        "orderid": orderid,
+        "parent":  parent,
+      },
+      where: "id = ?",
+      whereArgs: [cell.folderId],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    _loadBraincells();
+  }
+
+  _onReorder(oldIndex, newIndex) async {
+    BrainCell cell = braincells.removeAt(oldIndex);
     braincells.insert(newIndex, cell);
-    _saveBraincell();
+
+    Database db = DbHelper.database;
+    int i = 0;
+    for (BrainCell cell in braincells) {
+      await db.update(
+        DbTableName.cellFolders,
+        {
+          "orderid": i,
+        },
+        where: "id = ?",
+        whereArgs: [cell.folderId],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      i++;
+    }
+
+    await _loadBraincells();
   }
 
   /// Returns a list of BraincellTiles
   List<Widget> getBraincellList() {
-    return braincells.map(
-      (BrainCell cell) => BraincellTile(
-        key: Key("braincell-tile-" + cell.cellid.toString()),
+    return braincells.map((BrainCell cell) => BraincellTile(
+        key: Key("braincell-tile-${cell.folderId}-${cell.cellid}"),
         cell: cell,
-        page: cell.getPage(),
-        onDelete: _deleteBraincell,
-        onEdit: _editBraincell,
-      ),
+        onDelete:     _deleteBraincell,
+        onMove:       _onMoveFolder,
+        onEdit:       _editBraincell,
+        onOpenFolder: _onOpenFolder,
+        reload: () {
+          setState(() {
+            isBraincellsLoaded = false;
+          });
+          _loadBraincells();
+        },
+      )
     ).toList();
   }
 
@@ -255,6 +273,30 @@ class _HomePageState extends State<HomePage> {
   }
 
 
+  Widget buildFolderNav() {
+    List<String> folderNames = [];
+    for (int i = 1; i < folderParent.length; i++) {
+      String? name = folderName[folderParent[i]];
+      folderNames.add(name ?? "folder");
+    }
+    return Container(
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: folderParent.length > 1
+              ? () {
+                  folderParent.removeLast();
+                  _onOpenFolder(folderParent.last);
+                }
+              : null,
+            icon: const Icon(Icons.arrow_upward),
+          ),
+          Text(folderNames.join(" > ")),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +309,44 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("NoBrainer"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              String folderName = "";
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("New Folder"),
+                  content: TextField(
+                    onChanged: (value) {
+                      folderName = value;
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Folder Name",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        _onNewFolder(folderName);
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Create"),
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.create_new_folder_outlined),
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -290,7 +370,6 @@ class _HomePageState extends State<HomePage> {
               title: const Text('About'),
               onTap: () {
                 setState(() {
-                  isExpandAddOptions = false;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -306,7 +385,6 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Settings'),
               onTap: () {
                 setState(() {
-                  isExpandAddOptions = false;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -329,31 +407,31 @@ class _HomePageState extends State<HomePage> {
           ? const Center(
             child: CircularProgressIndicator(),
           )
-          : (braincells.isNotEmpty
+          : braincells.isNotEmpty
               ? Container(
-                padding: const EdgeInsets.all(0),
-                child: ReorderableGridView.count(
-                  crossAxisCount: 2,
-                  childAspectRatio: braincellTilesAR,
-                  mainAxisSpacing: 15,
-                  crossAxisSpacing: 12,
-                  children: getBraincellList(),
-                  onReorder: _onReorder,
-                  padding: const EdgeInsets.only(
-                    top: 20, left: 20, right: 20, bottom: 85,
+                  padding: const EdgeInsets.all(0),
+                  child: ReorderableGridView.count(
+                    //shrinkWrap: true,
+                    crossAxisCount: 2,
+                    childAspectRatio: braincellTilesAR,
+                    mainAxisSpacing: 15,
+                    crossAxisSpacing: 12,
+                    children: getBraincellList(),
+                    onReorder: _onReorder,
+                    padding: const EdgeInsets.only(
+                      top: 20, left: 20, right: 20, bottom: 85,
+                    ),
                   ),
-                ),
-              )
-              : const Center(
-                  child: Text(
-                    "No BrainCells found"
-                    + "\n\n"
-                    + "Create a new BrainCell by tapping the '+' icon",
-                    textAlign: TextAlign.center,
-                  )
                 )
-            ),
+              : const Text(
+                  "No BrainCells found"
+                  "\n\n"
+                  "Create a new BrainCell by tapping the '+' icon",
+                  textAlign: TextAlign.center,
+                ),
       ),
+
+      bottomSheet: buildFolderNav(),
     );
   }
 }

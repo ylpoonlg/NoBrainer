@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nobrainer/src/Database/tables.dart';
 import 'package:nobrainer/src/Database/updates.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
