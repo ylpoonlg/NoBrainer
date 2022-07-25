@@ -7,6 +7,7 @@ class BraincellTile extends StatelessWidget {
   final BrainCell                cell;
   final Function(BrainCell)      onEdit;
   final Function(BrainCell, int) onMove;
+  final Function(BrainCell)      onClone;
   final Function(BrainCell)      onDelete;
   final Function(int)            onOpenFolder;
   final Function                 reload;
@@ -15,6 +16,7 @@ class BraincellTile extends StatelessWidget {
     required this.cell,
     required this.onEdit,
     required this.onMove,
+    required this.onClone,
     required this.onDelete,
     required this.onOpenFolder,
     required this.reload,
@@ -68,9 +70,10 @@ class BraincellTile extends StatelessWidget {
               },
               itemBuilder: (context) {
                 return const [
-                  PopupMenuItem(value: "edit"  , child: Text("Edit")  ),
-                  PopupMenuItem(value: "move"  , child: Text("Move")  ),
-                  PopupMenuItem(value: "delete", child: Text("Delete")),
+                  PopupMenuItem(value: "edit"      , child: Text("Edit")),
+                  PopupMenuItem(value: "move"      , child: Text("Move")),
+                  PopupMenuItem(value: "clone_cell", child: Text("Clone")),
+                  PopupMenuItem(value: "delete"    , child: Text("Delete")),
                 ];
               }
             ),
@@ -120,6 +123,8 @@ class BraincellTile extends StatelessWidget {
                   child: Text(
                     cell.title,
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow:  TextOverflow.ellipsis,
                   ),
                 ),
                 PopupMenuButton(
@@ -190,6 +195,9 @@ class BraincellTile extends StatelessWidget {
             ],
           ),
         );
+        break;
+      case "clone_cell":
+        onClone(cell);
         break;
       case "move":
         int moveTo = 0;

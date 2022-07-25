@@ -100,6 +100,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     await _loadBraincells();
+    return cell.cellid;
   }
 
   _editBraincell(BrainCell cell) async {
@@ -125,6 +126,45 @@ class _HomePageState extends State<HomePage> {
     }
 
     _loadBraincells();
+  }
+
+  _cloneBraincell(BrainCell cell) async {
+    int oldCellid = cell.cellid;
+    cell.cellid = -1;
+    cell.title = "Copy of " + cell.title;
+    int newCellid = await _newBraincell(cell);
+
+    setState(() {
+      isBraincellsLoaded = false;
+    });
+
+    Database db = DbHelper.database;
+    for (String tbName in [
+      DbTableName.todoItems,
+      DbTableName.shopItems,
+      DbTableName.moneyPitItems,
+    ]) {
+      List<Map<String, Object?>> items = await db.query(
+        tbName,
+        where: "cellid = ?",
+        whereArgs: [oldCellid],
+      );
+
+      for (Map<String, Object?> item in items) {
+        Map<String, Object?> newItem = Map.from(item);
+        newItem["cellid"] = newCellid;
+        newItem.remove("id");
+        await db.insert(
+          tbName,
+          newItem,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+
+    setState(() {
+      isBraincellsLoaded = true;
+    });
   }
 
   _deleteBraincell(BrainCell cell) async {
@@ -235,6 +275,7 @@ class _HomePageState extends State<HomePage> {
         onDelete:     _deleteBraincell,
         onMove:       _onMoveFolder,
         onEdit:       _editBraincell,
+        onClone:      _cloneBraincell,
         onOpenFolder: _onOpenFolder,
         reload: () {
           setState(() {
@@ -274,13 +315,16 @@ class _HomePageState extends State<HomePage> {
 
 
   Widget buildFolderNav() {
+    double screenWidth  = MediaQuery.of(context).size.width;
     List<String> folderNames = [];
     for (int i = 1; i < folderParent.length; i++) {
       String? name = folderName[folderParent[i]];
       folderNames.add(name ?? "folder");
     }
     return Container(
+      padding: const EdgeInsets.all(0),
       child: Row(
+        mainAxisSize: MainAxisSize.max,
         children: [
           IconButton(
             onPressed: folderParent.length > 1
@@ -291,7 +335,13 @@ class _HomePageState extends State<HomePage> {
               : null,
             icon: const Icon(Icons.arrow_upward),
           ),
-          Text(folderNames.join(" > ")),
+          Container(
+            width: screenWidth - 160,
+            child: Text(
+              folderNames.join(" > "),
+              overflow: TextOverflow.fade,
+            ),
+          ),
         ],
       ),
     );
