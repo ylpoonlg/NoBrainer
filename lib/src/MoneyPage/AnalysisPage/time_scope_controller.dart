@@ -27,8 +27,14 @@ class TimeScope {
   late String   scope;
 
   TimeScope({DateTime? from, DateTime? to, this.scope = TimeScope.unset}) {
-    dateFrom = from ?? DateTime.now();
-    dateTo   = to   ?? DateTime.now();
+    DateTime nowTime = DateTime.now();
+    DateTime nowDate = DateTime(
+      nowTime.year,
+      nowTime.month,
+      nowTime.day,
+    );
+    dateFrom = from ?? nowDate;
+    dateTo   = to   ?? nowDate;
     setScope(scope: scope);
   }
 
