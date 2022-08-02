@@ -93,9 +93,14 @@ class _AboutPageState extends State<AboutPage> {
             title: const Text("GitHub"),
             trailing: TextButton(
               onPressed: () async {
-                Uri githubUri = Uri.parse("https://github.com/ylpoonlg/NoBrainer");
+                Uri githubUri = Uri.parse(
+                  "https://github.com/ylpoonlg/NoBrainer"
+                );
                 if (await canLaunchUrl(githubUri)) {
-                  await launchUrl(githubUri);
+                  await launchUrl(
+                    githubUri,
+                    mode: LaunchMode.externalApplication,
+                  );
                 }
               },
               child: const Text(
