@@ -84,6 +84,10 @@ class _MoneyPageState extends State<MoneyPage> implements CellPage<MoneyItem> {
 
   @override
   editItem(MoneyItem item) async {
+    setState(() {
+      isItemsLoaded = false;
+    });
+
     if (item.id < 0) {
       newItem(item);
       return;
